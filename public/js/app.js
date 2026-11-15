@@ -375,26 +375,61 @@ async function renderStartScreen(container) {
   const coordOptions = coordinators.map(c => `<option value="${c}">`).join('');
 
   container.innerHTML = `
+    <!-- The 5 Stages Showcase Card (from Official Poster) -->
+    <div class="card poster-stages-section">
+      <div class="poster-stages-heading">⚡ THE 5 STAGES OF OVERRIDE ⚡</div>
+      <div class="poster-stages-grid">
+        <div class="stage-poster-card s1">
+          <div class="stage-badge-num">1</div>
+          <div style="font-size: 1.6rem;">🎧</div>
+          <div class="stage-poster-title">Media Analysis</div>
+          <div class="stage-poster-desc">Extract hidden Morse audio and screen signals</div>
+        </div>
+        <div class="stage-poster-card s2">
+          <div class="stage-badge-num">2</div>
+          <div style="font-size: 1.6rem;">🔓</div>
+          <div class="stage-poster-title">Decoding</div>
+          <div class="stage-poster-desc">Unwrap 3 layers of encrypted ciphers</div>
+        </div>
+        <div class="stage-poster-card s3">
+          <div class="stage-badge-num">3</div>
+          <div style="font-size: 1.6rem;">🤖</div>
+          <div class="stage-poster-title">Prompt AI</div>
+          <div class="stage-poster-desc">Bypass WARDEN AI security protocols</div>
+        </div>
+        <div class="stage-poster-card s4">
+          <div class="stage-badge-num">4</div>
+          <div style="font-size: 1.6rem;">🚩</div>
+          <div class="stage-poster-title">CTF Flags</div>
+          <div class="stage-poster-desc">Hunt terminal tokens & inspect web metadata</div>
+        </div>
+        <div class="stage-poster-card s5">
+          <div class="stage-badge-num">5</div>
+          <div style="font-size: 1.6rem;">🧩</div>
+          <div class="stage-poster-title">Sync & Override</div>
+          <div class="stage-poster-desc">Merge all squad member shards & unlock vault</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Story Card -->
     <div class="card">
-      <h2 class="card-title">📖 Your story</h2>
-      <p style="font-size: 1.05rem; line-height: 1.6;">
-        "Welcome, Agents! 🦸 The secret vault of Invictors Lab has locked itself, and a sneaky guardian AI is hiding the key. Your team is the rescue squad. 🦸 Collect secret pieces 🧩 from 5 missions, then put them together in the last mission to open the vault. 🔐 🏆 The fastest team that gets it right wins. Ready?"
+      <h2 class="card-title">📖 Mission Storyline</h2>
+      <p style="font-size: 1.05rem; line-height: 1.7; color: var(--txt-body);">
+        "Welcome, Agents! 🦸 The secret vault of Invictors Lab has initiated lockdown, and a stubborn guardian AI is shielding the master override key. Your squad is the tactical rescue unit. Collect secret fragment pieces 🧩 across 5 distinct puzzle stages, coordinate across your devices, and assemble the final master key to override the system. 🔐 The fastest verified team claims 1st place! 🏆"
       </p>
     </div>
 
     <!-- How to play Card -->
     <div class="card">
-      <h2 class="card-title">🎮 How to play</h2>
-      <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.98rem; line-height: 1.5;">
-        <li>1️⃣ Do the missions one by one. The next one opens when you finish the current one. 🚪</li>
-        <li>2️⃣ Each mission hides a secret piece 🧩. Find it, type it in the box, press Submit. ✅</li>
-        <li>3️⃣ Your pieces are saved in the 📒 notebook automatically.</li>
-        <li>4️⃣ Stuck? Tap 💡 Hint. First hint ⏱️ +3 min, second ⏱️ +5 min.</li>
-        <li>5️⃣ Wrong answer? Try again! 🙂 After 5 wrong tries, each extra one adds ⏱️ +1 min.</li>
-        <li>6️⃣ 🤝 Mission 5 needs your whole team: every player on their own laptop.</li>
-        <li>⚠️ Some clues are tricks on purpose. Think before you trust them. 🤔</li>
-        <li>🤝 Play fair: no outside help and no sharing answers with other teams. 🚫</li>
+      <h2 class="card-title">🎮 Mission Rules & Guidelines</h2>
+      <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 0.98rem; line-height: 1.6; color: var(--txt-body);">
+        <li><strong style="color: var(--cyan-neon);">1️⃣ Sequential Unlocks:</strong> Stages open one by one. Each stage yields a secret fragment.</li>
+        <li><strong style="color: var(--cyan-neon);">2️⃣ Auto Notebook:</strong> Solved fragments are automatically recorded in your team's live notebook.</li>
+        <li><strong style="color: var(--gold);">3️⃣ Hints:</strong> Need clues? 1st hint adds <span style="color:var(--gold);">+3m</span> penalty, 2nd hint adds <span style="color:var(--gold);">+5m</span> penalty.</li>
+        <li><strong style="color: var(--ok);">4️⃣ Wrong Attempts:</strong> First 5 incorrect submissions are free. From the 6th onwards, each wrong try adds <span style="color:var(--bad);">+1m</span>.</li>
+        <li><strong style="color: var(--stage5-color);">5️⃣ Team Synchronization:</strong> Stage 5 requires every team member on their own device to retrieve their individual shard!</li>
+        <li><strong style="color: var(--bad);">🚨 Anti-Cheat:</strong> Tab switches and switching to unauthorized tools incur an automatic <span style="color:var(--bad);">+2m penalty</span>.</li>
       </ul>
     </div>
 
