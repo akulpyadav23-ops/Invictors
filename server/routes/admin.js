@@ -3,6 +3,9 @@ const router = express.Router();
 const db = require('../db');
 const config = require('../config');
 const { generateVerificationCode } = require('../logic/security');
+const { computeTeamCode, getMemberShard } = require('../logic/shard');
+const { computeFinalKey } = require('../logic/finalKey');
+const { STAGE_CONFIG } = require('../logic/stages');
 
 // Admin PIN middleware
 function requireAdmin(req, res, next) {
@@ -22,12 +25,23 @@ router.post('/verify', (req, res) => {
   return res.status(401).json({ error: 'Invalid Admin PIN.' });
 });
 
-// GET /api/admin/teams - List all teams
+// GET /api/admin/teams - List all teams with stats, clock, and settings
 router.get('/teams', requireAdmin, (req, res) => {
   const teams = db.prepare('SELECT * FROM teams ORDER BY startedAt DESC').all();
 
   const clockPausedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('clockPaused');
   const isClockPaused = clockPausedRow && clockPausedRow.value === 'true';
+
+  const gameStartedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('gameStarted');
+  const isGameStarted = gameStartedRow && gameStartedRow.value === 'true';
+
+  const startTogetherRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('startTogetherMode');
+  const startTogetherMode = !startTogetherRow || startTogetherRow.value === 'true';
+
+  const notepadRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('winnersNotepad');
+  const notepad = notepadRow ? notepadRow.value : '';
+
+  const now = Date.now();
 
   const fullTeams = teams.map(t => {
     const members = db.prepare('SELECT id, fullName, isLeader, deviceToken FROM members WHERE teamId = ?').all(t.id);
@@ -36,7 +50,6 @@ router.get('/teams', requireAdmin, (req, res) => {
     const totalWrong = progress.reduce((acc, p) => acc + (p.wrongAttempts || 0), 0);
     const totalHints = progress.reduce((acc, p) => acc + (p.hintsUsed || 0), 0);
 
-    const now = Date.now();
     let effectiveElapsedMs = 0;
     if (t.finishedAt) {
       effectiveElapsedMs = t.finishedAt - t.startedAt - (t.pausedMs || 0);
@@ -64,7 +77,10 @@ router.get('/teams', requireAdmin, (req, res) => {
       totalSeconds,
       formattedTime,
       verificationCode,
-      isFinished: !!t.finishedAt
+      isFinished: !!t.finishedAt,
+      isIndividuallyPaused: t.isPaused === 1,
+      tabSwitches: t.tabSwitches || 0,
+      status: t.status || 'active'
     };
   });
 
@@ -73,12 +89,236 @@ router.get('/teams', requireAdmin, (req, res) => {
   return res.json({
     teams: fullTeams,
     isClockPaused,
+    isGameStarted,
+    startTogetherMode,
+    notepad,
     allowNewTeams: allowNewTeamsRow && allowNewTeamsRow.value === 'true',
-    serverTime: Date.now()
+    serverTime: now
   });
 });
 
-// POST /api/admin/skip - Skip stage for team (dry run testing)
+// POST /api/admin/start-all - Launch game simultaneously for all teams
+router.post('/start-all', requireAdmin, (req, res) => {
+  const now = Date.now();
+
+  db.prepare("UPDATE settings SET value = 'true' WHERE key = 'gameStarted'").run();
+  db.prepare("UPDATE settings SET value = ? WHERE key = 'eventStartedAt'").run(String(now));
+  db.prepare("UPDATE settings SET value = 'false' WHERE key = 'clockPaused'").run();
+  db.prepare("UPDATE settings SET value = '0' WHERE key = 'pauseStartedAt'").run();
+
+  // Activate all waiting teams and set their startedAt to now
+  const result = db.prepare("UPDATE teams SET status = 'active', startedAt = ? WHERE status = 'waiting'").run(now);
+
+  return res.json({
+    success: true,
+    startedAt: now,
+    activatedTeamsCount: result.changes
+  });
+});
+
+// POST /api/admin/team-pause - Pause or resume an individual team
+router.post('/team-pause', requireAdmin, (req, res) => {
+  const { teamId, action } = req.body; // 'pause' or 'resume'
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
+  if (!team) return res.status(404).json({ error: 'Team not found' });
+
+  const now = Date.now();
+
+  if (action === 'pause') {
+    db.prepare('UPDATE teams SET isPaused = 1, teamPauseStartedAt = ? WHERE id = ?').run(now, teamId);
+    return res.json({ success: true, isPaused: true });
+  } else if (action === 'resume') {
+    const pauseStarted = team.teamPauseStartedAt || now;
+    const duration = now - pauseStarted;
+    const newPausedMs = (team.pausedMs || 0) + (duration > 0 ? duration : 0);
+
+    db.prepare('UPDATE teams SET isPaused = 0, teamPauseStartedAt = 0, pausedMs = ? WHERE id = ?').run(newPausedMs, teamId);
+    return res.json({ success: true, isPaused: false });
+  }
+
+  return res.json({ success: true, isPaused: team.isPaused === 1 });
+});
+
+// POST /api/admin/team-restart - Restart an individual team back to Stage 1
+router.post('/team-restart', requireAdmin, (req, res) => {
+  const { teamId } = req.body;
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
+  if (!team) return res.status(404).json({ error: 'Team not found' });
+
+  const now = Date.now();
+
+  const tx = db.transaction(() => {
+    // Reset progress
+    db.prepare('DELETE FROM progress WHERE teamId = ?').run(teamId);
+    const insertProg = db.prepare('INSERT INTO progress (teamId, stage, fragment, wrongAttempts, hintsUsed, solvedAt) VALUES (?, ?, NULL, 0, 0, NULL)');
+    for (let s = 1; s <= 6; s++) {
+      insertProg.run(teamId, s);
+    }
+
+    // Reset team stats
+    db.prepare(`
+      UPDATE teams
+      SET stage = 1,
+          finishedAt = NULL,
+          penaltyMin = 0,
+          pausedMs = 0,
+          isPaused = 0,
+          teamPauseStartedAt = 0,
+          tabSwitches = 0,
+          startedAt = ?
+      WHERE id = ?
+    `).run(now, teamId);
+
+    // Clear submissions & chat
+    db.prepare('DELETE FROM submissions WHERE teamId = ?').run(teamId);
+    db.prepare('DELETE FROM chat WHERE teamId = ?').run(teamId);
+    db.prepare('DELETE FROM violations WHERE teamId = ?').run(teamId);
+  });
+
+  tx();
+
+  return res.json({ success: true, message: `Team ${team.name} has been restarted at Stage 1.` });
+});
+
+// POST /api/admin/restart-all - Restart all teams back to Waiting Lobby or Stage 1
+router.post('/restart-all', requireAdmin, (req, res) => {
+  const { mode } = req.body; // 'lobby' or 'active'
+  const now = Date.now();
+  const targetStatus = mode === 'active' ? 'active' : 'waiting';
+
+  const tx = db.transaction(() => {
+    db.prepare('DELETE FROM submissions').run();
+    db.prepare('DELETE FROM chat').run();
+    db.prepare('DELETE FROM violations').run();
+    db.prepare('DELETE FROM progress').run();
+
+    const teams = db.prepare('SELECT id FROM teams').all();
+    const insertProg = db.prepare('INSERT INTO progress (teamId, stage, fragment, wrongAttempts, hintsUsed, solvedAt) VALUES (?, ?, NULL, 0, 0, NULL)');
+    for (const t of teams) {
+      for (let s = 1; s <= 6; s++) {
+        insertProg.run(t.id, s);
+      }
+    }
+
+    db.prepare(`
+      UPDATE teams
+      SET stage = 1,
+          finishedAt = NULL,
+          penaltyMin = 0,
+          pausedMs = 0,
+          isPaused = 0,
+          teamPauseStartedAt = 0,
+          tabSwitches = 0,
+          startedAt = ?,
+          status = ?
+    `).run(now, targetStatus);
+
+    db.prepare("UPDATE settings SET value = ? WHERE key = 'gameStarted'").run(mode === 'active' ? 'true' : 'false');
+    db.prepare("UPDATE settings SET value = '0' WHERE key = 'eventStartedAt'").run();
+    db.prepare("UPDATE settings SET value = '0' WHERE key = 'totalPausedMs'").run();
+    db.prepare("UPDATE settings SET value = 'false' WHERE key = 'clockPaused'").run();
+    db.prepare("UPDATE settings SET value = '0' WHERE key = 'pauseStartedAt'").run();
+  });
+
+  tx();
+
+  return res.json({ success: true, message: `All teams have been reset to ${targetStatus} mode.` });
+});
+
+// GET /api/admin/answers - Master Answer Key & Dynamic Team Solutions Reference
+router.get('/answers', requireAdmin, (req, res) => {
+  const teams = db.prepare('SELECT id, name, coordinator FROM teams ORDER BY name ASC').all();
+
+  const teamSolutions = teams.map(t => {
+    const members = db.prepare('SELECT fullName FROM members WHERE teamId = ?').all(t.id);
+    const memberNames = members.map(m => m.fullName);
+
+    const memberShards = memberNames.map(name => ({
+      name,
+      shard: getMemberShard(t.name, name)
+    }));
+
+    const stage5Code = computeTeamCode(t.name, memberNames);
+    const stage6Key = computeFinalKey('NOVA', '7K2', 'ORBIT', '91X', stage5Code);
+
+    return {
+      teamId: t.id,
+      teamName: t.name,
+      coordinator: t.coordinator,
+      memberShards,
+      stage5Code,
+      stage6Key
+    };
+  });
+
+  return res.json({
+    staticAnswers: {
+      stage1: {
+        title: 'Stage 1: Media Analysis',
+        answer: 'NOVA',
+        decoy: 'ZETA9',
+        explanation: 'Web Audio API Morse code pattern (-. --- ...- .- = NOVA). Decoy text ZETA9 flashes on monitor at 2.2s.'
+      },
+      stage2: {
+        title: 'Stage 2: Decoding',
+        answer: '7K2',
+        accessPhrase: 'AURORA',
+        explanation: '3-layer cipher: Base64 decode -> Hex decode -> ROT13 unwrap reveals: "ACCESS PHRASE IS AURORA. FRAGMENT TWO IS 7K2. IGNORE ZETA9."'
+      },
+      stage3: {
+        title: 'Stage 3: Prompt the AI (WARDEN)',
+        answer: 'ORBIT',
+        decoy: 'ZETA9',
+        accessPhrase: 'AURORA',
+        explanation: 'Offline AI rule engine. Requires access phrase AURORA, role declaration (e.g., "I am the maintenance technician"), task keyword (fragment/code/release), and >=10 words.'
+      },
+      stage4: {
+        title: 'Stage 4: CTF Challenges',
+        answer: '91X',
+        explanation: 'Token 1 in HTML comment: <!-- token1 = 9 -->. Token 2 via terminal "cat vault-7f3a/note.txt" = 1. Token 3 via terminal "exif badge.jpg" = X. Combined: 9 + 1 + X = 91X.'
+      }
+    },
+    teamSolutions
+  });
+});
+
+// GET /api/admin/notepad & POST /api/admin/notepad - Organiser Scratchpad & Winners
+router.get('/notepad', requireAdmin, (req, res) => {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'winnersNotepad'").get();
+  return res.json({ notepad: row ? row.value : '' });
+});
+
+router.post('/notepad', requireAdmin, (req, res) => {
+  const { notepad } = req.body;
+  db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('winnersNotepad', ?)").run(notepad || '');
+  return res.json({ success: true });
+});
+
+// GET /api/admin/violations - Anti-cheat violations log
+router.get('/violations', requireAdmin, (req, res) => {
+  const rows = db.prepare(`
+    SELECT v.id, v.teamId, t.name as teamName, v.type, v.details, v.penaltyAdded, v.at
+    FROM violations v
+    JOIN teams t ON v.teamId = t.id
+    ORDER BY v.at DESC
+  `).all();
+  return res.json({ violations: rows });
+});
+
+// POST /api/admin/waive-penalty - Waive penalty minutes
+router.post('/waive-penalty', requireAdmin, (req, res) => {
+  const { teamId, minutes } = req.body;
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
+  if (!team) return res.status(404).json({ error: 'Team not found' });
+
+  const toRemove = parseInt(minutes, 10) || 0;
+  const newPenalty = Math.max(0, (team.penaltyMin || 0) - toRemove);
+  db.prepare('UPDATE teams SET penaltyMin = ? WHERE id = ?').run(newPenalty, teamId);
+
+  return res.json({ success: true, newPenalty });
+});
+
+// POST /api/admin/skip - Skip stage for team
 router.post('/skip', requireAdmin, (req, res) => {
   const { teamId } = req.body;
   const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
@@ -110,7 +350,7 @@ router.post('/reset-member-device', requireAdmin, (req, res) => {
   return res.json({ success: true });
 });
 
-// POST /api/admin/clock - Pause or resume clock
+// POST /api/admin/clock - Global clock control
 router.post('/clock', requireAdmin, (req, res) => {
   const { action } = req.body; // 'pause', 'resume', 'toggle', 'start', 'reset'
   const now = Date.now();
@@ -171,11 +411,14 @@ router.post('/clock', requireAdmin, (req, res) => {
   return res.json({ success: true, isPaused, eventStartedAt });
 });
 
-// POST /api/admin/settings - Update settings like allowNewTeams
+// POST /api/admin/settings - Update settings like allowNewTeams or startTogetherMode
 router.post('/settings', requireAdmin, (req, res) => {
-  const { allowNewTeams } = req.body;
+  const { allowNewTeams, startTogetherMode } = req.body;
   if (typeof allowNewTeams === 'boolean') {
     db.prepare('UPDATE settings SET value = ? WHERE key = ?').run(allowNewTeams ? 'true' : 'false', 'allowNewTeams');
+  }
+  if (typeof startTogetherMode === 'boolean') {
+    db.prepare('UPDATE settings SET value = ? WHERE key = ?').run(startTogetherMode ? 'true' : 'false', 'startTogetherMode');
   }
   return res.json({ success: true });
 });
@@ -204,7 +447,7 @@ router.get('/export', requireAdmin, (req, res) => {
   const teams = db.prepare('SELECT * FROM teams ORDER BY startedAt ASC').all();
 
   const rows = [
-    ['Team Name', 'Coordinator', 'Members', 'Stage', 'Status', 'Started At', 'Finished At', 'Total Time (mm:ss)', 'Penalty (min)', 'Hints Used', 'Wrong Attempts', 'Verification Code']
+    ['Team Name', 'Coordinator', 'Members', 'Stage', 'Status', 'Started At', 'Finished At', 'Total Time (mm:ss)', 'Penalty (min)', 'Tab Switches', 'Hints Used', 'Wrong Attempts', 'Verification Code']
   ];
 
   teams.forEach(t => {
@@ -229,11 +472,12 @@ router.get('/export', requireAdmin, (req, res) => {
       `"${t.coordinator.replace(/"/g, '""')}"`,
       `"${members.replace(/"/g, '""')}"`,
       t.finishedAt ? '6/6 (Done)' : `${t.stage}/6`,
-      t.finishedAt ? 'Completed' : 'In Progress',
+      t.finishedAt ? 'Completed' : (t.status === 'waiting' ? 'Waiting in Lobby' : (t.isPaused ? 'Paused' : 'In Progress')),
       new Date(t.startedAt).toISOString(),
       t.finishedAt ? new Date(t.finishedAt).toISOString() : 'N/A',
       `"${timeStr}"`,
       t.penaltyMin,
+      t.tabSwitches || 0,
       totalHints,
       totalWrong,
       `"${vCode}"`

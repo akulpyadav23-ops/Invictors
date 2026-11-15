@@ -28,7 +28,11 @@ function initSchema() {
       stage INTEGER DEFAULT 1,
       penaltyMin INTEGER DEFAULT 0,
       pausedMs INTEGER DEFAULT 0,
-      sessionToken TEXT UNIQUE
+      sessionToken TEXT UNIQUE,
+      status TEXT DEFAULT 'active',
+      isPaused INTEGER DEFAULT 0,
+      teamPauseStartedAt INTEGER DEFAULT 0,
+      tabSwitches INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS members (
@@ -70,11 +74,27 @@ function initSchema() {
       FOREIGN KEY (teamId) REFERENCES teams(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS violations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      teamId TEXT NOT NULL,
+      type TEXT NOT NULL,
+      details TEXT,
+      penaltyAdded INTEGER DEFAULT 0,
+      at INTEGER NOT NULL,
+      FOREIGN KEY (teamId) REFERENCES teams(id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT
     );
   `);
+
+  // Migrate existing tables if columns are missing
+  try { db.exec("ALTER TABLE teams ADD COLUMN status TEXT DEFAULT 'active'"); } catch {}
+  try { db.exec("ALTER TABLE teams ADD COLUMN isPaused INTEGER DEFAULT 0"); } catch {}
+  try { db.exec("ALTER TABLE teams ADD COLUMN teamPauseStartedAt INTEGER DEFAULT 0"); } catch {}
+  try { db.exec("ALTER TABLE teams ADD COLUMN tabSwitches INTEGER DEFAULT 0"); } catch {}
 
   // Ensure default settings exist
   const setStmt = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
@@ -83,6 +103,9 @@ function initSchema() {
   setStmt.run('allowNewTeams', 'false');
   setStmt.run('eventStartedAt', '0');
   setStmt.run('totalPausedMs', '0');
+  setStmt.run('startTogetherMode', 'true');
+  setStmt.run('gameStarted', 'false');
+  setStmt.run('winnersNotepad', '🏆 INVICTORS FINAL OVERRIDE — OFFICIAL WINNERS SCRATCHPAD\n=======================================================\n1st Place:\n2nd Place:\n3rd Place:\n\nSpecial Mentions:\nJudge Notes:\n');
 }
 
 initSchema();

@@ -16,7 +16,7 @@ function formatClock(seconds) {
 
 // GET /api/leaderboard - Live public status with event timer
 router.get('/', (req, res) => {
-  const teams = db.prepare('SELECT id, name, coordinator, startedAt, finishedAt, stage, penaltyMin, pausedMs FROM teams').all();
+  const teams = db.prepare('SELECT id, name, coordinator, startedAt, finishedAt, stage, penaltyMin, pausedMs, status, isPaused, tabSwitches FROM teams').all();
   const now = Date.now();
 
   const clockPausedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('clockPaused');
@@ -31,11 +31,14 @@ router.get('/', (req, res) => {
   const totalPausedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('totalPausedMs');
   let totalPausedMs = parseInt(totalPausedRow ? totalPausedRow.value : '0', 10) || 0;
 
-  // If eventStartedAt not explicitly set, use earliest team start time if available
+  // If eventStartedAt not explicitly set, use earliest active team start time if available
   if (eventStartedAt === 0 && teams.length > 0) {
-    const minStart = Math.min(...teams.map(t => t.startedAt));
-    if (minStart > 0 && minStart !== Infinity) {
-      eventStartedAt = minStart;
+    const activeTeams = teams.filter(t => t.status !== 'waiting');
+    if (activeTeams.length > 0) {
+      const minStart = Math.min(...activeTeams.map(t => t.startedAt));
+      if (minStart > 0 && minStart !== Infinity) {
+        eventStartedAt = minStart;
+      }
     }
   }
 
@@ -51,13 +54,15 @@ router.get('/', (req, res) => {
   }
 
   const processed = teams.map(t => {
-    const progress = db.prepare('SELECT stage, wrongAttempts, hintsUsed FROM progress WHERE teamId = ?').all(t.id);
+    const progress = db.prepare('SELECT stage, fragment, wrongAttempts, hintsUsed, solvedAt FROM progress WHERE teamId = ?').all(t.id);
     const totalWrong = progress.reduce((acc, p) => acc + (p.wrongAttempts || 0), 0);
     const totalHints = progress.reduce((acc, p) => acc + (p.hintsUsed || 0), 0);
 
     let effectiveElapsedMs = 0;
     if (t.finishedAt) {
       effectiveElapsedMs = t.finishedAt - t.startedAt - (t.pausedMs || 0);
+    } else if (t.status === 'waiting') {
+      effectiveElapsedMs = 0;
     } else {
       effectiveElapsedMs = (isClockPaused && pauseStartedAt > 0 ? pauseStartedAt : now) - t.startedAt - (t.pausedMs || 0);
     }
@@ -72,13 +77,16 @@ router.get('/', (req, res) => {
       id: t.id,
       name: t.name,
       coordinator: t.coordinator,
-      stageText: t.finishedAt ? '✅ Done' : `${t.stage}/6`,
-      stageNumber: t.finishedAt ? 7 : t.stage,
+      stageText: t.finishedAt ? '✅ Done' : (t.status === 'waiting' ? 'Lobby' : `${t.stage}/6`),
+      stageNumber: t.finishedAt ? 7 : (t.status === 'waiting' ? 0 : t.stage),
       isFinished: !!t.finishedAt,
+      isWaiting: t.status === 'waiting',
+      isIndividuallyPaused: t.isPaused === 1,
       totalSeconds,
       formattedTime,
       totalHints,
       totalWrong,
+      tabSwitches: t.tabSwitches || 0,
       penaltyMin: t.penaltyMin
     };
   });

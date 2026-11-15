@@ -929,6 +929,117 @@ label {
   font-weight: bold;
 }
 
+/* ==========================================================================
+   Waiting Lobby & Anti-Cheat Styles
+   ========================================================================== */
+.lobby-card {
+  text-align: center;
+  padding: 36px 20px;
+  background: radial-gradient(circle at 50% 30%, rgba(39, 180, 255, 0.12) 0%, rgba(8, 20, 44, 0.95) 70%);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 35px rgba(39, 180, 255, 0.25);
+  border-radius: var(--radius-lg);
+}
+
+.lobby-pulse-ring {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 4px solid var(--accent);
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  box-shadow: 0 0 20px rgba(39, 180, 255, 0.6);
+  animation: floatAndGlow 3s infinite ease-in-out;
+}
+
+.cheat-alert-banner {
+  background: rgba(255, 93, 108, 0.15);
+  border: 2px solid var(--bad);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  color: var(--txt);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: cardFadeSlide 0.3s ease-out;
+}
+
+.cheat-badge {
+  background: rgba(255, 93, 108, 0.2);
+  border: 1px solid var(--bad);
+  color: var(--bad);
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Event Control Portal Cards */
+.control-hero-bar {
+  background: rgba(3, 8, 19, 0.7);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin: 16px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.notepad-textarea {
+  width: 100%;
+  min-height: 180px;
+  background: #030813;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: #34d399;
+  font-family: ui-monospace, monospace;
+  font-size: 0.92rem;
+  padding: 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.notepad-textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 15px rgba(255, 184, 31, 0.3);
+}
+
+.answer-key-box {
+  background: rgba(3, 8, 19, 0.8);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.answer-key-box h4 {
+  color: var(--gold);
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+.solution-token {
+  font-family: ui-monospace, monospace;
+  background: rgba(255, 184, 31, 0.15);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
 /* Mobile adjustments (360px phone) */
 @media (max-width: 480px) {
   .site-header {

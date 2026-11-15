@@ -65,9 +65,17 @@ router.post('/teams', (req, res) => {
   const sessionToken = generateToken();
   const now = Date.now();
 
+  // Check start together mode setting
+  const startTogetherRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('startTogetherMode');
+  const gameStartedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('gameStarted');
+  const isStartTogether = startTogetherRow ? startTogetherRow.value === 'true' : false;
+  const isGameStarted = gameStartedRow ? gameStartedRow.value === 'true' : false;
+
+  const initialStatus = (isStartTogether && !isGameStarted) ? 'waiting' : 'active';
+
   const insertTeam = db.prepare(`
-    INSERT INTO teams (id, name, coordinator, startedAt, finishedAt, stage, penaltyMin, pausedMs, sessionToken)
-    VALUES (?, ?, ?, ?, NULL, 1, 0, 0, ?)
+    INSERT INTO teams (id, name, coordinator, startedAt, finishedAt, stage, penaltyMin, pausedMs, sessionToken, status, isPaused, teamPauseStartedAt, tabSwitches)
+    VALUES (?, ?, ?, ?, NULL, 1, 0, 0, ?, ?, 0, 0, 0)
   `);
 
   const insertMember = db.prepare(`
@@ -81,7 +89,7 @@ router.post('/teams', (req, res) => {
   `);
 
   const tx = db.transaction(() => {
-    insertTeam.run(teamId, rawTeamName, rawCoord, now, sessionToken);
+    insertTeam.run(teamId, rawTeamName, rawCoord, now, sessionToken, initialStatus);
 
     // Leader is member1
     insertMember.run(crypto.randomUUID(), teamId, rawMembers[0], 1, null);
@@ -109,19 +117,30 @@ router.post('/teams', (req, res) => {
       name: rawTeamName,
       coordinator: rawCoord,
       startedAt: now,
-      stage: 1
+      stage: 1,
+      status: initialStatus
     }
   });
 });
 
 // GET /api/state - Current game state
 router.get('/state', requireTeam, (req, res) => {
-  const team = req.team;
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(req.team.id);
+  if (!team) return res.status(401).json({ error: 'Team not found' });
   const currentStage = team.stage;
 
-  // Global pause status
+  // Global pause status & game started status
   const clockPausedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('clockPaused');
   const isClockPaused = clockPausedRow && clockPausedRow.value === 'true';
+
+  const gameStartedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('gameStarted');
+  const isGameStarted = gameStartedRow && gameStartedRow.value === 'true';
+
+  const isIndividuallyPaused = team.isPaused === 1;
+  const isPaused = isClockPaused || isIndividuallyPaused;
+
+  const waitingCountRow = db.prepare("SELECT COUNT(*) as c FROM teams WHERE status = 'waiting'").get();
+  const waitingCount = waitingCountRow ? waitingCountRow.c : 0;
 
   // Get solved fragments from progress
   const progressRows = db.prepare('SELECT stage, fragment, wrongAttempts, hintsUsed, solvedAt FROM progress WHERE teamId = ? ORDER BY stage ASC').all(team.id);
@@ -142,7 +161,6 @@ router.get('/state', requireTeam, (req, res) => {
   const members = db.prepare('SELECT id, fullName, isLeader, deviceToken FROM members WHERE teamId = ?').all(team.id);
   const totalMembers = members.length;
   // Distinct joined devices count:
-  // Leader counts as 1 device, plus each other member who has a non-null deviceToken
   const joinedMembers = members.filter(m => m.isLeader === 1 || m.deviceToken !== null);
   const joinedCount = joinedMembers.length;
 
@@ -151,8 +169,8 @@ router.get('/state', requireTeam, (req, res) => {
 
   // Build stage-specific payload (ISOLATION ENFORCED: future stage details are never returned)
   let stageContent = null;
-  if (team.finishedAt) {
-    // Finished
+  if (team.finishedAt || team.status === 'waiting') {
+    // Waiting or Finished
   } else if (currentStage === 1) {
     stageContent = {
       morsePattern: stageConfig.morsePattern
@@ -201,8 +219,15 @@ router.get('/state', requireTeam, (req, res) => {
       stage: team.stage,
       penaltyMin: team.penaltyMin,
       pausedMs: team.pausedMs,
-      isPaused: isClockPaused
+      status: team.status,
+      isPaused: isPaused,
+      isIndividuallyPaused,
+      isClockPaused,
+      tabSwitches: team.tabSwitches || 0
     },
+    gameStarted: isGameStarted,
+    waitingInLobby: team.status === 'waiting',
+    waitingCount,
     members: members.map(m => ({ fullName: m.fullName, isLeader: !!m.isLeader })),
     currentProg: {
       wrongAttempts: currentProg.wrongAttempts,
@@ -219,10 +244,20 @@ router.get('/state', requireTeam, (req, res) => {
 
 // POST /api/submit - Submit answer
 router.post('/submit', requireTeam, (req, res) => {
-  const team = req.team;
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(req.team.id);
 
   if (team.finishedAt) {
     return res.status(400).json({ error: 'Mission already completed.' });
+  }
+
+  if (team.status === 'waiting') {
+    return res.status(400).json({ error: 'The game has not started yet. Waiting for organiser to launch! 🚀' });
+  }
+
+  const clockPausedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('clockPaused');
+  const isClockPaused = clockPausedRow && clockPausedRow.value === 'true';
+  if (isClockPaused || team.isPaused === 1) {
+    return res.status(400).json({ error: 'Mission is currently paused by organisers. Submissions are temporarily on hold.' });
   }
 
   // Rate limit: 1 submission per second per team
@@ -365,10 +400,20 @@ router.post('/submit', requireTeam, (req, res) => {
 
 // POST /api/hint - Request a hint for current stage
 router.post('/hint', requireTeam, (req, res) => {
-  const team = req.team;
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(req.team.id);
 
   if (team.finishedAt) {
     return res.status(400).json({ error: 'Mission already completed.' });
+  }
+
+  if (team.status === 'waiting') {
+    return res.status(400).json({ error: 'The game has not started yet.' });
+  }
+
+  const clockPausedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('clockPaused');
+  const isClockPaused = clockPausedRow && clockPausedRow.value === 'true';
+  if (isClockPaused || team.isPaused === 1) {
+    return res.status(400).json({ error: 'Mission is paused by organisers.' });
   }
 
   const stage = team.stage;
@@ -398,6 +443,40 @@ router.post('/hint', requireTeam, (req, res) => {
     hintsUsed: newHintsUsed,
     hint: unlockedHint,
     penaltyMin: newPenalty
+  });
+});
+
+// POST /api/tab-penalty - Anti-cheat tab switch penalty
+router.post('/tab-penalty', requireTeam, (req, res) => {
+  const currentTeam = db.prepare('SELECT * FROM teams WHERE id = ?').get(req.team.id);
+  if (!currentTeam || currentTeam.finishedAt || currentTeam.status === 'waiting') {
+    return res.json({ success: false });
+  }
+
+  const now = Date.now();
+  const newSwitches = (currentTeam.tabSwitches || 0) + 1;
+  const penaltyToAdd = 2; // +2 min penalty per tab switch
+  const newTotalPenalty = (currentTeam.penaltyMin || 0) + penaltyToAdd;
+
+  db.prepare('UPDATE teams SET tabSwitches = ?, penaltyMin = ? WHERE id = ?').run(
+    newSwitches,
+    newTotalPenalty,
+    currentTeam.id
+  );
+
+  db.prepare('INSERT INTO violations (teamId, type, details, penaltyAdded, at) VALUES (?, ?, ?, ?, ?)').run(
+    currentTeam.id,
+    'tab_switch',
+    `Tab switched or left mission screen (violation #${newSwitches})`,
+    penaltyToAdd,
+    now
+  );
+
+  return res.json({
+    success: true,
+    tabSwitches: newSwitches,
+    penaltyAdded: penaltyToAdd,
+    totalPenaltyMin: newTotalPenalty
   });
 });
 

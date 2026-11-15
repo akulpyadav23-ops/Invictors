@@ -2,7 +2,87 @@
 
 let gameState = null;
 let liveTimerInterval = null;
+let lobbyPollInterval = null;
 let currentMorsePattern = null;
+let antiCheatInitDone = false;
+let lastBlurTime = 0;
+
+// Anti-cheat alert notification banner
+function showCheatAlert(msg) {
+  const existing = document.getElementById('cheat-alert-box');
+  if (existing) existing.remove();
+
+  const container = document.getElementById('app-main');
+  const alertEl = document.createElement('div');
+  alertEl.id = 'cheat-alert-box';
+  alertEl.className = 'cheat-alert-banner';
+  alertEl.innerHTML = `
+    <span style="font-size: 1.6rem;">🚨</span>
+    <div style="flex: 1;">
+      <div style="font-weight: bold; color: var(--bad); font-size: 1.05rem;">Anti-Cheat Violation Detected!</div>
+      <div style="font-size: 0.92rem; margin-top: 2px;">${escapeHtml(msg)}</div>
+    </div>
+    <button class="btn btn-sm btn-outline" style="border-color: var(--bad); color: var(--bad);" onclick="this.parentElement.remove()">Dismiss</button>
+  `;
+  if (container && container.firstChild) {
+    container.insertBefore(alertEl, container.firstChild);
+  } else if (container) {
+    container.appendChild(alertEl);
+  }
+}
+
+// Anti-cheat tab switch detection
+function initAntiCheat() {
+  if (antiCheatInitDone) return;
+  antiCheatInitDone = true;
+
+  async function handleTabLeave() {
+    if (!gameState || !gameState.team || gameState.team.finishedAt || gameState.waitingInLobby || getRoute() !== 'game') {
+      return;
+    }
+    lastBlurTime = Date.now();
+  }
+
+  async function handleTabReturn() {
+    if (!lastBlurTime) return;
+    const elapsed = Date.now() - lastBlurTime;
+    lastBlurTime = 0;
+
+    // Minimum 1500ms to avoid false triggers during modal/system popups
+    if (elapsed < 1500) return;
+    if (!gameState || !gameState.team || gameState.team.finishedAt || gameState.waitingInLobby || getRoute() !== 'game') {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/tab-penalty', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          showCheatAlert(`Tab shift or external window switch detected! +${data.penaltyAdded} min penalty applied (Violation #${data.tabSwitches}). Total penalty is now +${data.totalPenaltyMin}m.`);
+          const updatedState = await fetchState();
+          if (updatedState) {
+            gameState = updatedState;
+            updateStickyBar(updatedState);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to report tab switch:', err);
+    }
+  }
+
+  window.addEventListener('blur', handleTabLeave);
+  window.addEventListener('focus', handleTabReturn);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      handleTabLeave();
+    } else {
+      handleTabReturn();
+    }
+  });
+}
 
 // Routing helpers
 function getRoute() {
@@ -73,6 +153,8 @@ function formatDuration(totalSeconds) {
 
 // Initialize Application
 async function init() {
+  initAntiCheat();
+
   // Intercept nav links for smooth SPA navigation
   document.querySelectorAll('.portal-nav-link').forEach(link => {
     link.addEventListener('click', (e) => {
@@ -95,6 +177,10 @@ async function renderApp() {
     clearInterval(liveTimerInterval);
     liveTimerInterval = null;
   }
+  if (lobbyPollInterval) {
+    clearInterval(lobbyPollInterval);
+    lobbyPollInterval = null;
+  }
 
   if (route === 'portal') {
     stickyBar.style.display = 'none';
@@ -113,6 +199,9 @@ async function renderApp() {
     } else if (state.team.finishedAt) {
       stickyBar.style.display = 'none';
       renderResultScreen(main, state);
+    } else if (state.waitingInLobby || state.team.status === 'waiting') {
+      stickyBar.style.display = 'none';
+      renderWaitingLobby(main, state);
     } else {
       stickyBar.style.display = 'block';
       updateStickyBar(state);
@@ -120,6 +209,79 @@ async function renderApp() {
       startLiveTimer(state);
     }
   }
+}
+
+// ==========================================================================
+// Waiting Lobby (Start Together Mode)
+// ==========================================================================
+function renderWaitingLobby(container, state) {
+  if (lobbyPollInterval) clearInterval(lobbyPollInterval);
+
+  const team = state.team;
+  const members = state.members || [];
+  const memberListHtml = members.map(m => `
+    <li style="padding: 6px 0; border-bottom: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center;">
+      <span>${m.isLeader ? '👑' : '👤'} <strong>${escapeHtml(m.fullName)}</strong></span>
+      <span style="color: ${m.isLeader ? 'var(--gold)' : 'var(--muted)'}; font-size: 0.85rem;">${m.isLeader ? 'Squad Leader' : 'Operative'}</span>
+    </li>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="card lobby-card">
+      <div class="lobby-pulse-ring">⏳</div>
+      <h2 style="font-size: 1.8rem; color: var(--gold); margin-bottom: 6px;">
+        MISSION BRIEFING LOBBY
+      </h2>
+      <p style="font-size: 1rem; color: var(--muted); margin-bottom: 22px;">
+        Department of Computer Science & Engineering · Invictors Club
+      </p>
+
+      <div style="background: rgba(3, 8, 19, 0.75); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 18px 22px; max-width: 520px; margin: 0 auto 24px; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 10px;">
+          <div>
+            <span style="font-size: 0.78rem; color: var(--muted); text-transform: uppercase;">Team ID</span>
+            <div style="font-size: 1.3rem; font-weight: bold; color: var(--accent);">${escapeHtml(team.name)}</div>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 0.78rem; color: var(--muted); text-transform: uppercase;">Coordinator</span>
+            <div style="font-size: 1.1rem; font-weight: bold; color: var(--gold);">${escapeHtml(team.coordinator)}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 8px; font-weight: bold; font-size: 0.9rem; color: var(--txt);">Registered Operatives:</div>
+        <ul style="list-style: none; margin: 0; padding: 0;">
+          ${memberListHtml}
+        </ul>
+      </div>
+
+      <div style="display: inline-block; background: rgba(39, 180, 255, 0.12); border: 2px solid var(--accent); border-radius: var(--radius-md); padding: 16px 28px; margin-bottom: 14px;">
+        <div style="font-size: 1.15rem; font-weight: bold; color: var(--accent); animation: pulseText 1.5s infinite;">
+          📡 Stand by! Waiting for Event Organiser to launch the mission...
+        </div>
+        <p style="color: var(--muted); font-size: 0.88rem; margin: 6px 0 0;">
+          All teams will start together simultaneously. Keep this screen open; do not refresh.
+        </p>
+      </div>
+
+      <div style="font-size: 0.88rem; color: var(--muted); margin-top: 8px;">
+        Teams currently waiting in lobby: <strong style="color: var(--gold);">${state.waitingCount || 1}</strong>
+      </div>
+    </div>
+  `;
+
+  lobbyPollInterval = setInterval(async () => {
+    try {
+      const s = await fetchState();
+      if (s && s.team) {
+        if (!s.waitingInLobby && s.team.status !== 'waiting') {
+          clearInterval(lobbyPollInterval);
+          lobbyPollInterval = null;
+          showToast('🚀 Mission launched! Good luck, Agents!');
+          renderApp();
+        }
+      }
+    } catch {}
+  }, 2000);
 }
 
 // ==========================================================================
@@ -175,7 +337,26 @@ function startLiveTimer(initialState) {
   }
 
   update();
-  liveTimerInterval = setInterval(update, 1000);
+  let syncTicks = 0;
+  liveTimerInterval = setInterval(async () => {
+    update();
+    syncTicks++;
+    if (syncTicks % 4 === 0) {
+      try {
+        const s = await fetchState();
+        if (s && s.team) {
+          if (s.team.isPaused !== isPaused || s.team.stage !== initialState.team.stage || s.waitingInLobby) {
+            renderApp();
+          } else {
+            penalty = s.team.penaltyMin;
+            pausedMs = s.team.pausedMs || 0;
+            const penEl = document.getElementById('status-penalty');
+            if (penEl) penEl.textContent = `+${penalty}m`;
+          }
+        }
+      } catch {}
+    }
+  }, 1000);
 }
 
 // ==========================================================================
@@ -561,7 +742,18 @@ function renderStageScreen(container, state) {
     hintDisabled = true;
   }
 
+  const isPaused = team.isPaused;
+  const pauseBannerHtml = isPaused ? `
+    <div class="card" style="background: rgba(255, 184, 31, 0.12); border: 2px solid var(--gold); margin-bottom: 16px; text-align: center;">
+      <span style="font-size: 1.25rem; font-weight: bold; color: var(--gold);">⏸ MISSION PAUSED BY ORGANISER</span>
+      <p style="color: var(--muted); margin: 6px 0 0; font-size: 0.95rem;">
+        Your mission timer and submissions are currently paused. Please stand by for organiser instructions.
+      </p>
+    </div>
+  ` : '';
+
   container.innerHTML = `
+    ${pauseBannerHtml}
     ${renderNotebookHtml(state.notebook)}
 
     <div class="card">
@@ -574,8 +766,8 @@ function renderStageScreen(container, state) {
 
       <form id="stage-submit-form">
         <div class="answer-box">
-          <input type="text" id="stage-answer-input" class="input-control" placeholder="${placeholderText}" autocomplete="off" autofocus />
-          <button type="submit" id="btn-submit-answer" class="btn btn-primary">Submit</button>
+          <input type="text" id="stage-answer-input" class="input-control" placeholder="${isPaused ? 'Submissions paused by organiser...' : placeholderText}" ${isPaused ? 'disabled' : ''} autocomplete="off" autofocus />
+          <button type="submit" id="btn-submit-answer" class="btn btn-primary" ${isPaused ? 'disabled' : ''}>Submit</button>
         </div>
         <div id="submit-feedback" class="feedback-line"></div>
       </form>
@@ -583,7 +775,7 @@ function renderStageScreen(container, state) {
       <div class="hint-section">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <span style="font-size: 0.9rem; color: var(--muted);">Need a clue? Hints add penalty minutes.</span>
-          <button id="btn-request-hint" class="btn btn-gold btn-sm" ${hintDisabled ? 'disabled' : ''}>
+          <button id="btn-request-hint" class="btn btn-gold btn-sm" ${(hintDisabled || isPaused) ? 'disabled' : ''}>
             ${hintBtnText}
           </button>
         </div>
@@ -889,9 +1081,9 @@ function renderMergedPortal(container) {
     container.innerHTML = `
       <div class="card" style="max-width: 540px; margin: 30px auto;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="font-size: 1.6rem; color: var(--gold);">⚡ Organiser & Coordinator Portal</h2>
+          <h2 style="font-size: 1.6rem; color: var(--gold);">⚡ Event Control Portal — Invictors</h2>
           <p style="color: var(--muted); font-size: 0.92rem; margin-top: 4px;">
-            Invictors Club · VVCE Computer Science & Engineering
+            Invictors Club · Dept. of Computer Science & Engineering, VVCE Mysuru
           </p>
         </div>
 
@@ -1109,16 +1301,18 @@ function renderMergedPortal(container) {
     return;
   }
 
-  // 3. Logged In as Master Admin (Full Organiser & Coordinator Super-View)
+  // 3. Logged In as Master Admin (Full Organiser & Anti-Cheat Super-View)
+  let answersVisible = false;
+
   container.innerHTML = `
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 14px;">
         <div>
-          <h2 style="font-size: 1.45rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
-            ⚡ Organiser & Coordinator Command Center
+          <h2 style="font-size: 1.5rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+            ⚡ Event Control Portal — Invictors
           </h2>
           <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">
-            Master view across all event coordinators and active teams.
+            Dept. of Computer Science & Engineering · VVCE Mysuru · Master Operations & Anti-Cheat Control
           </p>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -1129,8 +1323,33 @@ function renderMergedPortal(container) {
         </div>
       </div>
 
+      <!-- Hero Control Bar (Start Together, Launch All, Global Restart) -->
+      <div class="control-hero-bar">
+        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+          <div>
+            <span style="font-size: 0.75rem; color: var(--muted); text-transform: uppercase; font-weight: bold;">Mission Status</span>
+            <div id="admin-mission-status" style="font-size: 1.15rem; font-weight: bold; color: var(--gold);">
+              Checking...
+            </div>
+          </div>
+          <div style="height: 28px; width: 1px; background: var(--line);"></div>
+          <div>
+            <span style="font-size: 0.75rem; color: var(--muted); text-transform: uppercase; font-weight: bold;">Lobby Queue</span>
+            <div id="admin-waiting-count" style="font-size: 1.15rem; font-weight: bold; color: var(--accent);">
+              0 Waiting
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <button id="btn-admin-launch-all" class="btn btn-primary btn-sm" style="font-weight: bold;">🚀 Launch Game for All</button>
+          <button id="btn-admin-restart-all" class="btn btn-danger btn-sm" title="Reset all teams to lobby">🔄 Restart All to Lobby</button>
+          <button id="btn-admin-mode-toggle" class="btn btn-outline btn-sm">Start Together: ON</button>
+        </div>
+      </div>
+
       <!-- Coordinator Filter Tabs / Pills -->
-      <div class="coord-filter-bar">
+      <div class="coord-filter-bar" style="margin-top: 14px;">
         <span style="font-size: 0.85rem; font-weight: bold; color: var(--muted); text-transform: uppercase;">Filter by Coordinator:</span>
         <div id="coord-pills-container" style="display: flex; gap: 6px; flex-wrap: wrap;">
           <button class="coord-filter-pill active" data-coord="ALL">All Coordinators</button>
@@ -1142,8 +1361,96 @@ function renderMergedPortal(container) {
         <p style="color: var(--muted); padding: 14px;">Loading all teams...</p>
       </div>
 
+      <!-- Master Answer Key & Solutions Reference Section -->
+      <div style="margin-top: 32px; border-top: 1px solid var(--line); padding-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 style="font-size: 1.25rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+              🔑 Master Answer Key & Solutions Reference
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">
+              Confidential solutions guide. Includes static stages and dynamic per-team member shards & final keys.
+            </p>
+          </div>
+          <button id="btn-toggle-answers" class="btn btn-outline btn-sm">👁️ Show Answer Key</button>
+        </div>
+
+        <div id="admin-answers-panel" style="display: none;">
+          <!-- Static Stages 1 to 4 -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-bottom: 16px;">
+            <div class="answer-key-box">
+              <h4>🎧 Stage 1: Audio Morse</h4>
+              <div>Key: <span class="solution-token">NOVA</span></div>
+              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Pattern: -. --- ...- .-<br/>Decoy: <span style="color:var(--bad);">ZETA9</span> (visual flash)</div>
+            </div>
+            <div class="answer-key-box">
+              <h4>🔓 Stage 2: 3-Layer Cipher</h4>
+              <div>Key: <span class="solution-token">7K2</span></div>
+              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Base64 ➔ Hex ➔ ROT13<br/>Passphrase: <span style="color:var(--ok);">AURORA</span></div>
+            </div>
+            <div class="answer-key-box">
+              <h4>🤖 Stage 3: WARDEN AI</h4>
+              <div>Key: <span class="solution-token">ORBIT</span></div>
+              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">AURORA + Role (technician) + Task<br/>Decoy: <span style="color:var(--bad);">ZETA9</span></div>
+            </div>
+            <div class="answer-key-box">
+              <h4>🚩 Stage 4: CTF Challenges</h4>
+              <div>Key: <span class="solution-token">91X</span></div>
+              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Comment: 9 | note.txt: 1 | exif: X</div>
+            </div>
+          </div>
+
+          <!-- Dynamic Team Solutions Table -->
+          <h4 style="color: var(--accent); font-size: 1rem; margin-bottom: 8px;">🤝 Dynamic Stage 5 & 6 Team Solutions:</h4>
+          <div id="dynamic-answers-table" class="data-table-container">
+            <p style="color: var(--muted); padding: 10px;">Loading dynamic solutions...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Winners Scratchpad & Notes Section -->
+      <div style="margin-top: 32px; border-top: 1px solid var(--line); padding-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 style="font-size: 1.25rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+              🏆 Organiser Scratchpad & Winners Notepad
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">
+              Live persistent scratchpad for recording winning teams, announcements, and notes.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button id="btn-notepad-insert-top3" class="btn btn-gold btn-sm">📋 Insert Top 3 from Leaderboard</button>
+            <button id="btn-notepad-save" class="btn btn-primary btn-sm">💾 Save Notes</button>
+            <button id="btn-notepad-copy" class="btn btn-outline btn-sm">📋 Copy</button>
+          </div>
+        </div>
+        <textarea id="admin-winners-notepad" class="notepad-textarea" placeholder="Type event notes, prize allocations, or winner list here..."></textarea>
+        <div id="admin-notepad-status" style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Auto-saved to database.</div>
+      </div>
+
+      <!-- Anti-Cheat Violations Monitor -->
+      <div style="margin-top: 32px; border-top: 1px solid var(--line); padding-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 style="font-size: 1.2rem; color: var(--bad); display: flex; align-items: center; gap: 8px;">
+              🚨 Anti-Cheat Violations Activity Log
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">
+              Monitors tab switching, window blurs, and external tool detections. (+2 min added per offense).
+            </p>
+          </div>
+          <button id="btn-refresh-violations" class="btn btn-outline btn-sm">🔄 Refresh Violations</button>
+        </div>
+        <div id="admin-violations-container" class="data-table-container">
+          <p style="color: var(--muted); padding: 12px;">Loading violations...</p>
+        </div>
+      </div>
+
       <!-- WARDEN Logs Section -->
-      <h3 style="margin-top: 30px; font-size: 1.15rem; color: var(--accent);">WARDEN AI Chat Logs</h3>
+      <h3 style="margin-top: 32px; font-size: 1.15rem; color: var(--accent); border-top: 1px solid var(--line); padding-top: 20px;">
+        💬 WARDEN AI Chat Logs
+      </h3>
       <div id="admin-warden-logs" style="max-height: 250px; overflow-y: auto; background: #030813; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; margin-top: 10px; font-family: ui-monospace, monospace; font-size: 0.85rem;">
         Loading logs...
       </div>
@@ -1155,6 +1462,203 @@ function renderMergedPortal(container) {
     sessionStorage.removeItem('fo_coord_name');
     renderMergedPortal(container);
   };
+
+  // Toggle Answers Accordion
+  const toggleAnswersBtn = document.getElementById('btn-toggle-answers');
+  const answersPanel = document.getElementById('admin-answers-panel');
+  toggleAnswersBtn.onclick = () => {
+    answersVisible = !answersVisible;
+    answersPanel.style.display = answersVisible ? 'block' : 'none';
+    toggleAnswersBtn.textContent = answersVisible ? '🙈 Hide Answer Key' : '👁️ Show Answer Key';
+    if (answersVisible) loadDynamicAnswers();
+  };
+
+  async function loadDynamicAnswers() {
+    try {
+      const res = await fetch('/api/admin/answers', {
+        headers: { 'x-admin-pin': adminPin }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const solutions = data.teamSolutions || [];
+      const containerEl = document.getElementById('dynamic-answers-table');
+      if (!containerEl) return;
+
+      if (solutions.length === 0) {
+        containerEl.innerHTML = '<p style="padding: 12px; color: var(--muted);">No teams registered yet.</p>';
+        return;
+      }
+
+      let rows = solutions.map(t => {
+        const shardsStr = t.memberShards.map(m => `<strong>${escapeHtml(m.name)}:</strong> <span class="solution-token">${escapeHtml(m.shard)}</span>`).join(' &nbsp;|&nbsp; ');
+        return `
+          <tr>
+            <td><strong>${escapeHtml(t.teamName)}</strong></td>
+            <td><span style="color: var(--accent);">${escapeHtml(t.coordinator)}</span></td>
+            <td style="font-size: 0.88rem;">${shardsStr}</td>
+            <td><span class="solution-token">${escapeHtml(t.stage5Code)}</span></td>
+            <td><span class="solution-token" style="color: #34d399; border-color: #34d399;">${escapeHtml(t.stage6Key)}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      containerEl.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>Coordinator</th>
+              <th>Stage 5 Member Shards</th>
+              <th>Stage 5 Team Code</th>
+              <th>Stage 6 Final Key</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    } catch (err) {
+      console.error('Failed to load dynamic answers:', err);
+    }
+  }
+
+  // Notepad Save and Actions
+  const notepadEl = document.getElementById('admin-winners-notepad');
+  const notepadStatusEl = document.getElementById('admin-notepad-status');
+  let notepadSaveTimeout = null;
+
+  async function saveNotepadContent() {
+    const text = notepadEl.value;
+    notepadStatusEl.textContent = 'Saving...';
+    try {
+      await fetch('/api/admin/notepad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+        body: JSON.stringify({ notepad: text })
+      });
+      notepadStatusEl.textContent = `Saved at ${new Date().toLocaleTimeString()}`;
+    } catch {
+      notepadStatusEl.textContent = 'Failed to save.';
+    }
+  }
+
+  notepadEl.addEventListener('input', () => {
+    if (notepadSaveTimeout) clearTimeout(notepadSaveTimeout);
+    notepadSaveTimeout = setTimeout(saveNotepadContent, 1200);
+  });
+
+  document.getElementById('btn-notepad-save').onclick = () => {
+    saveNotepadContent();
+    showToast('Notepad saved!');
+  };
+
+  document.getElementById('btn-notepad-copy').onclick = () => {
+    navigator.clipboard.writeText(notepadEl.value);
+    showToast('Notepad copied to clipboard!');
+  };
+
+  document.getElementById('btn-notepad-insert-top3').onclick = async () => {
+    try {
+      const res = await fetch('/api/leaderboard');
+      if (!res.ok) return;
+      const lb = await res.json();
+      const finishedTeams = (lb.teams || []).filter(t => t.isFinished);
+      if (finishedTeams.length === 0) {
+        showToast('No teams have finished the mission yet.');
+        return;
+      }
+      const top3 = finishedTeams.slice(0, 3);
+      let snippet = `\n--- 🏆 TOP ${top3.length} TEAMS (Generated: ${new Date().toLocaleTimeString()}) ---\n`;
+      top3.forEach((t, idx) => {
+        const medal = idx === 0 ? '🥇 1st' : (idx === 1 ? '🥈 2nd' : '🥉 3rd');
+        snippet += `${medal} Place: Team "${t.name}" (Coordinator: ${t.coordinator})\n`;
+        snippet += `   Time: ${t.formattedTime} (+${t.penaltyMin}m penalties) | Verification: ${t.verificationCode || 'VERIFIED'}\n`;
+      });
+      snippet += `----------------------------------------------------------\n`;
+      notepadEl.value += snippet;
+      saveNotepadContent();
+      showToast('Top teams inserted into notepad!');
+    } catch {
+      showToast('Error fetching leaderboard.');
+    }
+  };
+
+  // Load and Refresh Anti-Cheat Violations
+  async function loadViolations() {
+    const containerEl = document.getElementById('admin-violations-container');
+    if (!containerEl) return;
+    try {
+      const res = await fetch('/api/admin/violations', {
+        headers: { 'x-admin-pin': adminPin }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const violations = data.violations || [];
+      if (violations.length === 0) {
+        containerEl.innerHTML = '<p style="padding: 12px; color: var(--ok); text-align: center;">✅ No anti-cheat violations recorded. Clean play so far!</p>';
+        return;
+      }
+
+      let rows = violations.map(v => {
+        const timeStr = new Date(v.at).toLocaleTimeString();
+        return `
+          <tr>
+            <td><strong>${escapeHtml(v.teamName)}</strong></td>
+            <td><span class="cheat-badge">${escapeHtml(v.type)}</span></td>
+            <td style="font-size: 0.88rem;">${escapeHtml(v.details || '')}</td>
+            <td style="color: var(--bad); font-weight: bold;">+${v.penaltyAdded}m</td>
+            <td style="font-family: monospace; color: var(--muted);">${timeStr}</td>
+            <td>
+              <button class="btn btn-outline btn-sm btn-waive-penalty" data-id="${v.id}" data-team="${v.teamId}" data-penalty="${v.penaltyAdded}" title="Waive penalty">Waive</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      containerEl.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>Violation</th>
+              <th>Details</th>
+              <th>Penalty</th>
+              <th>Timestamp</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+
+      containerEl.querySelectorAll('.btn-waive-penalty').forEach(btn => {
+        btn.onclick = async () => {
+          if (confirm('Waive this penalty and deduct the penalty minutes from the team?')) {
+            await fetch('/api/admin/waive-penalty', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+              body: JSON.stringify({
+                violationId: btn.dataset.id,
+                teamId: btn.dataset.team,
+                penaltyToWaive: Number(btn.dataset.penalty)
+              })
+            });
+            showToast('Penalty waived.');
+            loadMasterData();
+          }
+        };
+      });
+    } catch (err) {
+      console.error('Failed to load violations:', err);
+    }
+  }
+
+  document.getElementById('btn-refresh-violations').onclick = loadViolations;
+
+  let notepadLoaded = false;
 
   async function loadMasterData() {
     try {
@@ -1168,6 +1672,85 @@ function renderMergedPortal(container) {
       }
       const data = await res.json();
       const allTeams = data.teams || [];
+
+      // Initial populate notepad once
+      if (!notepadLoaded && data.notepad !== undefined) {
+        notepadEl.value = data.notepad;
+        notepadLoaded = true;
+      }
+
+      // Update Hero Status
+      const statusEl = document.getElementById('admin-mission-status');
+      const waitingCountEl = document.getElementById('admin-waiting-count');
+      const waitingTeams = allTeams.filter(t => t.status === 'waiting');
+      if (waitingCountEl) waitingCountEl.textContent = `${waitingTeams.length} Waiting in Lobby`;
+
+      if (statusEl) {
+        if (!data.isGameStarted) {
+          statusEl.innerHTML = '<span style="color: var(--gold);">⏳ LOBBY ACTIVE (Pending Launch)</span>';
+        } else if (data.isClockPaused) {
+          statusEl.innerHTML = '<span style="color: var(--gold);">⏸ GLOBAL CLOCK PAUSED</span>';
+        } else {
+          statusEl.innerHTML = '<span style="color: var(--ok);">🟢 MISSION IS LIVE</span>';
+        }
+      }
+
+      // Launch All Button
+      const launchBtn = document.getElementById('btn-admin-launch-all');
+      if (launchBtn) {
+        if (!data.isGameStarted || waitingTeams.length > 0) {
+          launchBtn.textContent = `🚀 Launch Mission (${waitingTeams.length} Teams Waiting)`;
+          launchBtn.className = 'btn btn-primary btn-sm';
+          launchBtn.disabled = false;
+        } else {
+          launchBtn.textContent = '✅ All Waiting Teams Launched';
+          launchBtn.className = 'btn btn-outline btn-sm';
+          launchBtn.disabled = true;
+        }
+        launchBtn.onclick = async () => {
+          if (confirm('Launch the game now for all waiting teams? Their timers will start simultaneously.')) {
+            const r = await fetch('/api/admin/start-all', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin }
+            });
+            const d = await r.json();
+            showToast(`Launched! ${d.activatedTeamsCount || 0} teams activated.`);
+            loadMasterData();
+          }
+        };
+      }
+
+      // Restart All Button
+      const restartAllBtn = document.getElementById('btn-admin-restart-all');
+      if (restartAllBtn) {
+        restartAllBtn.onclick = async () => {
+          const mode = prompt('Type "lobby" to restart all teams to Waiting Lobby, or "active" to restart all immediately to Stage 1:');
+          if (mode === 'lobby' || mode === 'active') {
+            await fetch('/api/admin/restart-all', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+              body: JSON.stringify({ mode })
+            });
+            showToast(`All teams restarted to ${mode} mode.`);
+            loadMasterData();
+          }
+        };
+      }
+
+      // Mode Toggle Button
+      const modeBtn = document.getElementById('btn-admin-mode-toggle');
+      if (modeBtn) {
+        modeBtn.textContent = data.startTogetherMode ? 'Mode: Start Together (ON)' : 'Mode: Free Start (OFF)';
+        modeBtn.className = data.startTogetherMode ? 'btn btn-gold btn-sm' : 'btn btn-outline btn-sm';
+        modeBtn.onclick = async () => {
+          await fetch('/api/admin/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+            body: JSON.stringify({ startTogetherMode: !data.startTogetherMode })
+          });
+          loadMasterData();
+        };
+      }
 
       // Update Global Clock button
       const clockBtn = document.getElementById('btn-admin-clock');
@@ -1234,24 +1817,47 @@ function renderMergedPortal(container) {
         if (filteredTeams.length === 0) {
           tableEl.innerHTML = '<p style="padding: 20px; color: var(--muted); text-align: center;">No teams match the selected filter.</p>';
         } else {
-          let rows = filteredTeams.map(t => `
-            <tr>
-              <td><strong>${escapeHtml(t.name)}</strong></td>
-              <td><span style="color: var(--accent); font-weight: 600;">${escapeHtml(t.coordinator)}</span></td>
-              <td><span style="color: ${t.isFinished ? 'var(--ok)' : 'var(--accent)'}; font-weight: bold;">${t.isFinished ? '✅ Done' : t.stage + '/6'}</span></td>
-              <td style="font-family: monospace;">${t.formattedTime}</td>
-              <td>+${t.penaltyMin}m</td>
-              <td>${t.totalHints}</td>
-              <td>${t.totalWrong}</td>
-              <td>
-                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                  <button class="btn btn-outline btn-sm btn-action-skip" data-id="${t.id}" title="Skip current stage">⏭ Skip</button>
-                  <button class="btn btn-outline btn-sm btn-action-devices" data-id="${t.id}" title="Reset bound member devices">🔄 Devices</button>
-                  <button class="btn btn-danger btn-sm btn-action-del" data-id="${t.id}" title="Delete team">🗑 Delete</button>
-                </div>
-              </td>
-            </tr>
-          `).join('');
+          let rows = filteredTeams.map(t => {
+            let statusBadge = '';
+            if (t.isFinished) {
+              statusBadge = '<span style="color: var(--ok); font-weight: bold;">✅ Done</span>';
+            } else if (t.status === 'waiting') {
+              statusBadge = '<span style="color: var(--gold); font-weight: bold;">⏳ Lobby</span>';
+            } else if (t.isIndividuallyPaused) {
+              statusBadge = '<span style="color: var(--bad); font-weight: bold;">⏸ Paused</span>';
+            } else {
+              statusBadge = '<span style="color: var(--accent); font-weight: bold;">▶ Active</span>';
+            }
+
+            const cheatBadge = (t.tabSwitches && t.tabSwitches > 0)
+              ? `<span class="cheat-badge" title="${t.tabSwitches} anti-cheat violation(s)">🚨 ${t.tabSwitches}</span>`
+              : '<span style="color: var(--muted); font-size: 0.8rem;">0</span>';
+
+            const pauseBtnHtml = t.isIndividuallyPaused
+              ? `<button class="btn btn-gold btn-sm btn-team-resume" data-id="${t.id}" title="Resume this team">▶ Resume</button>`
+              : `<button class="btn btn-outline btn-sm btn-team-pause" data-id="${t.id}" title="Pause this team">⏸ Pause</button>`;
+
+            return `
+              <tr>
+                <td><strong>${escapeHtml(t.name)}</strong></td>
+                <td><span style="color: var(--accent); font-weight: 600;">${escapeHtml(t.coordinator)}</span></td>
+                <td>${statusBadge}</td>
+                <td><span style="color: ${t.isFinished ? 'var(--ok)' : 'var(--txt)'}; font-weight: bold;">${t.isFinished ? '✅ Done' : t.stage + '/6'}</span></td>
+                <td style="font-family: monospace; font-size: 1rem; color: var(--gold);">${t.formattedTime}</td>
+                <td>+${t.penaltyMin}m</td>
+                <td style="text-align: center;">${cheatBadge}</td>
+                <td>
+                  <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    ${pauseBtnHtml}
+                    <button class="btn btn-outline btn-sm btn-team-restart" data-id="${t.id}" data-name="${escapeHtml(t.name)}" title="Restart this team back to Stage 1">🔄 Restart</button>
+                    <button class="btn btn-outline btn-sm btn-action-skip" data-id="${t.id}" title="Skip current stage">⏭ Skip</button>
+                    <button class="btn btn-outline btn-sm btn-action-devices" data-id="${t.id}" title="Reset bound member devices">🔄 Devices</button>
+                    <button class="btn btn-danger btn-sm btn-action-del" data-id="${t.id}" title="Delete team">🗑</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('');
 
           tableEl.innerHTML = `
             <table class="data-table">
@@ -1259,11 +1865,11 @@ function renderMergedPortal(container) {
                 <tr>
                   <th>Team</th>
                   <th>Coordinator</th>
+                  <th>Status</th>
                   <th>Stage</th>
                   <th>Total Time</th>
                   <th>Penalty</th>
-                  <th>Hints</th>
-                  <th>Wrong</th>
+                  <th>Tab Violations</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -1273,8 +1879,46 @@ function renderMergedPortal(container) {
             </table>
           `;
 
-          // Attach Action Listeners
-          document.querySelectorAll('.btn-action-skip').forEach(b => {
+          // Team Pause / Resume Listeners
+          tableEl.querySelectorAll('.btn-team-pause').forEach(b => {
+            b.onclick = async () => {
+              await fetch('/api/admin/team-pause', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+                body: JSON.stringify({ teamId: b.dataset.id, action: 'pause' })
+              });
+              loadMasterData();
+            };
+          });
+
+          tableEl.querySelectorAll('.btn-team-resume').forEach(b => {
+            b.onclick = async () => {
+              await fetch('/api/admin/team-pause', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+                body: JSON.stringify({ teamId: b.dataset.id, action: 'resume' })
+              });
+              loadMasterData();
+            };
+          });
+
+          // Individual Team Restart Listener
+          tableEl.querySelectorAll('.btn-team-restart').forEach(b => {
+            b.onclick = async () => {
+              if (confirm(`Restart team "${b.dataset.name}" back to Stage 1? Their progress, chat, and penalties will be reset.`)) {
+                await fetch('/api/admin/team-restart', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+                  body: JSON.stringify({ teamId: b.dataset.id })
+                });
+                showToast(`Team ${b.dataset.name} restarted at Stage 1.`);
+                loadMasterData();
+              }
+            };
+          });
+
+          // Attach Stage Skip
+          tableEl.querySelectorAll('.btn-action-skip').forEach(b => {
             b.onclick = async () => {
               if (confirm('Skip current stage for this team?')) {
                 await fetch('/api/admin/skip', {
@@ -1287,7 +1931,8 @@ function renderMergedPortal(container) {
             };
           });
 
-          document.querySelectorAll('.btn-action-devices').forEach(b => {
+          // Attach Reset Devices
+          tableEl.querySelectorAll('.btn-action-devices').forEach(b => {
             b.onclick = async () => {
               const targetTeam = allTeams.find(t => t.id === b.dataset.id);
               if (targetTeam && targetTeam.members) {
@@ -1304,7 +1949,8 @@ function renderMergedPortal(container) {
             };
           });
 
-          document.querySelectorAll('.btn-action-del').forEach(b => {
+          // Attach Delete Team
+          tableEl.querySelectorAll('.btn-action-del').forEach(b => {
             b.onclick = async () => {
               if (confirm('Permanently delete this team?')) {
                 await fetch('/api/admin/reset-team', {
@@ -1338,6 +1984,10 @@ function renderMergedPortal(container) {
           }
         }
       }
+
+      // Violations
+      loadViolations();
+
     } catch (err) {
       console.error('Admin poll error:', err);
     }

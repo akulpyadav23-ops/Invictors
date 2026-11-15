@@ -11,7 +11,7 @@ router.get('/', (req, res) => {
   }
 
   const allTeams = db.prepare(`
-    SELECT id, name, coordinator, startedAt, finishedAt, stage, penaltyMin, pausedMs
+    SELECT id, name, coordinator, startedAt, finishedAt, stage, penaltyMin, pausedMs, status, isPaused, tabSwitches
     FROM teams
   `).all();
 
@@ -32,6 +32,8 @@ router.get('/', (req, res) => {
     let effectiveElapsedMs = 0;
     if (t.finishedAt) {
       effectiveElapsedMs = t.finishedAt - t.startedAt - (t.pausedMs || 0);
+    } else if (t.status === 'waiting') {
+      effectiveElapsedMs = 0;
     } else {
       effectiveElapsedMs = now - t.startedAt - (t.pausedMs || 0);
     }
@@ -45,7 +47,9 @@ router.get('/', (req, res) => {
     let status = 'In Progress';
     if (t.finishedAt) {
       status = '✅ Done';
-    } else if (isClockPaused) {
+    } else if (t.status === 'waiting') {
+      status = '⏳ Waiting in Lobby';
+    } else if (isClockPaused || t.isPaused === 1) {
       status = '⏸️ Paused';
     }
 
@@ -54,13 +58,14 @@ router.get('/', (req, res) => {
       name: t.name,
       coordinator: t.coordinator,
       players: members.map(m => m.fullName),
-      stageText: t.finishedAt ? '✅ Done' : `${t.stage}/6`,
-      stageNumber: t.finishedAt ? 7 : t.stage,
+      stageText: t.finishedAt ? '✅ Done' : (t.status === 'waiting' ? 'Lobby' : `${t.stage}/6`),
+      stageNumber: t.finishedAt ? 7 : (t.status === 'waiting' ? 0 : t.stage),
       formattedTime,
       totalSeconds,
       penaltyMin: t.penaltyMin,
       totalHints,
       totalWrong,
+      tabSwitches: t.tabSwitches || 0,
       status
     };
   });
