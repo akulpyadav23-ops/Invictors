@@ -1,6 +1,5 @@
 require('dotenv').config();
 const crypto = require('crypto');
-const ws = require('ws');
 let sqliteDb = null;
 try {
   sqliteDb = require('./db');
@@ -14,10 +13,12 @@ let supabase = null;
 if (isSupabaseConfigured) {
   try {
     const { createClient } = require('@supabase/supabase-js');
-    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-      auth: { persistSession: false },
-      realtime: { transport: ws }
-    });
+    // Use ws transport only when available (not needed on serverless/Vercel)
+    let wsTransport;
+    try { wsTransport = require('ws'); } catch (_) {}
+    const supabaseOpts = { auth: { persistSession: false } };
+    if (wsTransport) supabaseOpts.realtime = { transport: wsTransport };
+    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, supabaseOpts);
     console.log('⚡ Connected to Supabase Cloud Database:', process.env.SUPABASE_URL);
   } catch (err) {
     console.error('Failed to initialize Supabase client:', err);
