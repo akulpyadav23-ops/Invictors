@@ -689,16 +689,19 @@ function renderStageScreen(container, state) {
   if (stage === 1) {
     specificHtml = `
       <!-- Story Briefing -->
-      <div style="background: rgba(3, 8, 22, 0.9); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); padding: 14px 18px; margin-bottom: 18px;">
-        <div style="font-weight: 800; font-family: var(--font-display); font-size: 1.05rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
-          <span>📡 INCOMING TRANSMISSION: VAULT DE-SCRAMBLER MATRIX</span>
+      <div style="background: rgba(3, 8, 22, 0.9); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 18px;">
+        <div style="font-weight: 800; font-family: var(--font-display); font-size: 1.1rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+          <span>📡 MISSION 1: DECODE THE 4-LETTER VAULT CODE</span>
         </div>
-        <p style="margin: 8px 0 4px; font-size: 0.92rem; color: var(--txt); line-height: 1.5;">
-          The vault's audio transmitter was severed, but our directional receiver intercepted <strong>4 scrambled signal sectors</strong>. Each sector encodes exactly <strong>one letter</strong> of the 4-letter vault override code.
+        <p style="margin: 8px 0 6px; font-size: 0.94rem; color: var(--txt); line-height: 1.5;">
+          The vault door is locked with a secret <strong>4-letter password</strong>. Our radio antenna intercepted 4 signals (Sector 1, 2, 3, and 4). <strong>Each sector gives you exactly 1 letter</strong> in Morse code.
         </p>
-        <p style="margin: 0; font-size: 0.85rem; color: var(--muted);">
-          ⚡ <em>Analyze the oscilloscope pulse widths, binary carrier streams, and optical strobes below to crack the 4 letters.</em>
-        </p>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 0.85rem; color: var(--accent); font-family: var(--font-mono);">
+          <span>1️⃣ Sector 1 = Letter 1</span>
+          <span>2️⃣ Sector 2 = Letter 2</span>
+          <span>3️⃣ Sector 3 = Letter 3</span>
+          <span>4️⃣ Sector 4 = Letter 4</span>
+        </div>
       </div>
 
       <!-- 4 Puzzle Sectors Grid -->
@@ -707,115 +710,114 @@ function renderStageScreen(container, state) {
         <!-- Sector 01: Waveform Pulse Duration -->
         <div class="sector-card" style="background: #030814; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px;">
-            <span style="font-weight: bold; font-family: var(--font-mono); color: var(--accent); font-size: 0.88rem;">SECTOR 01 // FREQ: 142.5 MHz</span>
-            <span style="background: rgba(39, 180, 255, 0.15); color: var(--accent); font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: bold;">OSCILLOGRAM</span>
+            <span style="font-weight: bold; font-family: var(--font-mono); color: var(--accent); font-size: 0.9rem;">SECTOR 1 ➔ LETTER 1</span>
+            <span style="background: rgba(39, 180, 255, 0.15); color: var(--accent); font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">PULSE SIGNAL</span>
           </div>
-          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 10px;">
-            Analog voltage duration log: Long pulse for <strong>300ms</strong>, 100ms gap, followed by short pulse for <strong>100ms</strong>.
+          <p style="font-size: 0.86rem; color: var(--muted); margin-bottom: 10px;">
+            Two pulses intercepted: a <strong>Long pulse (Dash —)</strong> followed by a <strong>Short pulse (Dot •)</strong>.
           </p>
-          <div style="background: #01040a; border: 1px solid #1a365d; border-radius: 4px; padding: 12px 8px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
-            <div style="background: var(--accent); height: 26px; width: 68px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--accent);">DASH (—)</div>
-            <div style="width: 14px; height: 2px; background: #2a4365;"></div>
-            <div style="background: var(--accent); height: 26px; width: 26px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--accent);">DOT (•)</div>
+          <div style="background: #01040a; border: 1px solid #1a365d; border-radius: 4px; padding: 12px 8px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+            <div style="background: var(--accent); height: 28px; width: 68px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--accent);">DASH (—)</div>
+            <span style="color: #64748b;">+</span>
+            <div style="background: var(--accent); height: 28px; width: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--accent);">DOT (•)</div>
           </div>
-          <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--txt); text-align: center;">
-            Morse Pattern: <strong style="color: var(--gold); letter-spacing: 4px;">— •</strong>
+          <div style="font-family: var(--font-mono); font-size: 0.92rem; color: var(--gold); text-align: center; font-weight: bold;">
+            Morse Code: <span style="letter-spacing: 6px;">— •</span>
           </div>
         </div>
 
         <!-- Sector 02: Binary Serial Modulation -->
         <div class="sector-card" style="background: #030814; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px;">
-            <span style="font-weight: bold; font-family: var(--font-mono); color: var(--gold); font-size: 0.88rem;">SECTOR 02 // FREQ: 218.4 MHz</span>
-            <span style="background: rgba(251, 191, 36, 0.15); color: var(--gold); font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: bold;">BINARY STREAM</span>
+            <span style="font-weight: bold; font-family: var(--font-mono); color: var(--gold); font-size: 0.9rem;">SECTOR 2 ➔ LETTER 2</span>
+            <span style="background: rgba(251, 191, 36, 0.15); color: var(--gold); font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">BINARY CODE</span>
           </div>
-          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 10px;">
-            Demodulated raw bits: <code style="color: var(--accent); background: #01040a; padding: 2px 6px; border-radius: 3px;">111·0·111·0·111</code>. Protocol: <span style="color: var(--txt);">111 = Dash (—), 1 = Dot (•), 0 = Gap</span>.
+          <p style="font-size: 0.86rem; color: var(--muted); margin-bottom: 10px;">
+            A binary stream was received: <code style="color: var(--accent); background: #01040a; padding: 2px 6px; border-radius: 3px;">111-0-111-0-111</code>.<br>
+            Rule: <strong>111 = Dash (—)</strong> and <strong>0 = Space</strong>.
           </p>
           <div style="background: #01040a; border: 1px solid #4a3808; border-radius: 4px; padding: 12px 8px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
-            <div style="background: var(--gold); height: 26px; width: 44px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--gold);">111 (—)</div>
-            <div style="background: var(--gold); height: 26px; width: 44px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--gold);">111 (—)</div>
-            <div style="background: var(--gold); height: 26px; width: 44px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--gold);">111 (—)</div>
+            <div style="background: var(--gold); height: 28px; width: 48px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--gold);">—</div>
+            <div style="background: var(--gold); height: 28px; width: 48px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--gold);">—</div>
+            <div style="background: var(--gold); height: 28px; width: 48px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--gold);">—</div>
           </div>
-          <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--txt); text-align: center;">
-            Morse Pattern: <strong style="color: var(--gold); letter-spacing: 4px;">— — —</strong>
+          <div style="font-family: var(--font-mono); font-size: 0.92rem; color: var(--gold); text-align: center; font-weight: bold;">
+            Morse Code: <span style="letter-spacing: 6px;">— — —</span>
           </div>
         </div>
 
         <!-- Sector 03: Optical Pulse Strobe & Decoy Glitch -->
         <div class="sector-card" style="background: #030814; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px;">
-            <span style="font-weight: bold; font-family: var(--font-mono); color: #38bdf8; font-size: 0.88rem;">SECTOR 03 // FREQ: 315.0 MHz</span>
-            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: bold;">OPTICAL STROBE</span>
+            <span style="font-weight: bold; font-family: var(--font-mono); color: #38bdf8; font-size: 0.9rem;">SECTOR 3 ➔ LETTER 3</span>
+            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">BLINKING LIGHT</span>
           </div>
-          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 10px;">
-            Emergency optical telemetry strobe. Watch the visual strobe sequence:
+          <p style="font-size: 0.86rem; color: var(--muted); margin-bottom: 10px;">
+            A flashing light beacon sends <strong>3 quick blinks</strong> and <strong>1 long blink</strong>:
           </p>
           <div style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <div id="optical-beacon-lamp" style="width: 22px; height: 22px; border-radius: 50%; background: #334155; border: 2px solid #64748b; transition: all 0.08s ease;"></div>
               <span id="optical-beacon-status" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted);">READY</span>
             </div>
-            <button type="button" id="btn-trigger-strobe" class="btn btn-outline btn-sm" style="padding: 4px 10px; font-size: 0.78rem;">▶ Trigger Strobe</button>
+            <button type="button" id="btn-trigger-strobe" class="btn btn-outline btn-sm" style="padding: 4px 10px; font-size: 0.78rem;">▶ Watch Light Blink</button>
           </div>
-          <div style="display: flex; gap: 4px; justify-content: center; margin-bottom: 6px;">
-            <span style="background: #1e293b; padding: 2px 6px; border-radius: 3px; font-size: 0.72rem; font-family: var(--font-mono); color: #94a3b8;">• (100ms)</span>
-            <span style="background: #1e293b; padding: 2px 6px; border-radius: 3px; font-size: 0.72rem; font-family: var(--font-mono); color: #94a3b8;">• (100ms)</span>
-            <span style="background: #1e293b; padding: 2px 6px; border-radius: 3px; font-size: 0.72rem; font-family: var(--font-mono); color: #94a3b8;">• (100ms)</span>
-            <span style="background: #1e293b; padding: 2px 6px; border-radius: 3px; font-size: 0.72rem; font-family: var(--font-mono); color: #94a3b8;">— (300ms)</span>
+          <div style="font-family: var(--font-mono); font-size: 0.92rem; color: var(--gold); text-align: center; font-weight: bold;">
+            Morse Code: <span style="letter-spacing: 6px;">• • • —</span>
           </div>
           <div style="font-size: 0.72rem; color: var(--bad); text-align: center; margin-top: 4px;">
-            ⚠️ Decoy Glitch: Telemetry contains noise packet [ZETA9]. Discard decoy!
+            ⚠️ Trap Alert: Screen may flash decoy word <code>ZETA9</code>. Ignore it!
           </div>
         </div>
 
         <!-- Sector 04: Satellite Uplink Pulse -->
         <div class="sector-card" style="background: #030814; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px;">
-            <span style="font-weight: bold; font-family: var(--font-mono); color: #a78bfa; font-size: 0.88rem;">SECTOR 04 // FREQ: 433.9 MHz</span>
-            <span style="background: rgba(167, 139, 250, 0.15); color: #a78bfa; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: bold;">ORBITAL RELAY</span>
+            <span style="font-weight: bold; font-family: var(--font-mono); color: #a78bfa; font-size: 0.9rem;">SECTOR 4 ➔ LETTER 4</span>
+            <span style="background: rgba(167, 139, 250, 0.15); color: #a78bfa; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">SATELLITE SIGNAL</span>
           </div>
-          <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 10px;">
-            Final confirmation burst from orbital satellite relay. Pulse telemetry:
+          <p style="font-size: 0.86rem; color: var(--muted); margin-bottom: 10px;">
+            The final pulse: a <strong>Short pulse (Dot •)</strong> followed by a <strong>Long pulse (Dash —)</strong>.
           </p>
-          <div style="background: #01040a; border: 1px solid #2e1065; border-radius: 4px; padding: 12px 8px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
-            <div style="background: #a78bfa; height: 26px; width: 26px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px #a78bfa;">DOT (•)</div>
-            <div style="width: 14px; height: 2px; background: #4c1d95;"></div>
-            <div style="background: #a78bfa; height: 26px; width: 68px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px #a78bfa;">DASH (—)</div>
+          <div style="background: #01040a; border: 1px solid #2e1065; border-radius: 4px; padding: 12px 8px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+            <div style="background: #a78bfa; height: 28px; width: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px #a78bfa;">DOT (•)</div>
+            <span style="color: #64748b;">+</span>
+            <div style="background: #a78bfa; height: 28px; width: 68px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px #a78bfa;">DASH (—)</div>
           </div>
-          <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--txt); text-align: center;">
-            Morse Pattern: <strong style="color: var(--gold); letter-spacing: 4px;">• —</strong>
+          <div style="font-family: var(--font-mono); font-size: 0.92rem; color: var(--gold); text-align: center; font-weight: bold;">
+            Morse Code: <span style="letter-spacing: 6px;">• —</span>
           </div>
         </div>
 
       </div>
 
-      
-
       <!-- Live 4-Slot Assembler Indicator -->
-      <div style="background: rgba(16, 29, 54, 0.45); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
+      <div style="background: rgba(16, 29, 54, 0.5); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
-          <span style="font-size: 0.88rem; font-weight: bold; color: var(--gold);">🧩 4-SECTOR ASSEMBLED KEY:</span>
-          <span style="font-size: 0.78rem; color: var(--muted);">Sector 1 ➔ Sector 4 in sequence</span>
+          <span style="font-size: 0.9rem; font-weight: bold; color: var(--gold);">🎯 4-SECTOR ASSEMBLED KEY:</span>
+          <span style="font-size: 0.8rem; color: var(--muted);">Align Letter 1 to Letter 4 in order</span>
         </div>
         <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 8px;">
-          <div id="slot-preview-1" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 62px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
-            <span style="font-size: 0.65rem; color: var(--muted);">SEC 1 (—•)</span>
-            <span id="slot-val-1" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.2rem; color: var(--accent);">?</span>
+          <div id="slot-preview-1" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 68px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
+            <span style="font-size: 0.65rem; color: var(--muted);">Letter 1 (—•)</span>
+            <span id="slot-val-1" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.25rem; color: var(--accent);">?</span>
           </div>
-          <div id="slot-preview-2" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 62px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
-            <span style="font-size: 0.65rem; color: var(--muted);">SEC 2 (———)</span>
-            <span id="slot-val-2" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.2rem; color: var(--accent);">?</span>
+          <div id="slot-preview-2" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 68px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
+            <span style="font-size: 0.65rem; color: var(--muted);">Letter 2 (———)</span>
+            <span id="slot-val-2" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.25rem; color: var(--accent);">?</span>
           </div>
-          <div id="slot-preview-3" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 62px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
-            <span style="font-size: 0.65rem; color: var(--muted);">SEC 3 (•••—)</span>
-            <span id="slot-val-3" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.2rem; color: var(--accent);">?</span>
+          <div id="slot-preview-3" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 68px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
+            <span style="font-size: 0.65rem; color: var(--muted);">Letter 3 (•••—)</span>
+            <span id="slot-val-3" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.25rem; color: var(--accent);">?</span>
           </div>
-          <div id="slot-preview-4" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 62px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
-            <span style="font-size: 0.65rem; color: var(--muted);">SEC 4 (•—)</span>
-            <span id="slot-val-4" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.2rem; color: var(--accent);">?</span>
+          <div id="slot-preview-4" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 68px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
+            <span style="font-size: 0.65rem; color: var(--muted);">Letter 4 (•—)</span>
+            <span id="slot-val-4" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.25rem; color: var(--accent);">?</span>
           </div>
         </div>
+        <p style="text-align: center; font-size: 0.82rem; color: var(--muted); margin: 6px 0 0;">
+          Type the 4 letters below and click <strong>Submit</strong>. Need help matching Morse codes? Click <strong>💡 Hint</strong> below to reveal the 15-letter chart!
+        </p>
       </div>
     `;
   } else if (stage === 2) {
@@ -992,19 +994,19 @@ function renderStageScreen(container, state) {
           ${hintsHtml}
         </div>
 
-        ${stage === 1 ? `
-        <!-- 15-Alphabet Morse Chart in Hint Section -->
-        <div class="stage1-hint-chart" style="margin-top: 14px; background: rgba(3, 8, 22, 0.85); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: var(--radius-sm); padding: 12px 14px;">
+        ${stage === 1 ? (hintsUsed >= 1 ? `
+        <!-- UNLOCKED 15-Alphabet Morse Chart (Only visible when hint is pressed) -->
+        <div class="stage1-hint-chart" style="margin-top: 14px; background: rgba(3, 8, 22, 0.9); border: 2px solid var(--gold); border-radius: var(--radius-sm); padding: 14px 16px; animation: fadeIn 0.3s ease;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-            <div style="font-weight: bold; font-size: 0.88rem; color: var(--gold); display: flex; align-items: center; gap: 6px;">
-              <span>💡 Tactical Morse Code Reference Chart (15 Alphabets):</span>
+            <div style="font-weight: bold; font-size: 0.92rem; color: var(--gold); display: flex; align-items: center; gap: 6px;">
+              <span>🔓 UNLOCKED HINT: Morse Code Decoder Chart (15 Alphabets)</span>
             </div>
-            <span style="font-size: 0.75rem; color: var(--muted);">(Click any letter to insert into answer)</span>
+            <span style="font-size: 0.78rem; color: var(--accent);">(Click any letter to insert into answer)</span>
           </div>
-          <p style="font-size: 0.82rem; color: var(--muted); margin: 0 0 10px;">
-            Match the dot (•) and dash (—) patterns from Sectors 1, 2, 3, and 4 against this 15-letter chart:
+          <p style="font-size: 0.85rem; color: var(--muted); margin: 0 0 12px; line-height: 1.4;">
+            Match the Morse codes from Sectors 1, 2, 3, and 4 against this 15-letter chart:
           </p>
-          <div class="morse-grid-table" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 6px;">
+          <div class="morse-grid-table" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px;">
             
     <div class="morse-ref-card" data-letter="A" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'A' into answer">
       <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">A</div>
@@ -1083,7 +1085,14 @@ function renderStageScreen(container, state) {
   
           </div>
         </div>
-        ` : ''}
+        ` : `
+        <!-- Locked Hint Notice -->
+        <div style="margin-top: 12px; background: rgba(3, 8, 22, 0.4); border: 1px dashed #334155; border-radius: var(--radius-sm); padding: 12px 14px; text-align: center;">
+          <span style="font-size: 0.86rem; color: var(--muted);">
+            🔒 <strong>Morse Code Chart is locked.</strong> Don't know Morse code? Click <strong>"💡 Hint (+3 min)"</strong> above to unlock the 15-alphabet decoder chart!
+          </span>
+        </div>
+        `) : ''}
       </div>
     </div>
   `;
