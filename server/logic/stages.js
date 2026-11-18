@@ -4,8 +4,8 @@ const { computeFinalKey } = require('./finalKey');
 
 const STAGE_CONFIG = {
   1: {
-    name: 'Media Analysis',
-    icon: '🎧',
+    name: 'Signal Intercept',
+    icon: '📡',
     answer: 'NOVA',
     decoy: 'ZETA9',
     hints: [

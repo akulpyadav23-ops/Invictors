@@ -281,7 +281,7 @@ bodyText('• Concept: The culmination of the entire challenge. Teams combine al
 bodyText('• Alphabetical Ordering by Mission NAME (Crucial Rule):');
 bodyText('   1. CTF Challenges (Mission 4)  -> f4 = 91X');
 bodyText('   2. Decoding (Mission 2)        -> f2 = 7K2');
-bodyText('   3. Media Analysis (Mission 1)  -> f1 = NOVA');
+bodyText('   3. Signal Intercept / Media (Mission 1)  -> f1 = NOVA');
 bodyText('   4. Prompt the AI (Mission 3)   -> REVERSED f3 = TIBRO  (ORBIT reversed)');
 bodyText('   5. Team Sync (Mission 5)       -> f5 with hyphens removed = EFD82D326');
 bodyText('• Key Body: FO{91X-7K2-NOVA-TIBRO-EFD82D326}');

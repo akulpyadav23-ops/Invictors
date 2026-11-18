@@ -13,8 +13,22 @@ app.use(express.json({ limit: '500kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Disable aggressive browser caching for HTML, CSS and JS
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // Serve static assets from public/
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(__dirname, '..', 'public'), {
+  etag: false,
+  maxAge: 0,
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  }
+}));
 
 // Mount API routes
 app.use('/api', require('./routes/api'));
