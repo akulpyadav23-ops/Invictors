@@ -708,8 +708,10 @@ function renderStageScreen(container, state) {
           </div>
         </div>
 
-        <audio id="morse-audio" controls preload="auto" style="width: 100%; height: 42px; margin-bottom: 8px;">
-          <source id="morse-audio-source" src="/assets/signal-normal.wav" type="audio/wav">
+        <audio id="morse-audio" controls preload="auto" style="width: 100%; height: 44px; margin-bottom: 8px;">
+          <source src="/assets/signal.mp3" type="audio/mpeg">
+          <source src="/assets/signal-normal.mp3" type="audio/mp3">
+          <source src="/assets/signal-normal.wav" type="audio/wav">
           Your browser does not support HTML5 audio.
         </audio>
 
@@ -1045,13 +1047,8 @@ function attachStageEvents(stage) {
 
     if (speedSelect && audioEl) {
       speedSelect.addEventListener('change', () => {
-        const wasPlaying = !audioEl.paused;
-        const src = speedSelect.value === '1.6' ? '/assets/signal-slow.wav' : '/assets/signal-normal.wav';
-        audioEl.src = src;
-        audioEl.load();
-        if (wasPlaying) {
-          audioEl.play().catch(() => {});
-        }
+        const rate = speedSelect.value === '1.6' ? 0.75 : 1.0;
+        audioEl.playbackRate = rate;
       });
     }
 

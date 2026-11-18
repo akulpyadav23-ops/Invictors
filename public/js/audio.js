@@ -78,6 +78,9 @@ class MorsePlayer {
       const audio = new Audio(src);
       this.audioElement = audio;
       audio.preload = 'auto';
+      if (speedFactor && speedFactor !== 1.0) {
+        audio.playbackRate = 1.0 / speedFactor;
+      }
 
       // Decoy visual flash timing: ~2.0s into the message (scaled by speed)
       const flashAtMs = Math.round(2000 * speedFactor);
@@ -161,8 +164,7 @@ class MorsePlayer {
     await this.unlockAudio();
 
     // Select the pre-rendered audio asset based on selected speed
-    const isSlow = Math.abs(speedFactor - 1.6) < 0.2;
-    const audioUrl = isSlow ? '/assets/signal-slow.wav' : '/assets/signal-normal.wav';
+    const audioUrl = '/assets/signal.mp3';
 
     // Attempt HTML5 Audio first
     const played = await this.playAudioElement(audioUrl, speedFactor, onProgress);
