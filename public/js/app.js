@@ -790,148 +790,7 @@ function renderStageScreen(container, state) {
 
       </div>
 
-      <!-- Built-In NATO & Telegraph Emergency Field Manual -->
-      <details class="morse-manual-details" style="background: rgba(3, 8, 22, 0.7); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 18px;" open>
-        <summary style="cursor: pointer; font-weight: bold; color: var(--accent); display: flex; align-items: center; justify-content: space-between; user-select: none;">
-          <span>📖 Tactical Telegraph &amp; NATO Morse Code Field Manual</span>
-          <span style="font-size: 0.78rem; color: var(--muted);">(Anti-Cheat Safe: Click letter to insert)</span>
-        </summary>
-        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line);">
-          <div class="morse-grid-table" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 6px;">
-            
-    <div class="morse-ref-card" data-letter="A" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'A' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">A</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="B" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'B' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">B</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— • • •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="C" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'C' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">C</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— • — •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="D" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'D' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">D</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— • •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="E" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'E' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">E</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">•</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="F" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'F' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">F</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• • — •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="G" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'G' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">G</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— — •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="H" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'H' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">H</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• • • •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="I" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'I' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">I</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="J" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'J' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">J</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• — — —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="K" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'K' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">K</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— • —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="L" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'L' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">L</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• — • •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="M" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'M' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">M</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="N" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'N' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">N</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="O" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'O' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">O</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— — —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="P" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'P' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">P</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• — — •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="Q" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'Q' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">Q</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— — • —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="R" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'R' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">R</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• — •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="S" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'S' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">S</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• • •</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="T" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'T' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">T</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">—</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="U" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'U' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">U</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• • —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="V" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'V' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">V</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• • • —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="W" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'W' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">W</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• — —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="X" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'X' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">X</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— • • —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="Y" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'Y' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">Y</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— • — —</div>
-    </div>
-  
-    <div class="morse-ref-card" data-letter="Z" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'Z' into answer">
-      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">Z</div>
-      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— — • •</div>
-    </div>
-  
-          </div>
-        </div>
-      </details>
+      
 
       <!-- Live 4-Slot Assembler Indicator -->
       <div style="background: rgba(16, 29, 54, 0.45); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
@@ -1132,6 +991,99 @@ function renderStageScreen(container, state) {
         <div id="hints-display-container" style="display: flex; flex-direction: column; gap: 8px;">
           ${hintsHtml}
         </div>
+
+        ${stage === 1 ? `
+        <!-- 15-Alphabet Morse Chart in Hint Section -->
+        <div class="stage1-hint-chart" style="margin-top: 14px; background: rgba(3, 8, 22, 0.85); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: var(--radius-sm); padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+            <div style="font-weight: bold; font-size: 0.88rem; color: var(--gold); display: flex; align-items: center; gap: 6px;">
+              <span>💡 Tactical Morse Code Reference Chart (15 Alphabets):</span>
+            </div>
+            <span style="font-size: 0.75rem; color: var(--muted);">(Click any letter to insert into answer)</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--muted); margin: 0 0 10px;">
+            Match the dot (•) and dash (—) patterns from Sectors 1, 2, 3, and 4 against this 15-letter chart:
+          </p>
+          <div class="morse-grid-table" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 6px;">
+            
+    <div class="morse-ref-card" data-letter="A" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'A' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">A</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• —</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="B" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'B' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">B</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— • • •</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="C" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'C' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">C</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— • — •</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="D" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'D' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">D</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— • •</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="E" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'E' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">E</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">•</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="M" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'M' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">M</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— —</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="N" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'N' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">N</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— •</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="O" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'O' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">O</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— — —</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="R" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'R' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">R</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• — •</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="S" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'S' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">S</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• • •</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="T" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'T' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">T</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">—</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="U" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'U' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">U</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• • —</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="V" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'V' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">V</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• • • —</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="W" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'W' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">W</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">• — —</div>
+    </div>
+  
+    <div class="morse-ref-card" data-letter="Z" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 3px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="Click to insert 'Z' into answer">
+      <div style="font-weight: bold; font-size: 0.95rem; color: var(--gold);">Z</div>
+      <div style="font-size: 0.72rem; color: var(--accent); font-family: var(--font-mono); letter-spacing: 1px;">— — • •</div>
+    </div>
+  
+          </div>
+        </div>
+        ` : ''}
       </div>
     </div>
   `;

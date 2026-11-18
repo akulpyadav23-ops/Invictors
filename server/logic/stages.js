@@ -9,8 +9,8 @@ const STAGE_CONFIG = {
     answer: 'NOVA',
     decoy: 'ZETA9',
     hints: [
-      'Listen for long and short beeps. Something on screen is only a distraction.',
-      'Morse code: short = dot, long = dash. Four letters. Ignore the flash.'
+      'Check the 15-alphabet Morse chart in the hint section below. Sector 1 is —•, Sector 2 is ———, Sector 3 is •••—, and Sector 4 is •—.',
+      'The 4 letters from the 15-alphabet chart spell out NOVA. Ignore the ZETA9 decoy anomaly.'
     ],
     // Morse pulses: [type, durationInUnits]: 1=dot, 3=dash, pause between symbols=1, between letters=4
     // N: -.  (dash 3, gap 1, dot 1) -> gap 4
