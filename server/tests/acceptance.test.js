@@ -13,7 +13,8 @@ if (fs.existsSync(testDbPath)) {
   try { fs.unlinkSync(testDbPath); } catch {}
 }
 
-process.env.ADMIN_PIN = 'INVICTORS';
+process.env.NODE_ENV = 'test';
+process.env.ADMIN_PIN = 'INVICTORS@23';
 process.env.EVENT_SALT = 'test_salt_123';
 
 const Database = require('better-sqlite3');
@@ -156,6 +157,15 @@ async function runTests() {
   });
 
   try {
+    const ds = require('../dataService');
+    await ds.setSetting('startTogetherMode', 'false');
+    await ds.setSetting('allowNewTeams', 'true');
+    const existingTeams = await ds.getAllTeams();
+    for (const t of existingTeams) {
+      if (t.name.includes('CyberKnights') || t.name.includes('Alpha') || t.name.includes('Delta') || t.name.includes('Test')) {
+        await ds.deleteTeam(t.id);
+      }
+    }
     // -------------------------------------------------------------
     // Test 1: Team registration rules
     // -------------------------------------------------------------
@@ -472,7 +482,7 @@ async function runTests() {
     for (let s = 1; s <= 4; s++) {
       const skipRes = await request('/api/admin/skip', {
         method: 'POST',
-        headers: { 'x-admin-pin': 'INVICTORS' },
+        headers: { 'x-admin-pin': 'INVICTORS@23' },
         body: { teamId: regAlpha.data.team.id }
       });
       assert.strictEqual(skipRes.status, 200);
@@ -591,7 +601,7 @@ async function runTests() {
 
     // Admin sees all teams
     const adminView = await request('/api/admin/teams', {
-      headers: { 'x-admin-pin': 'INVICTORS' }
+      headers: { 'x-admin-pin': 'INVICTORS@23' }
     });
     assert.strictEqual(adminView.status, 200);
     const adminTeams = adminView.data.teams.map(t => t.name);

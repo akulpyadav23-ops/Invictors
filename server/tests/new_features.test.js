@@ -3,7 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 
-process.env.ADMIN_PIN = 'INVICTORS';
+process.env.NODE_ENV = 'test';
+process.env.ADMIN_PIN = 'INVICTORS@23';
 process.env.EVENT_SALT = 'test_salt_123';
 
 const express = require('express');
@@ -120,7 +121,7 @@ async function runNewFeatureTests() {
     console.log('--- Test 2: Admin Launch All Teams ---');
     const startAllRes = await request('/api/admin/start-all', {
       method: 'POST',
-      headers: { 'x-admin-pin': 'INVICTORS' }
+      headers: { 'x-admin-pin': 'INVICTORS@23' }
     });
     assert.strictEqual(startAllRes.status, 200);
     assert.strictEqual(startAllRes.data.success, true);
@@ -148,7 +149,7 @@ async function runNewFeatureTests() {
 
     // Check violation in admin log
     const violationsRes = await request('/api/admin/violations', {
-      headers: { 'x-admin-pin': 'INVICTORS' }
+      headers: { 'x-admin-pin': 'INVICTORS@23' }
     });
     assert.strictEqual(violationsRes.status, 200);
     assert(violationsRes.data.violations.length >= 1);
@@ -160,7 +161,7 @@ async function runNewFeatureTests() {
     // Pause team
     const pauseRes = await request('/api/admin/team-pause', {
       method: 'POST',
-      headers: { 'x-admin-pin': 'INVICTORS' },
+      headers: { 'x-admin-pin': 'INVICTORS@23' },
       body: { teamId, action: 'pause' }
     });
     assert.strictEqual(pauseRes.status, 200);
@@ -178,7 +179,7 @@ async function runNewFeatureTests() {
     // Resume team
     const resumeRes = await request('/api/admin/team-pause', {
       method: 'POST',
-      headers: { 'x-admin-pin': 'INVICTORS' },
+      headers: { 'x-admin-pin': 'INVICTORS@23' },
       body: { teamId, action: 'resume' }
     });
     assert.strictEqual(resumeRes.status, 200);
@@ -197,7 +198,7 @@ async function runNewFeatureTests() {
     console.log('--- Test 5: Individual Team Restart ---');
     const restartRes = await request('/api/admin/team-restart', {
       method: 'POST',
-      headers: { 'x-admin-pin': 'INVICTORS' },
+      headers: { 'x-admin-pin': 'INVICTORS@23' },
       body: { teamId }
     });
     assert.strictEqual(restartRes.status, 200);
@@ -212,7 +213,7 @@ async function runNewFeatureTests() {
 
     console.log('--- Test 6: Master Answer Key & Solutions Endpoint ---');
     const answersRes = await request('/api/admin/answers', {
-      headers: { 'x-admin-pin': 'INVICTORS' }
+      headers: { 'x-admin-pin': 'INVICTORS@23' }
     });
     assert.strictEqual(answersRes.status, 200);
     assert.strictEqual(answersRes.data.staticAnswers.stage1.answer, 'NOVA');
@@ -230,13 +231,13 @@ async function runNewFeatureTests() {
     const testNotes = '1st Place: AlphaSquad (Time: 12:45)\n2nd Place: BetaSquad (Time: 15:30)';
     const saveNotepad = await request('/api/admin/notepad', {
       method: 'POST',
-      headers: { 'x-admin-pin': 'INVICTORS' },
+      headers: { 'x-admin-pin': 'INVICTORS@23' },
       body: { notepad: testNotes }
     });
     assert.strictEqual(saveNotepad.status, 200);
 
     const getNotepad = await request('/api/admin/notepad', {
-      headers: { 'x-admin-pin': 'INVICTORS' }
+      headers: { 'x-admin-pin': 'INVICTORS@23' }
     });
     assert.strictEqual(getNotepad.status, 200);
     assert.strictEqual(getNotepad.data.notepad, testNotes);

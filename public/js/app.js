@@ -450,9 +450,9 @@ async function renderStartScreen(container) {
       <div class="poster-stages-grid">
         <div class="stage-poster-card s1">
           <div class="stage-badge-num">1</div>
-          <div style="font-size: 1.6rem;">🎧</div>
-          <div class="stage-poster-title">Media Analysis</div>
-          <div class="stage-poster-desc">Extract hidden Morse audio and screen signals</div>
+          <div style="font-size: 1.6rem;">📡</div>
+          <div class="stage-poster-title">Signal Intercept</div>
+          <div class="stage-poster-desc">Decode 4-sector Morse telemetry and matrix frequencies</div>
         </div>
         <div class="stage-poster-card s2">
           <div class="stage-badge-num">2</div>
@@ -822,31 +822,47 @@ function renderStageScreen(container, state) {
     `;
   } else if (stage === 2) {
     specificHtml = `
-      <p style="margin-bottom: 10px;">
-        📖 The story: The vault sent a second message, but it is wrapped in 3 scrambled layers, like a gift with 3 wrappers. 🎁
-      </p>
-      <p style="margin-bottom: 14px;">
-        🧅 Unwrap one layer at a time, in the right order, to read the secret message.
-      </p>
+      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--gold); font-size: 0.95rem;">
+          <span>⚡ CIPHER INTERCEPT: Multi-Layer Cryptographic Stream</span>
+        </div>
+        <p style="margin: 6px 0 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.5;">
+          The transmission has been encased in multiple transposition and substitution ciphers. Beware of decoy transformations: applying an invalid cipher will corrupt the payload or produce false leads. Analyze character sets (padding '=', byte pairs, alphabet shifts) to determine the exact sequence.
+        </p>
+      </div>
 
-      <div style="background: #030813; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; word-break: break-all; font-family: ui-monospace, monospace; font-size: 0.88rem; color: var(--gold); margin-bottom: 14px;">
-        ${escapeHtml(content.encodedText || '')}
+      <div style="background: #030813; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; word-break: break-all; font-family: ui-monospace, monospace; font-size: 0.88rem; color: var(--gold); margin-bottom: 14px; position: relative;">
+        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px;">Intercepted Cipher Payload:</div>
+        <div id="stage2-cipher-raw" style="user-select: all;">${escapeHtml(content.encodedText || '')}</div>
       </div>
 
       <div class="toolkit-box">
-        <h3 style="font-size: 1rem; color: var(--accent);">🧰 Toolkit: copy the scrambled text into the box, then tap a button to unwrap one layer. Repeat until it reads like normal words.</h3>
-        <textarea id="toolkit-input" rows="3" placeholder="Paste scrambled text here..."></textarea>
-        <div class="toolkit-actions">
-          <button id="btn-decode-b64" class="btn btn-outline btn-sm">Base64 decode</button>
-          <button id="btn-decode-hex" class="btn btn-outline btn-sm">Hex decode</button>
-          <button id="btn-decode-rot13" class="btn btn-outline btn-sm">ROT13</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <h3 style="font-size: 0.95rem; color: var(--accent); margin: 0;">🧰 Cryptanalyst Workbench</h3>
+          <div style="display: flex; gap: 6px;">
+            <button id="btn-paste-original" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 3px 8px;">📋 Paste Payload</button>
+            <button id="btn-reset-workbench" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 3px 8px; color: var(--bad); border-color: rgba(239, 68, 68, 0.4);">↺ Reset</button>
+          </div>
         </div>
-        <div id="toolkit-error" class="feedback-line error"></div>
+        <textarea id="toolkit-input" rows="3" placeholder="Paste cipher text here to analyze and transform..."></textarea>
+        
+        <div style="margin-top: 8px; margin-bottom: 6px; font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Cryptographic Modules:</div>
+        <div class="toolkit-actions" style="display: flex; flex-wrap: wrap; gap: 6px;">
+          <button id="btn-decode-b64" class="btn btn-outline btn-sm" title="RFC-4648 Base64 Decoder">Base64 Decode</button>
+          <button id="btn-decode-hex" class="btn btn-outline btn-sm" title="Hexadecimal ASCII byte conversion">Hex Decode</button>
+          <button id="btn-decode-rot13" class="btn btn-outline btn-sm" title="Rotational Caesar-13 shift">ROT13</button>
+          <button id="btn-decode-atbash" class="btn btn-outline btn-sm" title="Hebrew Atbash Alphabet Mirror (A↔Z)">Atbash Mirror</button>
+          <button id="btn-decode-reverse" class="btn btn-outline btn-sm" title="Reverse sequence transposition">Reverse String</button>
+          <button id="btn-decode-rot5" class="btn btn-outline btn-sm" title="Numeric ROT5 (0↔5, 1↔6)">ROT5 (Digits)</button>
+          <button id="btn-decode-caesar" class="btn btn-outline btn-sm" title="Caesar +3 Alphabet shift">Caesar (+3)</button>
+          <button id="btn-decode-vigenere" class="btn btn-outline btn-sm" title="Polyalphabetic Vigenere cipher">Vigenère</button>
+        </div>
+        <div id="toolkit-error" class="feedback-line error" style="margin-top: 6px;"></div>
       </div>
 
-      <p style="font-size: 0.9rem; color: var(--muted); margin-top: 10px;">
-        ✍️ The message tells you the secret piece. Type it below. 👉 Also remember the special access phrase in it: you will need it in the next mission! 🗝️
-      </p>
+      <div style="background: rgba(56, 189, 248, 0.08); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 4px; margin-top: 14px; font-size: 0.85rem; color: #cbd5e1;">
+        💡 <strong>Tactical Note:</strong> The fully decoded plaintext reveals Fragment 2 as well as a vital <strong>Access Phrase</strong>. Record both securely before proceeding!
+      </div>
     `;
   } else if (stage === 3) {
     specificHtml = `
@@ -1273,26 +1289,61 @@ function attachStageEvents(stage) {
   if (stage === 2) {
     const toolkitInput = document.getElementById('toolkit-input');
     const toolkitError = document.getElementById('toolkit-error');
+    const rawCipher = document.getElementById('stage2-cipher-raw');
 
     function runDecoder(fn) {
       toolkitError.textContent = '';
+      if (!toolkitInput.value.trim()) {
+        toolkitError.textContent = 'Paste or enter ciphertext into the workbench first.';
+        return;
+      }
       try {
         const res = fn(toolkitInput.value);
         toolkitInput.value = res;
-      } catch {
-        toolkitError.textContent = 'Invalid input for this decoder';
+      } catch (err) {
+        toolkitError.textContent = err.message || 'Invalid transformation for this payload';
       }
     }
 
-    document.getElementById('btn-decode-b64').addEventListener('click', () => {
-      runDecoder(window.decoderTools.base64Decode);
-    });
-    document.getElementById('btn-decode-hex').addEventListener('click', () => {
-      runDecoder(window.decoderTools.hexDecode);
-    });
-    document.getElementById('btn-decode-rot13').addEventListener('click', () => {
-      runDecoder(window.decoderTools.rot13);
-    });
+    const pasteBtn = document.getElementById('btn-paste-original');
+    if (pasteBtn && rawCipher) {
+      pasteBtn.addEventListener('click', () => {
+        toolkitInput.value = rawCipher.textContent.trim();
+        toolkitError.textContent = '';
+      });
+    }
+
+    const resetBtn = document.getElementById('btn-reset-workbench');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        toolkitInput.value = '';
+        toolkitError.textContent = '';
+      });
+    }
+
+    const b64 = document.getElementById('btn-decode-b64');
+    if (b64) b64.addEventListener('click', () => runDecoder(window.decoderTools.base64Decode));
+
+    const hex = document.getElementById('btn-decode-hex');
+    if (hex) hex.addEventListener('click', () => runDecoder(window.decoderTools.hexDecode));
+
+    const r13 = document.getElementById('btn-decode-rot13');
+    if (r13) r13.addEventListener('click', () => runDecoder(window.decoderTools.rot13));
+
+    const atb = document.getElementById('btn-decode-atbash');
+    if (atb) atb.addEventListener('click', () => runDecoder(window.decoderTools.atbash));
+
+    const rev = document.getElementById('btn-decode-reverse');
+    if (rev) rev.addEventListener('click', () => runDecoder(window.decoderTools.reverse));
+
+    const r5 = document.getElementById('btn-decode-rot5');
+    if (r5) r5.addEventListener('click', () => runDecoder(window.decoderTools.rot5));
+
+    const csr = document.getElementById('btn-decode-caesar');
+    if (csr) csr.addEventListener('click', () => runDecoder(window.decoderTools.caesar3));
+
+    const vig = document.getElementById('btn-decode-vigenere');
+    if (vig) vig.addEventListener('click', () => runDecoder(window.decoderTools.vigenere));
   }
 
   if (stage === 3) {
@@ -1473,7 +1524,7 @@ function renderMergedPortal(container) {
           <form id="portal-admin-form">
             <div class="form-group">
               <label for="portal-admin-pin">Admin PIN *</label>
-              <input type="password" id="portal-admin-pin" class="input-control" placeholder="Enter Admin PIN (Default: INVICTORS)" required ${isDirectAdmin ? 'autofocus' : ''} />
+              <input type="password" id="portal-admin-pin" class="input-control" placeholder="Enter Admin PIN" required ${isDirectAdmin ? 'autofocus' : ''} />
             </div>
             <div id="portal-admin-err" class="feedback-line error"></div>
             <button type="submit" class="btn btn-gold" style="width: 100%; margin-top: 10px;">
@@ -1795,9 +1846,9 @@ function renderMergedPortal(container) {
           <!-- Static Stages 1 to 4 -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-bottom: 16px;">
             <div class="answer-key-box">
-              <h4>🎧 Stage 1: Audio Morse</h4>
+              <h4>📡 Stage 1: Signal Intercept (Morse Matrix)</h4>
               <div>Key: <span class="solution-token">NOVA</span></div>
-              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Pattern: -. --- ...- .-<br/>Decoy: <span style="color:var(--bad);">ZETA9</span> (visual flash)</div>
+              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Matrix Sectors: S1 (—• [N]), S2 (——— [O]), S3 (•••— [V]), S4 (•— [A])<br/>Decoy: <span style="color:var(--bad);">ZETA9</span> | 15-char hint chart</div>
             </div>
             <div class="answer-key-box">
               <h4>🔓 Stage 2: 3-Layer Cipher</h4>

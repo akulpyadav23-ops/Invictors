@@ -34,7 +34,7 @@ const coordinatorPinsMap = parseCoordinatorPins();
 
 module.exports = {
   PORT: parseInt(process.env.PORT, 10) || 3000,
-  ADMIN_PIN: process.env.ADMIN_PIN || 'INVICTORS',
+  ADMIN_PIN: process.env.ADMIN_PIN || 'INVICTORS@23',
   COORDINATORS: (process.env.COORDINATORS || 'Akul P Yadav,Gagan S Urs,M Punya Sagar,MN Shashank,Dhanush KP,Anish S Kumar,Ayush P,Skanda,Vishnuvardhan,Vandhana V,Abhiram BS,Harshil')
     .split(',')
     .map(c => c.trim())

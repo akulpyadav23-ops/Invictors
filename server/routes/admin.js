@@ -280,10 +280,10 @@ router.get('/answers', requireAdmin, async (req, res) => {
     return res.json({
       staticAnswers: {
         stage1: {
-          title: 'Stage 1: Media Analysis',
+          title: 'Stage 1: Media Analysis (Signal Matrix)',
           answer: 'NOVA',
           decoy: 'ZETA9',
-          explanation: 'Web Audio API Morse code pattern (-. --- ...- .- = NOVA). Decoy text ZETA9 flashes on monitor at 2.2s.'
+          explanation: '4-Sector Morse Matrix: Oscilloscope (—• [N]), Binary Telemetry (——— [O]), Optical Strobe (•••— [V]), Satellite Relay (•— [A]) -> NOVA. Hint button reveals 15-char Morse chart.'
         },
         stage2: {
           title: 'Stage 2: Decoding',
