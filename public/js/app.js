@@ -979,10 +979,21 @@ function attachStageEvents(stage) {
 
     if (playBtn) {
       playBtn.addEventListener('click', () => {
-        if (!currentMorsePattern) return;
-        const speed = parseFloat(speedSelect.value) || 1.0;
+        if (window.morsePlayer && window.morsePlayer.isPlaying) {
+          window.morsePlayer.stop();
+          monitor.classList.remove('flash');
+          monitor.textContent = 'SIGNAL MONITOR';
+          playBtn.textContent = '▶ Play signal';
+          playBtn.classList.remove('btn-outline');
+          playBtn.classList.add('btn-primary');
+          return;
+        }
 
-        playBtn.disabled = true;
+        const speed = parseFloat(speedSelect ? speedSelect.value : '1.0') || 1.0;
+
+        playBtn.textContent = '⏹ Stop signal';
+        playBtn.classList.remove('btn-primary');
+        playBtn.classList.add('btn-outline');
         monitor.classList.remove('flash');
         monitor.textContent = '…receiving…';
 
@@ -996,7 +1007,9 @@ function attachStageEvents(stage) {
           } else if (status === 'done') {
             monitor.classList.remove('flash');
             monitor.textContent = 'SIGNAL MONITOR';
-            playBtn.disabled = false;
+            playBtn.textContent = '▶ Play signal';
+            playBtn.classList.remove('btn-outline');
+            playBtn.classList.add('btn-primary');
           }
         });
       });
