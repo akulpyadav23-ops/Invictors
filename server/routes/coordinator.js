@@ -1,14 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const ds = require('../dataService');
+const config = require('../config');
 const { norm } = require('../logic/security');
 
-// GET /api/coordinator?name=...
+// POST /api/coordinator/verify - Verify coordinator name and PIN
+router.post('/verify', (req, res) => {
+  const { name, pin } = req.body || {};
+  if (!name || !pin) {
+    return res.status(400).json({ error: 'Coordinator name and PIN are required.' });
+  }
+  if (!config.verifyCoordinatorPin(name, pin)) {
+    return res.status(401).json({ error: 'Invalid Coordinator PIN.' });
+  }
+  return res.json({ success: true, coordinator: name.trim() });
+});
+
+// GET /api/coordinator?name=...&pin=...
 router.get('/', async (req, res) => {
   try {
-    const coordName = (req.query.name || '').trim();
+    const coordName = (req.query.name || req.headers['x-coordinator-name'] || '').trim();
+    const coordPin = (req.query.pin || req.headers['x-coordinator-pin'] || '').trim();
+
     if (!coordName) {
       return res.status(400).json({ error: 'Coordinator name is required.' });
+    }
+    if (!coordPin || !config.verifyCoordinatorPin(coordName, coordPin)) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid Coordinator PIN.' });
     }
 
     const allTeams = await ds.getAllTeams();

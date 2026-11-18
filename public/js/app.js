@@ -219,7 +219,18 @@ async function init() {
   });
   const logo = document.querySelector('.club-logo');
   if (logo) {
+    logo.style.cursor = 'pointer';
     logo.addEventListener('dblclick', () => navigateTo('/admin'));
+    let lastTap = 0;
+    logo.addEventListener('touchend', (e) => {
+      const currentTime = Date.now();
+      const tapLen = currentTime - lastTap;
+      if (tapLen < 400 && tapLen > 40) {
+        e.preventDefault();
+        navigateTo('/admin');
+      }
+      lastTap = currentTime;
+    });
   }
 
   renderApp();
@@ -1212,7 +1223,7 @@ function renderMergedPortal(container) {
           <form id="portal-coord-form">
             <div class="form-group">
               <label for="portal-coord-input">Coordinator Name *</label>
-              <input type="text" id="portal-coord-input" class="input-control" list="portal-coord-list" placeholder="e.g. Akul P Yadav, Gagan S Urs, Skanda..." required ${!isDirectAdmin ? 'autofocus' : ''} />
+              <input type="text" id="portal-coord-input" class="input-control" list="portal-coord-list" placeholder="Select or type your name..." required ${!isDirectAdmin ? 'autofocus' : ''} />
               <datalist id="portal-coord-list">
                 <option value="Akul P Yadav">
                 <option value="Gagan S Urs">
@@ -1228,6 +1239,11 @@ function renderMergedPortal(container) {
                 <option value="Harshil">
               </datalist>
             </div>
+            <div class="form-group" style="margin-top: 12px;">
+              <label for="portal-coord-pin">Coordinator PIN *</label>
+              <input type="password" id="portal-coord-pin" class="input-control" placeholder="Enter your coordinator PIN" required />
+            </div>
+            <div id="portal-coord-err" class="feedback-line error"></div>
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
               Open Coordinator Dashboard
             </button>
@@ -1261,12 +1277,34 @@ function renderMergedPortal(container) {
     };
 
     // Handle Coordinator Submit
-    document.getElementById('portal-coord-form').onsubmit = (e) => {
+    document.getElementById('portal-coord-form').onsubmit = async (e) => {
       e.preventDefault();
       const name = document.getElementById('portal-coord-input').value.trim();
-      if (name) {
-        sessionStorage.setItem('fo_coord_name', name);
-        renderMergedPortal(container);
+      const pin = document.getElementById('portal-coord-pin').value.trim();
+      const errEl = document.getElementById('portal-coord-err');
+      errEl.textContent = '';
+
+      if (!name || !pin) {
+        errEl.textContent = 'Please enter both coordinator name and PIN.';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/coordinator/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, pin })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          sessionStorage.setItem('fo_coord_name', name);
+          sessionStorage.setItem('fo_coord_pin', pin);
+          renderMergedPortal(container);
+        } else {
+          errEl.textContent = data.error || 'Invalid coordinator PIN.';
+        }
+      } catch (err) {
+        errEl.textContent = 'Connection error. Please try again.';
       }
     };
 
@@ -1346,18 +1384,21 @@ function renderMergedPortal(container) {
 
     document.getElementById('btn-portal-switch-coord').onclick = () => {
       sessionStorage.removeItem('fo_coord_name');
+      sessionStorage.removeItem('fo_coord_pin');
       renderMergedPortal(container);
     };
 
     document.getElementById('btn-portal-logout').onclick = () => {
       sessionStorage.removeItem('fo_coord_name');
-      sessionStorage.removeItem('fo_admin_pin');
+      sessionStorage.removeItem('fo_coord_pin');
+      clearAdminSession();
       renderMergedPortal(container);
     };
 
     async function loadCoordinatorTeams() {
       try {
-        const res = await fetch(`/api/coordinator?name=${encodeURIComponent(coordName)}`);
+        const coordPin = sessionStorage.getItem('fo_coord_pin') || '';
+        const res = await fetch(`/api/coordinator?name=${encodeURIComponent(coordName)}&pin=${encodeURIComponent(coordPin)}`);
         if (!res.ok) return;
         const data = await res.json();
         const teams = data.teams || [];
