@@ -1,23 +1,39 @@
-const Database = require('better-sqlite3');
+let Database;
+try {
+  Database = require('better-sqlite3');
+} catch (err) {
+  console.warn('better-sqlite3 is not available in this environment. Continuing with Supabase cloud database.');
+}
 const path = require('path');
 const fs = require('fs');
 
-const isVercel = process.env.VERCEL || process.env.NOW_REGION;
-const dbPath = isVercel
-  ? path.join('/tmp', 'final_override.db')
-  : path.join(__dirname, '..', 'data', 'final_override.db');
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+let db = null;
+
+if (Database) {
+  try {
+    const isVercel = process.env.VERCEL || process.env.NOW_REGION;
+    const dbPath = isVercel
+      ? path.join('/tmp', 'final_override.db')
+      : path.join(__dirname, '..', 'data', 'final_override.db');
+    const dbDir = path.dirname(dbPath);
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+
+    db = new Database(dbPath);
+
+    // Enable WAL mode for high performance concurrency
+    db.pragma('journal_mode = WAL');
+    db.pragma('foreign_keys = ON');
+
+    initSchema();
+  } catch (err) {
+    console.warn('SQLite initialization skipped:', err.message);
+  }
 }
 
-const db = new Database(dbPath);
-
-// Enable WAL mode for high performance concurrency
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-
 function initSchema() {
+  if (!db) return;
   db.exec(`
     CREATE TABLE IF NOT EXISTS teams (
       id TEXT PRIMARY KEY,
