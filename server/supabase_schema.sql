@@ -95,7 +95,7 @@ Judge Notes:
 ')
 ON CONFLICT (key) DO NOTHING;
 
--- Enable Row Level Security & Allow Service Role access
+-- Enable Row Level Security (service_role secret key automatically bypasses RLS)
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE progress ENABLE ROW LEVEL SECURITY;
@@ -103,12 +103,3 @@ ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat ENABLE ROW LEVEL SECURITY;
 ALTER TABLE violations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
-
--- Allow server service_role key full read/write access
-CREATE POLICY IF NOT EXISTS "Service role has full access to teams" ON teams FOR ALL USING (true);
-CREATE POLICY IF NOT EXISTS "Service role has full access to members" ON members FOR ALL USING (true);
-CREATE POLICY IF NOT EXISTS "Service role has full access to progress" ON progress FOR ALL USING (true);
-CREATE POLICY IF NOT EXISTS "Service role has full access to submissions" ON submissions FOR ALL USING (true);
-CREATE POLICY IF NOT EXISTS "Service role has full access to chat" ON chat FOR ALL USING (true);
-CREATE POLICY IF NOT EXISTS "Service role has full access to violations" ON violations FOR ALL USING (true);
-CREATE POLICY IF NOT EXISTS "Service role has full access to settings" ON settings FOR ALL USING (true);
