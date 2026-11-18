@@ -7,6 +7,23 @@ const { computeTeamCode, getMemberShard } = require('../logic/shard');
 const { computeFinalKey } = require('../logic/finalKey');
 const { STAGE_CONFIG } = require('../logic/stages');
 
+// ── Concurrent Admin Session Tracking ────────────────────────────────────────
+// Maps sessionId → { lastSeen: timestamp }
+const adminSessions = new Map();
+const ADMIN_HEARTBEAT_TTL = 30000; // 30s — session expires if no heartbeat
+
+function pruneExpiredAdminSessions() {
+  const cutoff = Date.now() - ADMIN_HEARTBEAT_TTL;
+  for (const [id, s] of adminSessions) {
+    if (s.lastSeen < cutoff) adminSessions.delete(id);
+  }
+}
+
+function activeAdminCount() {
+  pruneExpiredAdminSessions();
+  return adminSessions.size;
+}
+
 // Admin PIN middleware
 function requireAdmin(req, res, next) {
   const pin = req.headers['x-admin-pin'] || req.query.pin || req.body.pin;
@@ -16,13 +33,42 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// POST /api/admin/verify - Verify admin pin
+// POST /api/admin/verify - Verify admin pin + enforce concurrent session limit
 router.post('/verify', (req, res) => {
   const pin = req.body.pin;
-  if (pin === config.ADMIN_PIN) {
-    return res.json({ success: true });
+  const sessionId = req.body.sessionId || null;
+  if (pin !== config.ADMIN_PIN) {
+    return res.status(401).json({ error: 'Invalid Admin PIN.' });
   }
-  return res.status(401).json({ error: 'Invalid Admin PIN.' });
+  pruneExpiredAdminSessions();
+  // If this sessionId is already counted, allow (re-verify / page refresh)
+  if (sessionId && adminSessions.has(sessionId)) {
+    adminSessions.get(sessionId).lastSeen = Date.now();
+    return res.json({ success: true, sessionId });
+  }
+  const limit = config.ADMIN_SESSION_LIMIT || 2;
+  if (adminSessions.size >= limit) {
+    return res.status(429).json({ error: `Admin portal is already open in ${limit} browser sessions. Please close one to continue.` });
+  }
+  const newId = sessionId || Math.random().toString(36).slice(2) + Date.now();
+  adminSessions.set(newId, { lastSeen: Date.now() });
+  return res.json({ success: true, sessionId: newId });
+});
+
+// POST /api/admin/heartbeat - Keep admin session alive (called every 20s)
+router.post('/heartbeat', requireAdmin, (req, res) => {
+  const sessionId = req.body.sessionId;
+  if (sessionId && adminSessions.has(sessionId)) {
+    adminSessions.get(sessionId).lastSeen = Date.now();
+  }
+  return res.json({ ok: true, activeSessions: activeAdminCount() });
+});
+
+// POST /api/admin/logout-session - Explicitly release admin session slot
+router.post('/logout-session', (req, res) => {
+  const sessionId = req.body.sessionId;
+  if (sessionId) adminSessions.delete(sessionId);
+  return res.json({ ok: true });
 });
 
 // GET /api/admin/teams - List all teams with stats, clock, and settings

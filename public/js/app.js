@@ -7,6 +7,52 @@ let currentMorsePattern = null;
 let antiCheatInitDone = false;
 let lastBlurTime = 0;
 
+// ── Admin Session Management ──────────────────────────────────────────────────
+let adminHeartbeatInterval = null;
+
+function getAdminSessionId() {
+  return sessionStorage.getItem('fo_admin_session_id') || null;
+}
+function setAdminSessionId(id) {
+  sessionStorage.setItem('fo_admin_session_id', id);
+}
+function clearAdminSession() {
+  sessionStorage.removeItem('fo_admin_pin');
+  sessionStorage.removeItem('fo_admin_session_id');
+  if (adminHeartbeatInterval) { clearInterval(adminHeartbeatInterval); adminHeartbeatInterval = null; }
+}
+function startAdminHeartbeat(pin) {
+  if (adminHeartbeatInterval) clearInterval(adminHeartbeatInterval);
+  adminHeartbeatInterval = setInterval(async () => {
+    const sid = getAdminSessionId();
+    if (!sid) return;
+    try {
+      await fetch('/api/admin/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-pin': pin },
+        body: JSON.stringify({ sessionId: sid })
+      });
+    } catch (_) {}
+  }, 20000); // every 20 seconds
+}
+
+// Release slot on page unload
+window.addEventListener('beforeunload', () => {
+  const sid = getAdminSessionId();
+  const pin = sessionStorage.getItem('fo_admin_pin');
+  if (sid && pin) {
+    navigator.sendBeacon('/api/admin/logout-session', JSON.stringify({ sessionId: sid }));
+  }
+});
+
+// ── Vercel-only: Is this a production deployment? ────────────────────────────
+function isVercelDeployment() {
+  const host = window.location.hostname;
+  // localhost, 127.x, 10.x, 192.168.x, 172.x → local
+  return !(host === 'localhost' || host === '127.0.0.1' ||
+    /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host));
+}
+
 // Anti-cheat alert notification banner
 function showCheatAlert(msg) {
   const existing = document.getElementById('cheat-alert-box');
@@ -1113,6 +1159,7 @@ function renderMergedPortal(container) {
 
   // 1. Not Logged In -> Dual-Tab Unified Login Form
   if (!adminPin && !coordName) {
+    const isVercel = isVercelDeployment();
     container.innerHTML = `
       <div class="card" style="max-width: 540px; margin: 30px auto;">
         <div style="text-align: center; margin-bottom: 20px;">
@@ -1124,7 +1171,7 @@ function renderMergedPortal(container) {
 
         <div class="portal-tabs">
           <button id="tab-btn-coord" class="portal-tab-btn active">🛡️ Event Coordinator</button>
-          <button id="tab-btn-admin" class="portal-tab-btn">⚡ Master Organiser</button>
+          ${isVercel ? '<button id="tab-btn-admin" class="portal-tab-btn">⚡ Master Organiser</button>' : ''}
         </div>
 
         <!-- Coordinator Login Tab -->
@@ -1135,13 +1182,20 @@ function renderMergedPortal(container) {
           <form id="portal-coord-form">
             <div class="form-group">
               <label for="portal-coord-input">Coordinator Name *</label>
-              <input type="text" id="portal-coord-input" class="input-control" list="portal-coord-list" placeholder="e.g. Arun, Divya, Kiran, Pooja, Rakshith" required autofocus />
+              <input type="text" id="portal-coord-input" class="input-control" list="portal-coord-list" placeholder="e.g. Akul P Yadav, Gagan S Urs, Skanda..." required autofocus />
               <datalist id="portal-coord-list">
-                <option value="Arun">
-                <option value="Divya">
-                <option value="Kiran">
-                <option value="Pooja">
-                <option value="Rakshith">
+                <option value="Akul P Yadav">
+                <option value="Gagan S Urs">
+                <option value="M Punya Sagar">
+                <option value="MN Shashank">
+                <option value="Dhanush KP">
+                <option value="Anish S Kumar">
+                <option value="Ayush P">
+                <option value="Skanda">
+                <option value="Vishnuvardhan">
+                <option value="Vandhana V">
+                <option value="Abhiram BS">
+                <option value="Harshil">
               </datalist>
             </div>
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
@@ -1150,7 +1204,7 @@ function renderMergedPortal(container) {
           </form>
         </div>
 
-        <!-- Admin Login Tab -->
+        ${isVercel ? `<!-- Admin Login Tab (Vercel only) -->
         <div id="tab-panel-admin" style="display: none;">
           <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 14px;">
             Enter the Organiser Admin PIN for master event control, timer controls, device resets, and CSV export.
@@ -1158,14 +1212,14 @@ function renderMergedPortal(container) {
           <form id="portal-admin-form">
             <div class="form-group">
               <label for="portal-admin-pin">Admin PIN *</label>
-              <input type="password" id="portal-admin-pin" class="input-control" placeholder="Enter PIN (Default: INVICTORS)" required />
+              <input type="password" id="portal-admin-pin" class="input-control" placeholder="Enter Admin PIN" required />
             </div>
             <div id="portal-admin-err" class="feedback-line error"></div>
             <button type="submit" class="btn btn-gold" style="width: 100%; margin-top: 10px;">
               Login as Master Organiser
             </button>
           </form>
-        </div>
+        </div>` : '<div id="tab-panel-admin" style="display:none;"></div>'}
       </div>
     `;
 
@@ -1177,18 +1231,21 @@ function renderMergedPortal(container) {
 
     tabCoordBtn.onclick = () => {
       tabCoordBtn.classList.add('active');
-      tabAdminBtn.classList.remove('active');
+      if (tabAdminBtn) tabAdminBtn.classList.remove('active');
       panelCoord.style.display = 'block';
-      panelAdmin.style.display = 'none';
+      if (panelAdmin) panelAdmin.style.display = 'none';
     };
 
-    tabAdminBtn.onclick = () => {
-      tabAdminBtn.classList.add('active');
-      tabCoordBtn.classList.remove('active');
-      panelAdmin.style.display = 'block';
-      panelCoord.style.display = 'none';
-      document.getElementById('portal-admin-pin').focus();
-    };
+    if (tabAdminBtn) {
+      tabAdminBtn.onclick = () => {
+        tabAdminBtn.classList.add('active');
+        tabCoordBtn.classList.remove('active');
+        if (panelAdmin) panelAdmin.style.display = 'block';
+        panelCoord.style.display = 'none';
+        const pinInput = document.getElementById('portal-admin-pin');
+        if (pinInput) pinInput.focus();
+      };
+    }
 
     // Handle Coordinator Submit
     document.getElementById('portal-coord-form').onsubmit = (e) => {
@@ -1200,29 +1257,35 @@ function renderMergedPortal(container) {
       }
     };
 
-    // Handle Admin Submit
-    document.getElementById('portal-admin-form').onsubmit = async (e) => {
-      e.preventDefault();
-      const pin = document.getElementById('portal-admin-pin').value.trim();
-      const errEl = document.getElementById('portal-admin-err');
-      errEl.textContent = '';
+    // Handle Admin Submit (Vercel only)
+    if (isVercel) {
+      document.getElementById('portal-admin-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const pin = document.getElementById('portal-admin-pin').value.trim();
+        const errEl = document.getElementById('portal-admin-err');
+        errEl.textContent = '';
 
-      try {
-        const res = await fetch('/api/admin/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin })
-        });
-        if (res.ok) {
-          sessionStorage.setItem('fo_admin_pin', pin);
-          renderMergedPortal(container);
-        } else {
-          errEl.textContent = 'Invalid Admin PIN.';
+        try {
+          const existingSessionId = getAdminSessionId();
+          const res = await fetch('/api/admin/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin, sessionId: existingSessionId })
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            sessionStorage.setItem('fo_admin_pin', pin);
+            setAdminSessionId(data.sessionId);
+            startAdminHeartbeat(pin);
+            renderMergedPortal(container);
+          } else {
+            errEl.textContent = data.error || 'Invalid Admin PIN.';
+          }
+        } catch {
+          errEl.textContent = 'Connection error.';
         }
-      } catch {
-        errEl.textContent = 'Connection error.';
-      }
-    };
+      };
+    }
 
     return;
   }

@@ -4,10 +4,11 @@ dotenv.config();
 module.exports = {
   PORT: parseInt(process.env.PORT, 10) || 3000,
   ADMIN_PIN: process.env.ADMIN_PIN || 'INVICTORS',
-  COORDINATORS: (process.env.COORDINATORS || 'Arun,Divya,Kiran,Pooja,Rakshith')
+  COORDINATORS: (process.env.COORDINATORS || 'Akul P Yadav,Gagan S Urs,M Punya Sagar,MN Shashank,Dhanush KP,Anish S Kumar,Ayush P,Skanda,Vishnuvardhan,Vandhana V,Abhiram BS,Harshil')
     .split(',')
     .map(c => c.trim())
     .filter(Boolean),
+  ADMIN_SESSION_LIMIT: parseInt(process.env.ADMIN_SESSION_LIMIT, 10) || 2,
   TIME_CAP_MINUTES: parseInt(process.env.TIME_CAP_MINUTES, 10) || 90,
   EVENT_SALT: process.env.EVENT_SALT || 'invictors_final_override_salt_2026',
   ALLOW_NEW_TEAMS: process.env.ALLOW_NEW_TEAMS === 'true',
