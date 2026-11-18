@@ -696,13 +696,27 @@ function renderStageScreen(container, state) {
         🎧 Press Play and listen closely: long beeps and short beeps carry a message. 👀 Watch the screen too, but careful: not everything you see is true!
       </p>
 
-      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 14px; flex-wrap: wrap;">
-        <label for="morse-speed">Speed:</label>
-        <select id="morse-speed" style="width: auto; padding: 6px 12px;">
-          <option value="1.0">Normal</option>
-          <option value="1.6">Slow (1.6x)</option>
-        </select>
-        <button id="btn-play-morse" class="btn btn-primary btn-sm">▶ Play signal</button>
+      <div style="background: rgba(16, 29, 54, 0.75); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; margin: 16px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+          <span style="font-weight: bold; color: var(--gold); font-size: 0.95rem;">📡 Audio Signal Transmission:</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <label for="morse-speed" style="font-size: 0.88rem; color: var(--muted);">Speed:</label>
+            <select id="morse-speed" class="input-control" style="width: auto; padding: 4px 10px; font-size: 0.88rem;">
+              <option value="1.0">Standard Speed (1.0x)</option>
+              <option value="1.6">Slowed Down (1.6x)</option>
+            </select>
+          </div>
+        </div>
+
+        <audio id="morse-audio" controls preload="auto" style="width: 100%; height: 42px; margin-bottom: 8px;">
+          <source id="morse-audio-source" src="/assets/signal-normal.wav" type="audio/wav">
+          Your browser does not support HTML5 audio.
+        </audio>
+
+        <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
+          <button id="btn-play-morse" class="btn btn-primary btn-sm">▶ Play signal</button>
+          <span style="font-size: 0.82rem; color: var(--muted);">Use headphones or adjust volume if needed.</span>
+        </div>
       </div>
 
       <div id="signal-monitor" class="signal-monitor-box">
@@ -976,42 +990,99 @@ function attachStageEvents(stage) {
     const playBtn = document.getElementById('btn-play-morse');
     const speedSelect = document.getElementById('morse-speed');
     const monitor = document.getElementById('signal-monitor');
+    const audioEl = document.getElementById('morse-audio');
 
-    if (playBtn) {
-      playBtn.addEventListener('click', () => {
-        if (window.morsePlayer && window.morsePlayer.isPlaying) {
-          window.morsePlayer.stop();
+    if (audioEl) {
+      // Connect timeupdate event to monitor box
+      audioEl.addEventListener('timeupdate', () => {
+        const curTime = audioEl.currentTime;
+        const isSlow = speedSelect && speedSelect.value === '1.6';
+        const flashStart = isSlow ? 3.1 : 1.95;
+        const flashEnd = isSlow ? 3.6 : 2.45;
+
+        if (curTime >= flashStart && curTime <= flashEnd) {
+          monitor.classList.add('flash');
+          monitor.textContent = 'ZETA9';
+        } else if (audioEl.paused || audioEl.ended) {
           monitor.classList.remove('flash');
           monitor.textContent = 'SIGNAL MONITOR';
+        } else {
+          monitor.classList.remove('flash');
+          monitor.textContent = '…receiving…';
+        }
+      });
+
+      audioEl.addEventListener('play', () => {
+        if (playBtn) {
+          playBtn.textContent = '⏸ Pause';
+          playBtn.classList.remove('btn-primary');
+          playBtn.classList.add('btn-outline');
+        }
+        monitor.classList.remove('flash');
+        monitor.textContent = '…receiving…';
+      });
+
+      audioEl.addEventListener('pause', () => {
+        if (playBtn) {
           playBtn.textContent = '▶ Play signal';
           playBtn.classList.remove('btn-outline');
           playBtn.classList.add('btn-primary');
-          return;
         }
-
-        const speed = parseFloat(speedSelect ? speedSelect.value : '1.0') || 1.0;
-
-        playBtn.textContent = '⏹ Stop signal';
-        playBtn.classList.remove('btn-primary');
-        playBtn.classList.add('btn-outline');
         monitor.classList.remove('flash');
-        monitor.textContent = '…receiving…';
+        monitor.textContent = 'SIGNAL MONITOR';
+      });
 
-        window.morsePlayer.playPattern(currentMorsePattern, speed, (status) => {
-          if (status === 'flash') {
-            monitor.classList.add('flash');
-            monitor.textContent = 'ZETA9';
-          } else if (status === 'reset-flash') {
-            monitor.classList.remove('flash');
-            monitor.textContent = '…receiving…';
-          } else if (status === 'done') {
-            monitor.classList.remove('flash');
-            monitor.textContent = 'SIGNAL MONITOR';
-            playBtn.textContent = '▶ Play signal';
-            playBtn.classList.remove('btn-outline');
-            playBtn.classList.add('btn-primary');
-          }
-        });
+      audioEl.addEventListener('ended', () => {
+        if (playBtn) {
+          playBtn.textContent = '▶ Play signal';
+          playBtn.classList.remove('btn-outline');
+          playBtn.classList.add('btn-primary');
+        }
+        monitor.classList.remove('flash');
+        monitor.textContent = 'SIGNAL MONITOR';
+      });
+    }
+
+    if (speedSelect && audioEl) {
+      speedSelect.addEventListener('change', () => {
+        const wasPlaying = !audioEl.paused;
+        const src = speedSelect.value === '1.6' ? '/assets/signal-slow.wav' : '/assets/signal-normal.wav';
+        audioEl.src = src;
+        audioEl.load();
+        if (wasPlaying) {
+          audioEl.play().catch(() => {});
+        }
+      });
+    }
+
+    if (playBtn && audioEl) {
+      playBtn.addEventListener('click', () => {
+        if (audioEl.paused) {
+          audioEl.play().catch(err => {
+            console.warn('Native audio play error, falling back to MorsePlayer:', err);
+            if (window.morsePlayer) {
+              const speed = parseFloat(speedSelect ? speedSelect.value : '1.0') || 1.0;
+              window.morsePlayer.playPattern(currentMorsePattern, speed, (status) => {
+                if (status === 'flash') {
+                  monitor.classList.add('flash');
+                  monitor.textContent = 'ZETA9';
+                } else if (status === 'reset-flash') {
+                  monitor.classList.remove('flash');
+                  monitor.textContent = '…receiving…';
+                } else if (status === 'done') {
+                  monitor.classList.remove('flash');
+                  monitor.textContent = 'SIGNAL MONITOR';
+                  playBtn.textContent = '▶ Play signal';
+                  playBtn.classList.remove('btn-outline');
+                  playBtn.classList.add('btn-primary');
+                }
+              });
+            }
+          });
+        } else {
+          audioEl.pause();
+          audioEl.currentTime = 0;
+        }
       });
     }
   }
