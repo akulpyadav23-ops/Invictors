@@ -666,6 +666,34 @@ label {
   color: var(--txt-body);
 }
 
+.hint-box.active-timed-hint {
+  border: 2px solid var(--gold);
+  border-left: 4px solid var(--gold);
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+.hint-box.expired-hint {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-left: 4px solid var(--muted);
+  background: rgba(15, 23, 42, 0.5);
+  opacity: 0.85;
+}
+
+.hint-timer-pill {
+  animation: pulseTimer 1s infinite alternate;
+}
+
+@keyframes pulseTimer {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.04); }
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.15); }
+  100% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.35); }
+}
+
 /* Audio monitor in Stage 1 */
 .signal-monitor-box {
   background: #020612;

@@ -293,6 +293,8 @@ bodyText('• Entering this key triggers the victory celebration, stops the team
 sectionTitle('6. Master Admin Operations & Troubleshooting Manual', '⚡');
 bodyText('• Admin Access: Double-click/double-tap Invictors logo or press Alt + A. Enter Admin PIN: INVICTORS@23.');
 bodyText('• Live Answer Key Inspector: Clicking "Show Answer Key" in the Admin portal displays all static keys AND computes real-time dynamic Stage 5 & 6 keys for every registered team.');
+bodyText('• Live Stage Hints Manager & Editor: Admins can inspect and live-edit Hint 1 (+3m) and Hint 2 (+5m) for all 6 stages simultaneously. Edited hints take effect immediately for active players with full system persistence.');
+bodyText('• 30-Second Hint Timer: When any player unlocks a hint, an urgent 30-second countdown timer starts. Once the 30 seconds expire, the clue (and Stage 1 Morse chart) automatically hides and locks permanently.');
 bodyText('• Emergency Admin Actions:');
 bodyText('   - Waive Penalty: Deducts accidental tab-switch penalties with 1 click.');
 bodyText('   - Unbind Device (Reset Device Binding): Frees a member device token if a student phone battery dies.');

@@ -5,7 +5,7 @@ const config = require('../config');
 const { generateVerificationCode } = require('../logic/security');
 const { computeTeamCode, getMemberShard } = require('../logic/shard');
 const { computeFinalKey } = require('../logic/finalKey');
-const { STAGE_CONFIG } = require('../logic/stages');
+const { STAGE_CONFIG, getAllEffectiveHints } = require('../logic/stages');
 
 // ── Concurrent Admin Session Tracking ────────────────────────────────────────
 // Maps sessionId → { lastSeen: timestamp }
@@ -329,6 +329,60 @@ router.post('/notepad', requireAdmin, async (req, res) => {
     return res.json({ success: true });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to save notepad.' });
+  }
+});
+
+// GET /api/admin/hints - View all stage hints for live admin management
+router.get('/hints', requireAdmin, async (req, res) => {
+  try {
+    const hintsMap = await getAllEffectiveHints(ds);
+    const stages = {};
+    for (let s = 1; s <= 6; s++) {
+      stages[s] = {
+        stage: s,
+        name: STAGE_CONFIG[s] ? STAGE_CONFIG[s].name : `Stage ${s}`,
+        icon: STAGE_CONFIG[s] ? STAGE_CONFIG[s].icon : '🎯',
+        hints: hintsMap[s] || []
+      };
+    }
+    return res.json({ stages });
+  } catch (err) {
+    console.error('Admin get hints error:', err);
+    return res.status(500).json({ error: 'Failed to fetch stage hints.' });
+  }
+});
+
+// POST /api/admin/hints - Live-edit stage hints
+router.post('/hints', requireAdmin, async (req, res) => {
+  try {
+    const { hints } = req.body; // Map: { 1: ['hint1', 'hint2'], ... }
+    if (!hints || typeof hints !== 'object') {
+      return res.status(400).json({ error: 'Invalid hints data provided.' });
+    }
+    // Clean and validate format
+    const cleaned = {};
+    for (let s = 1; s <= 6; s++) {
+      if (Array.isArray(hints[s])) {
+        cleaned[s] = hints[s].map(h => String(h || '').trim()).filter(Boolean);
+      }
+    }
+    await ds.setSetting('custom_hints', JSON.stringify(cleaned));
+    return res.json({ success: true, message: 'Stage hints saved successfully.' });
+  } catch (err) {
+    console.error('Admin save hints error:', err);
+    return res.status(500).json({ error: 'Failed to update stage hints.' });
+  }
+});
+
+// POST /api/admin/hints/reset - Reset hints to defaults
+router.post('/hints/reset', requireAdmin, async (req, res) => {
+  try {
+    await ds.setSetting('custom_hints', '');
+    const defaultHints = await getAllEffectiveHints(ds);
+    return res.json({ success: true, message: 'All stage hints reset to system defaults.', hints: defaultHints });
+  } catch (err) {
+    console.error('Admin reset hints error:', err);
+    return res.status(500).json({ error: 'Failed to reset stage hints.' });
   }
 });
 

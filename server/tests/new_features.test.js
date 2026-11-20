@@ -243,6 +243,43 @@ async function runNewFeatureTests() {
     assert.strictEqual(getNotepad.data.notepad, testNotes);
     console.log('✅ Passed Test 7: Winners Notepad persists and loads notes accurately');
 
+    console.log('--- Test 8: Admin Stage Hints Management & 30s Timer Delivery ---');
+    const getHints = await request('/api/admin/hints', {
+      headers: { 'x-admin-pin': 'INVICTORS@23' }
+    });
+    assert.strictEqual(getHints.status, 200);
+    assert.ok(getHints.data.stages[1], 'Stage 1 hints returned');
+
+    // Live update hints
+    const customH1 = 'CUSTOM ADMIN HINT: Sector 1 is N, Sector 2 is O.';
+    const saveHints = await request('/api/admin/hints', {
+      method: 'POST',
+      headers: { 'x-admin-pin': 'INVICTORS@23' },
+      body: {
+        hints: {
+          1: [customH1, 'CUSTOM HINT 2: NOVA']
+        }
+      }
+    });
+    assert.strictEqual(saveHints.status, 200);
+
+    // Verify stage 1 hint delivery returns the custom hint and 30s duration
+    const testHintRes = await request('/api/hint', {
+      method: 'POST',
+      cookies: { fo_leader_token: leaderCookie }
+    });
+    assert.strictEqual(testHintRes.status, 200);
+    assert.strictEqual(testHintRes.data.hint, customH1);
+    assert.strictEqual(testHintRes.data.hintDurationSec, 30);
+
+    // Reset hints
+    const resetHints = await request('/api/admin/hints/reset', {
+      method: 'POST',
+      headers: { 'x-admin-pin': 'INVICTORS@23' }
+    });
+    assert.strictEqual(resetHints.status, 200);
+    console.log('✅ Passed Test 8: Admin live stage hints manager saves, delivers 30s hints, and resets accurately');
+
     console.log('\n🎉 ALL NEW FEATURE TESTS PASSED SUCCESSFULLY! 🎉\n');
   } finally {
     server.close();

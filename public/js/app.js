@@ -3,6 +3,7 @@
 let gameState = null;
 let liveTimerInterval = null;
 let lobbyPollInterval = null;
+let hintTickerInterval = null;
 let currentMorsePattern = null;
 let antiCheatInitDone = false;
 let lastBlurTime = 0;
@@ -250,6 +251,10 @@ async function renderApp() {
     clearInterval(lobbyPollInterval);
     lobbyPollInterval = null;
   }
+  if (hintTickerInterval) {
+    clearInterval(hintTickerInterval);
+    hintTickerInterval = null;
+  }
 
   if (route === 'portal') {
     stickyBar.style.display = 'none';
@@ -478,6 +483,25 @@ async function renderStartScreen(container) {
           <div class="stage-poster-title">Sync & Override</div>
           <div class="stage-poster-desc">Merge all squad member shards & unlock vault</div>
         </div>
+      </div>
+    </div>
+
+    <!-- CRITICAL PRE-MISSION BRIEFING & STRATEGIC NOTICE -->
+    <div class="card" style="border: 2px solid var(--gold); background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.95)); box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+        <span style="font-size: 2rem; filter: drop-shadow(0 0 10px var(--gold));">⚠️</span>
+        <div>
+          <h2 style="font-size: 1.35rem; color: var(--gold); margin: 0; font-family: var(--font-display); letter-spacing: 1px;">
+            IMPORTANT NOTICE · READ &amp; ANALYZE BEFORE ENTERING
+          </h2>
+          <span style="font-size: 0.82rem; color: var(--accent); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Crucial Operational Intelligence for Mission Completion</span>
+        </div>
+      </div>
+      <p style="font-size: 1.02rem; line-height: 1.7; color: var(--txt); margin: 0 0 12px 0;">
+        <strong>What you must know before entering the game:</strong> Carefully inspect and analyze everything on this front briefing page before you start. Do not rush into registration without reviewing the mission parameters!
+      </p>
+      <div style="background: rgba(3, 8, 20, 0.9); border: 1px solid rgba(245, 158, 11, 0.4); border-left: 5px solid var(--gold); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 0.95rem; color: #fef08a; line-height: 1.65;">
+        🔍 <strong>Vital Clue for Stage 6 Override:</strong> Observe and record the exact <strong>Mission Names</strong> displayed on this briefing board (<em>Signal Intercept</em>, <em>Decoding</em>, <em>Prompt the AI</em>, <em>CTF Challenges</em>, <em>Team Sync</em>). When your squad unlocks the final master override in <strong>Stage 6</strong>, the system requires you to arrange and synthesize your recovered pieces based on these exact mission names! Take note of them now before lockdown begins!
       </div>
     </div>
 
@@ -955,8 +979,59 @@ function renderStageScreen(container, state) {
 
   const revealedHints = state.revealedHints || [];
   let hintsHtml = '';
+  const now = Date.now();
+
+  const hint1StorageKey = `fo_hint_expires_${team.id}_${stage}_1`;
+  const hint1Exp = parseInt(sessionStorage.getItem(hint1StorageKey) || '0', 10);
+  const hint1RemainingSec = Math.max(0, Math.ceil((hint1Exp - now) / 1000));
+
   if (revealedHints.length > 0) {
-    hintsHtml = revealedHints.map(h => `<div class="hint-box">${escapeHtml(h)}</div>`).join('');
+    hintsHtml = revealedHints.map((h, idx) => {
+      const hintNum = idx + 1;
+      const storageKey = `fo_hint_expires_${team.id}_${stage}_${hintNum}`;
+      let expiresAt = parseInt(sessionStorage.getItem(storageKey) || '0', 10);
+
+      // If hint was revealed on server, but no client timer exists yet:
+      if (!expiresAt) {
+        expiresAt = now + 30000;
+        sessionStorage.setItem(storageKey, String(expiresAt));
+      }
+
+      const remainingMs = expiresAt - now;
+      const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+
+      if (remainingSec > 0) {
+        return `
+          <div class="hint-box active-timed-hint" id="hint-timed-card-${hintNum}" style="border: 2px solid var(--gold); background: rgba(245, 158, 11, 0.08); padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(245, 158, 11, 0.4); padding-bottom: 6px; margin-bottom: 8px; flex-wrap: wrap; gap: 4px;">
+              <span style="font-weight: bold; color: var(--gold); font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+                💡 HINT ${hintNum} UNLOCKED
+              </span>
+              <span class="hint-timer-pill" id="hint-timer-pill-${hintNum}" style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--bad); color: #fca5a5; font-family: var(--font-mono); font-size: 0.82rem; font-weight: bold; padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                ⏱️ <span class="hint-sec-val" data-hint="${hintNum}">${remainingSec}</span>s remaining
+              </span>
+            </div>
+            <div class="hint-body-text" style="font-size: 0.95rem; color: #fef3c7; line-height: 1.55;">
+              ${escapeHtml(h)}
+            </div>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="hint-box expired-hint" style="border: 1px solid var(--line); background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: var(--radius-sm); color: var(--muted); margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+              <span style="font-size: 0.85rem; font-weight: bold; color: var(--muted); display: flex; align-items: center; gap: 6px;">
+                🔒 HINT ${hintNum} EXPIRED
+              </span>
+              <span style="font-size: 0.75rem; color: var(--bad); font-weight: bold; text-transform: uppercase;">30s Window Closed</span>
+            </div>
+            <p style="margin: 4px 0 0; font-size: 0.82rem; color: #64748b; font-style: italic;">
+              The 30-second viewing period for this hint has elapsed. Hint content has been securely hidden. Penalty minutes remain applied.
+            </p>
+          </div>
+        `;
+      }
+    }).join('');
   }
 
   const hintsUsed = currentProg.hintsUsed || 0;
@@ -1001,23 +1076,31 @@ function renderStageScreen(container, state) {
 
       <div class="hint-section">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-          <span style="font-size: 0.9rem; color: var(--muted);">Need a clue? Hints add penalty minutes.</span>
+          <div>
+            <span style="font-size: 0.9rem; color: var(--muted);">Need a clue? Hints add penalty minutes.</span>
+            <div style="font-size: 0.78rem; color: var(--gold); margin-top: 2px;">⏱️ Warning: Hints are displayed for <strong>30 seconds only</strong> before auto-hiding!</div>
+          </div>
           <button id="btn-request-hint" class="btn btn-gold btn-sm" ${(hintDisabled || isPaused) ? 'disabled' : ''}>
             ${hintBtnText}
           </button>
         </div>
-        <div id="hints-display-container" style="display: flex; flex-direction: column; gap: 8px;">
+        <div id="hints-display-container" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
           ${hintsHtml}
         </div>
 
-        ${stage === 1 ? (hintsUsed >= 1 ? `
-        <!-- UNLOCKED 15-Alphabet Morse Chart (Only visible when hint is pressed) -->
+        ${stage === 1 ? (hintsUsed >= 1 ? (hint1RemainingSec > 0 ? `
+        <!-- UNLOCKED 15-Alphabet Morse Chart (Only visible during 30s Hint 1 Window) -->
         <div class="stage1-hint-chart" style="margin-top: 14px; background: rgba(3, 8, 22, 0.9); border: 2px solid var(--gold); border-radius: var(--radius-sm); padding: 14px 16px; animation: fadeIn 0.3s ease;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
             <div style="font-weight: bold; font-size: 0.92rem; color: var(--gold); display: flex; align-items: center; gap: 6px;">
               <span>🔓 UNLOCKED HINT: Morse Code Decoder Chart (15 Alphabets)</span>
             </div>
-            <span style="font-size: 0.78rem; color: var(--accent);">(Click any letter to insert into answer)</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--bad); color: #fca5a5; font-family: var(--font-mono); font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 10px;">
+                ⏱️ <span class="hint-sec-val" data-hint="1">${hint1RemainingSec}</span>s remaining
+              </span>
+              <span style="font-size: 0.78rem; color: var(--accent);">(Click any letter to insert into answer)</span>
+            </div>
           </div>
           <p style="font-size: 0.85rem; color: var(--muted); margin: 0 0 12px; line-height: 1.4;">
             Match the Morse codes from Sectors 1, 2, 3, and 4 against this 15-letter chart:
@@ -1102,10 +1185,23 @@ function renderStageScreen(container, state) {
           </div>
         </div>
         ` : `
+        <!-- EXPIRED Morse Chart Notice -->
+        <div class="hint-box expired-hint" style="margin-top: 14px; border: 1px solid var(--line); background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: var(--radius-sm); color: var(--muted);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.85rem; font-weight: bold; color: var(--muted); display: flex; align-items: center; gap: 6px;">
+              🔒 MORSE CODE CHART AUTO-LOCKED
+            </span>
+            <span style="font-size: 0.75rem; color: var(--bad); font-weight: bold; text-transform: uppercase;">30s Window Closed</span>
+          </div>
+          <p style="margin: 4px 0 0; font-size: 0.82rem; color: #64748b; font-style: italic;">
+            The 30-second viewing period for Hint 1 has elapsed. The Morse decoder chart has been automatically hidden.
+          </p>
+        </div>
+        `) : `
         <!-- Locked Hint Notice -->
         <div style="margin-top: 12px; background: rgba(3, 8, 22, 0.4); border: 1px dashed #334155; border-radius: var(--radius-sm); padding: 12px 14px; text-align: center;">
           <span style="font-size: 0.86rem; color: var(--muted);">
-            🔒 <strong>Morse Code Chart is locked.</strong> Don't know Morse code? Click <strong>"💡 Hint (+3 min)"</strong> above to unlock the 15-alphabet decoder chart!
+            🔒 <strong>Morse Code Chart is locked.</strong> Don't know Morse code? Click <strong>"💡 Hint (+3 min)"</strong> above to unlock the 15-alphabet decoder chart! (30-second viewing window applies).
           </span>
         </div>
         `) : ''}
@@ -1178,19 +1274,57 @@ function attachStageEvents(stage) {
     });
   }
 
+  // 30-Second Hint Countdown Ticker
+  if (hintTickerInterval) {
+    clearInterval(hintTickerInterval);
+    hintTickerInterval = null;
+  }
+  const badgeEls = document.querySelectorAll('.hint-sec-val');
+  if (badgeEls && badgeEls.length > 0) {
+    hintTickerInterval = setInterval(() => {
+      let anyLeft = false;
+      let expiredFound = false;
+      badgeEls.forEach(el => {
+        const cur = parseInt(el.textContent, 10);
+        if (cur > 1) {
+          el.textContent = cur - 1;
+          anyLeft = true;
+        } else if (cur === 1) {
+          el.textContent = '0';
+          expiredFound = true;
+        }
+      });
+      if (expiredFound || !anyLeft) {
+        clearInterval(hintTickerInterval);
+        hintTickerInterval = null;
+        renderApp();
+      }
+    }, 1000);
+  }
+
   const hintBtn = document.getElementById('btn-request-hint');
   if (hintBtn) {
     hintBtn.addEventListener('click', async () => {
+      if (!confirm('Unlock hint? Penalty will be added to your score and the hint will be visible for 30 SECONDS ONLY before auto-hiding.')) {
+        return;
+      }
+      hintBtn.disabled = true;
+      hintBtn.textContent = 'Unlocking...';
       try {
         const res = await fetch('/api/hint', { method: 'POST' });
         const data = await res.json();
         if (res.ok) {
+          const tId = (gameState && gameState.team && gameState.team.id) || 'team';
+          sessionStorage.setItem(`fo_hint_expires_${tId}_${stage}_${data.hintsUsed}`, String(Date.now() + 30000));
+          showToast(`💡 Hint ${data.hintsUsed} unlocked! You have 30 seconds to view it before it hides.`);
           renderApp();
         } else {
           alert(data.error || 'Could not fetch hint.');
+          renderApp();
         }
       } catch {
         alert('Server connection error.');
+        renderApp();
       }
     });
   }
@@ -1875,6 +2009,27 @@ function renderMergedPortal(container) {
         </div>
       </div>
 
+      <!-- Stage Hints Management & Live Editor Section -->
+      <div style="margin-top: 32px; border-top: 1px solid var(--line); padding-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 style="font-size: 1.25rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+              💡 Live Stage Hints Manager &amp; Editor
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">
+              View and edit hints across all stages. Changes take effect immediately when requested by active players. (30s viewing timer applies to players).
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button id="btn-save-all-hints" class="btn btn-gold btn-sm">💾 Save All Hints</button>
+            <button id="btn-reset-hints" class="btn btn-outline btn-sm">↺ Reset Defaults</button>
+          </div>
+        </div>
+        <div id="admin-hints-editor-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
+          <p style="color: var(--muted); padding: 12px;">Loading hints editor...</p>
+        </div>
+      </div>
+
       <!-- Winners Scratchpad & Notes Section -->
       <div style="margin-top: 32px; border-top: 1px solid var(--line); padding-top: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
@@ -2124,6 +2279,109 @@ function renderMergedPortal(container) {
   }
 
   document.getElementById('btn-refresh-violations').onclick = loadViolations;
+
+  // Live Stage Hints Manager Logic
+  async function loadAdminHintsEditor() {
+    const grid = document.getElementById('admin-hints-editor-grid');
+    if (!grid) return;
+    try {
+      const res = await fetch('/api/admin/hints', {
+        headers: { 'x-admin-pin': adminPin }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const stages = data.stages || {};
+
+      let html = '';
+      for (let s = 1; s <= 6; s++) {
+        const stageInfo = stages[s] || { name: `Stage ${s}`, icon: '🎯', hints: [] };
+        const h1 = (stageInfo.hints && stageInfo.hints[0]) || '';
+        const h2 = (stageInfo.hints && stageInfo.hints[1]) || '';
+        html += `
+          <div class="card" style="background: rgba(3, 8, 22, 0.75); border: 1px solid var(--line); padding: 14px; border-radius: var(--radius-sm);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--line); padding-bottom: 6px;">
+              <span style="font-weight: bold; color: var(--accent); font-size: 0.95rem;">${stageInfo.icon} Stage ${s}: ${escapeHtml(stageInfo.name)}</span>
+              <span style="font-size: 0.75rem; color: var(--gold); font-family: var(--font-mono); font-weight: bold;">⏱️ 30s Window</span>
+            </div>
+            
+            <div style="margin-bottom: 10px;">
+              <label style="font-size: 0.78rem; font-weight: bold; color: var(--gold); display: block; margin-bottom: 4px;">
+                💡 HINT 1 (+3 min penalty):
+              </label>
+              <textarea id="admin-hint-${s}-1" class="input-control" rows="2" style="font-size: 0.85rem; width: 100%; resize: vertical;" placeholder="Enter Hint 1 text...">${escapeHtml(h1)}</textarea>
+            </div>
+
+            <div>
+              <label style="font-size: 0.78rem; font-weight: bold; color: var(--accent); display: block; margin-bottom: 4px;">
+                💡 HINT 2 (+5 min penalty):
+              </label>
+              <textarea id="admin-hint-${s}-2" class="input-control" rows="2" style="font-size: 0.85rem; width: 100%; resize: vertical;" placeholder="Enter Hint 2 text...">${escapeHtml(h2)}</textarea>
+            </div>
+          </div>
+        `;
+      }
+      grid.innerHTML = html;
+    } catch (err) {
+      grid.innerHTML = '<p style="color: var(--bad); padding: 10px;">Failed to load stage hints.</p>';
+    }
+  }
+
+  const saveHintsBtn = document.getElementById('btn-save-all-hints');
+  if (saveHintsBtn) {
+    saveHintsBtn.onclick = async () => {
+      saveHintsBtn.disabled = true;
+      saveHintsBtn.textContent = 'Saving...';
+      const hintsMap = {};
+      for (let s = 1; s <= 6; s++) {
+        const el1 = document.getElementById(`admin-hint-${s}-1`);
+        const el2 = document.getElementById(`admin-hint-${s}-2`);
+        const h1 = el1 ? el1.value.trim() : '';
+        const h2 = el2 ? el2.value.trim() : '';
+        hintsMap[s] = [h1, h2].filter(Boolean);
+      }
+      try {
+        const res = await fetch('/api/admin/hints', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+          body: JSON.stringify({ hints: hintsMap })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('✅ Stage hints updated successfully! Active teams will see new hints immediately.');
+        } else {
+          showToast(data.error || 'Failed to save hints.', 'error');
+        }
+      } catch {
+        showToast('Connection error while saving hints.', 'error');
+      } finally {
+        saveHintsBtn.disabled = false;
+        saveHintsBtn.textContent = '💾 Save All Hints';
+      }
+    };
+  }
+
+  const resetHintsBtn = document.getElementById('btn-reset-hints');
+  if (resetHintsBtn) {
+    resetHintsBtn.onclick = async () => {
+      if (!confirm('Reset all stage hints back to system defaults?')) return;
+      try {
+        const res = await fetch('/api/admin/hints/reset', {
+          method: 'POST',
+          headers: { 'x-admin-pin': adminPin }
+        });
+        if (res.ok) {
+          showToast('↺ Stage hints reset to system defaults.');
+          loadAdminHintsEditor();
+        } else {
+          showToast('Failed to reset hints.', 'error');
+        }
+      } catch {
+        showToast('Connection error.', 'error');
+      }
+    };
+  }
+
+  loadAdminHintsEditor();
 
   let notepadLoaded = false;
 

@@ -75,9 +75,46 @@ const STAGE_CONFIG = {
   }
 };
 
+async function getEffectiveStageHints(ds, stage) {
+  const defaultHints = (STAGE_CONFIG[stage] && STAGE_CONFIG[stage].hints) ? [...STAGE_CONFIG[stage].hints] : [];
+  if (!ds) return defaultHints;
+  try {
+    const customHintsStr = await ds.getSetting('custom_hints');
+    if (customHintsStr) {
+      const customHints = JSON.parse(customHintsStr);
+      if (customHints && customHints[stage] && Array.isArray(customHints[stage])) {
+        return customHints[stage];
+      }
+    }
+  } catch (_) {}
+  return defaultHints;
+}
+
+async function getAllEffectiveHints(ds) {
+  const hintsMap = {};
+  for (let s = 1; s <= 6; s++) {
+    hintsMap[s] = (STAGE_CONFIG[s] && STAGE_CONFIG[s].hints) ? [...STAGE_CONFIG[s].hints] : [];
+  }
+  if (!ds) return hintsMap;
+  try {
+    const customHintsStr = await ds.getSetting('custom_hints');
+    if (customHintsStr) {
+      const customHints = JSON.parse(customHintsStr);
+      for (let s = 1; s <= 6; s++) {
+        if (customHints[s] && Array.isArray(customHints[s])) {
+          hintsMap[s] = customHints[s];
+        }
+      }
+    }
+  } catch (_) {}
+  return hintsMap;
+}
+
 module.exports = {
   STAGE_CONFIG,
   getStageDetails(stage) {
     return STAGE_CONFIG[stage] || null;
-  }
+  },
+  getEffectiveStageHints,
+  getAllEffectiveHints
 };

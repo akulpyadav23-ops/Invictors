@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const ds = require('../dataService');
 const config = require('../config');
 const { norm, hashAnswer, generateToken, generateVerificationCode } = require('../logic/security');
-const { STAGE_CONFIG } = require('../logic/stages');
+const { STAGE_CONFIG, getEffectiveStageHints } = require('../logic/stages');
 const { getMemberShard, computeTeamCode } = require('../logic/shard');
 const { computeFinalKey } = require('../logic/finalKey');
 
@@ -160,7 +160,8 @@ router.get('/state', requireTeam, async (req, res) => {
     const currentProg = progressRows.find(p => p.stage === currentStage) || { wrongAttempts: 0, hintsUsed: 0 };
 
     const stageConfig = STAGE_CONFIG[currentStage] || {};
-    const revealedHints = (stageConfig.hints || []).slice(0, currentProg.hintsUsed);
+    const effectiveHints = await getEffectiveStageHints(ds, currentStage);
+    const revealedHints = effectiveHints.slice(0, currentProg.hintsUsed);
 
     // Members
     const members = await ds.getMembers(team.id);
@@ -425,8 +426,8 @@ router.post('/hint', requireTeam, async (req, res) => {
     }
 
     const stage = team.stage;
-    const stageConfig = STAGE_CONFIG[stage];
-    if (!stageConfig || !stageConfig.hints) {
+    const stageHints = await getEffectiveStageHints(ds, stage);
+    if (!stageHints || !stageHints.length) {
       return res.status(400).json({ error: 'No hints available for this mission.' });
     }
 
@@ -445,13 +446,15 @@ router.post('/hint', requireTeam, async (req, res) => {
     await ds.updateProgress(team.id, stage, { hintsUsed: newHintsUsed });
     await ds.updateTeam(team.id, { penaltyMin: newPenalty });
 
-    const unlockedHint = stageConfig.hints[newHintsUsed - 1];
+    const unlockedHint = stageHints[newHintsUsed - 1];
 
     return res.json({
       success: true,
       hintsUsed: newHintsUsed,
       hint: unlockedHint,
-      penaltyMin: newPenalty
+      penaltyMin: newPenalty,
+      hintDurationSec: 30,
+      unlockedAt: Date.now()
     });
   } catch (err) {
     console.error('Hint API error:', err);
