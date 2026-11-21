@@ -48,29 +48,30 @@ const STAGE_CONFIG = {
     ]
   },
   4: {
-    name: 'CTF Challenges',
-    icon: '🚩',
+    name: 'Cyber Defense',
+    icon: '🛡️',
     answer: '91X',
-    commentToken: '<!-- token1 = 9 -->',
     hints: [
-      'Inspect this section’s HTML, and use the terminal. Type help.',
-      'Tokens: HTML comment, robots.txt trail, badge.jpg metadata. Join them in order (1, 2, 3).'
+      'Analyze the Firewall Ingress Rules: Engage Port 80 (HTTP) and Port 443 (TLS) while keeping Port 21 (FTP) offline.',
+      'The 3 decoupled quadrant tokens are Alpha: 9, Beta: 1, Gamma: X. Concatenate them in order to obtain 91X.'
     ]
   },
   5: {
-    name: 'Team Sync',
-    icon: '🤝',
+    name: 'Hex Decryption',
+    icon: '🔢',
+    answer: 'HEX82D',
+    hexStream: '48 45 58 38 32 44',
     hints: [
-      'Every teammate needs their own device. Use the “Joining as a team member” box.',
-      'Sort the members A to Z by full name, then write their shards in that order with dashes.'
+      'Inspect the primary memory bus: Column 1 across Channels A through F gives the hex bytes: 48 45 58 38 32 44.',
+      'Decode the hex bytes to ASCII text: 0x48=H, 0x45=E, 0x58=X, 0x38=8, 0x32=2, 0x44=D. The resulting fragment is HEX82D.'
     ]
   },
   6: {
     name: 'Final Integration',
     icon: '🧩',
     hints: [
-      'The order is alphabetical by mission NAME, not by number.',
-      'Reverse the Prompt-the-AI piece. Add up every digit (0–9) you see for the number after #.'
+      'Sort the pieces alphabetically by mission NAME: Cyber Defense (91X), Decoding (7K2), Hex Decryption (HEX82D), Prompt the AI (reverse it), Signal Intercept (NOVA).',
+      'Formula: FO{91X-7K2-HEX82D-TIBRO-NOVA}#29. The number after # is the sum of all digits: 9+1+7+2+8+2 = 29.'
     ]
   }
 };

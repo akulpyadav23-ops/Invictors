@@ -87,8 +87,8 @@ doc.moveDown(0.4);
 calloutBox('🔑 Master Configuration & Critical Secrets', [
   '• Master Admin PIN: INVICTORS@23 (Full control, timer, device resets, dynamic answer keys)',
   '• Coordinator Portal PINs: Arun (ARUN#234), Divya (DIVYA#567), Kiran (KIRAN#890), Pooja (POOJA#123), Rakshith (RAKSHITH#456)',
-  '• Master Final Key Formula: FO{f4-f2-f1-reverse(f3)-f5_without_dashes}#checksum',
-  '• Stage 6 Alphabetical Sorting Rule: Missions sorted A-Z by NAME: CTF (f4), Decoding (f2), Media (f1), Prompt (f3), Sync (f5)',
+  '• Master Final Key Formula: FO{f4-f2-f5-reverse(f3)-f1}#checksum -> FO{91X-7K2-HEX82D-TIBRO-NOVA}#29',
+  '• Stage 6 Alphabetical Sorting Rule: Missions sorted A-Z by NAME: Cyber Defense (f4), Decoding (f2), Hex Decryption (f5), Prompt the AI (f3 reversed), Signal Intercept (f1)',
   '• Anti-Cheat Engine: Tab-switch detection (+2 min penalty per violation), Rate-limiting (1s cooldown between submits)'
 ], COLOR_ACCENT, '#eff6ff');
 
@@ -113,9 +113,9 @@ const stageRows = [
   ['1', 'Signal Intercept (Morse Matrix)', '8 – 12 mins', '+3m / +5m', 'NOVA'],
   ['2', 'Multi-Layer Decryption Suite', '8 – 12 mins', '+3m / +5m', '7K2 (AURORA)'],
   ['3', 'Prompt WARDEN AI Guardian', '10 – 15 mins', '+3m / +5m', 'ORBIT'],
-  ['4', 'CTF Recon & Steganography', '12 – 18 mins', '+3m / +5m', '91X'],
-  ['5', 'Multi-Device Team Sync', '10 – 15 mins', '+3m / +5m', 'Dynamic Shards'],
-  ['6', 'Final Override Key Integration', '12 – 18 mins', '+3m / +5m', 'FO{...}#Checksum']
+  ['4', 'Cyber Defense Firewall Matrix', '10 – 15 mins', '+3m / +5m', '91X'],
+  ['5', 'Hexadecimal Memory Core', '10 – 15 mins', '+3m / +5m', 'HEX82D'],
+  ['6', 'Final Override Key Integration', '10 – 15 mins', '+3m / +5m', 'FO{...}#29']
 ];
 
 let curRowY = tableY + 18;
@@ -198,64 +198,49 @@ calloutBox('💡 Stage 3 Hints Catalog', [
 ]);
 
 // -------------------------------------------------------------
-// PAGE 3: STAGE 4 DEEP DIVE (CTF CHALLENGES)
+// PAGE 3: STAGE 4 DEEP DIVE (CYBER DEFENSE FIREWALL MATRIX)
 // -------------------------------------------------------------
 doc.addPage();
 drawHeader();
 
-sectionTitle('4. Stage 4 In-Depth Deep Dive: CTF Recon & Steganography', '🚩');
+sectionTitle('4. Stage 4 In-Depth Deep Dive: Cyber Defense Firewall Matrix', '🛡️');
 bodyText(
-  'Stage 4 represents a classical Capture-The-Flag (CTF) triage scenario. Many participants struggle on this stage because it requires multi-vector reconnaissance rather than a single text input. The stage is split into 3 distinct security vectors that each yield 1 character token. Joining them in order (Token 1 + Token 2 + Token 3) forms the 3-character Fragment 4.'
+  'Stage 4 has been completely redesigned into a cyber defense firewall simulation. Teams breach the AEGIS-44 adaptive security mainframe by configuring ingress network port rules or by analyzing multi-quadrant packet telemetry logs. The stage eliminates command-line terminal syntax in favor of an interactive, visually rich network operations console.'
 );
 doc.moveDown(0.4);
 
 calloutBox('🎯 Complete Stage 4 Architecture & Solution Map', [
   '• Target Answer: 91X',
-  '• Token 1: 9  (Source Code / Web Node Inspection)',
-  '• Token 2: 1  (Web Reconnaissance & Directory Discovery via robots.txt)',
-  '• Token 3: X  (Digital Forensics / Image Metadata Extraction via EXIF)'
+  '• Core Mechanic: Ingress Port Alignment + Telemetry Quadrant Decoupling',
+  '• Quadrant Alpha Token: 9  (Packet header offset decryption)',
+  '• Quadrant Beta Token: 1  (Parity checksum handshake)',
+  '• Quadrant Gamma Token: X  (TLS common name certificate symbol)',
+  '• Synthesis: Concatenate Alpha (9) + Beta (1) + Gamma (X) -> 91X'
 ], '#10b981', '#f0fdf4');
 
-subSection('🔍 Vector 1: Token 1 (HTML Comment / Web Node Source Inspection)');
-bodyText('• How players find it:');
-bodyText('   - On Desktop: Right-click -> Inspect Element / View Page Source on the Mission 4 interface reveals:');
-bodyText('     <!-- token1 = 9 -->');
-bodyText('   - On Mobile / Built-in Terminal: Mobile users do not have browser DevTools. In the built-in terminal, typing');
-bodyText('     "cat index.html" prints the node HTML, immediately surfacing <!-- token1 = 9 -->.');
-bodyText('• Result Token 1 = 9');
+subSection('⚡ Pathway 1: Ingress Port Calibration Matrix');
+bodyText('• The Network Policy: The firewall policy specifies that standard web gateways must be active, while insecure daemons must be isolated.');
+bodyText('• Port Configuration:');
+bodyText('   - PORT 80 (HTTP Ingress Bridge): ROUTED [ACTIVE]');
+bodyText('   - PORT 443 (TLS Security Tunnel): ROUTED [ACTIVE]');
+bodyText('   - PORT 21 (FTP Data Stream): BLOCKED [ISOLATED]');
+bodyText('   - PORT 8080 (Proxy Relay Daemon): BLOCKED [ISOLATED]');
+bodyText('• Interaction: Players toggle the cards directly on screen. Clicking "Test Ingress Alignment" tests the circuit and reveals the breach confirmation: 91X.');
 doc.moveDown(0.3);
 
-subSection('🤖 Vector 2: Token 2 (Terminal Reconnaissance & Hidden Directory)');
-bodyText('• The Scenario: The terminal emulator connects to the simulated vault node. Typing "help" displays available commands:');
-bodyText('   Commands: ls, ls <folder>, cat <file>, exif <file>');
-bodyText('• Step 2A (Reconnaissance): Player types: ls');
-bodyText('   Terminal responds: index.html robots.txt badge.jpg');
-bodyText('• Step 2B (Inspecting Web Crawl Directives): In web security, robots.txt lists hidden endpoints. Player types:');
-bodyText('   cat robots.txt');
-bodyText('   Terminal responds: User-agent: *  |  Disallow: /vault-7f3a/');
-bodyText('• Step 2C (Directory Traversal): Player discovers the hidden directory "/vault-7f3a/". Player types:');
-bodyText('   ls vault-7f3a');
-bodyText('   Terminal responds: note.txt');
-bodyText('• Step 2D (Retrieving the Note): Player types:');
-bodyText('   cat vault-7f3a/note.txt');
-bodyText('   Terminal responds: token2 = 1');
-bodyText('• Result Token 2 = 1');
-doc.moveDown(0.3);
-
-subSection('📷 Vector 3: Token 3 (Steganography & EXIF Forensics)');
-bodyText('• The Scenario: An image named "badge.jpg" was listed in the root directory.');
-bodyText('• Forensics Analysis: In CTFs, files frequently conceal tokens in EXIF metadata header tags.');
-bodyText('• Player types: exif badge.jpg');
-bodyText('• Terminal responds: File: badge.jpg  |  Comment: token3 = X');
-bodyText('• Result Token 3 = X');
+subSection('📡 Pathway 2: Packet Telemetry Logs & Quadrant Synthesis');
+bodyText('• Telemetry Terminal: The console displays live intercepted packet logs:');
+bodyText('   - [LOG-α] Quadrant Alpha packet payload offset -> Token 1 = 9');
+bodyText('   - [LOG-β] Quadrant Beta parity checksum handshake -> Token 2 = 1');
+bodyText('   - [LOG-γ] Quadrant Gamma TLS common name symbol -> Token 3 = X');
+bodyText('• Result: Concatenating the 3 tokens in quadrant sequence produces the 3-character Fragment 4: 91X.');
 doc.moveDown(0.3);
 
 subSection('🔗 Synthesis & Stage 4 Submission');
-bodyText('• Player concatenates Token 1 + Token 2 + Token 3: "9" + "1" + "X" = "91X".');
-bodyText('• Typing "91X" into the Stage 4 solution input unlocks Stage 5 immediately.');
+bodyText('• Entering "91X" unlocks Stage 5 immediately and records 91X into the team notebook.');
 calloutBox('💡 Stage 4 Hints Catalog', [
-  '• Hint 1 (+3 min penalty): Directs players to inspect the HTML comments and use the terminal with the "help" command.',
-  '• Hint 2 (+5 min penalty): Spells out the 3 locations: HTML comment (Token 1), robots.txt / vault-7f3a note (Token 2), and badge.jpg exif (Token 3).'
+  '• Hint 1 (+3 min penalty): Directs players to engage Port 80 and Port 443 while isolating Port 21, or inspect telemetry logs.',
+  '• Hint 2 (+5 min penalty): Directly reveals the 3 quadrant tokens: Alpha = 9, Beta = 1, Gamma = X -> 91X.'
 ]);
 
 // -------------------------------------------------------------
@@ -266,28 +251,30 @@ drawHeader();
 
 sectionTitle('5. Detailed Stage Guide: Missions 5 and 6', '🧩');
 
-subSection('🤝 Mission 5: Multi-Device Team Sync');
-bodyText('• Concept: Prevents 1 player from doing all the work on 1 phone. Every teammate MUST join on their own separate device.');
-bodyText('• Team Shard Generation: The server hashes [TeamName + MemberFullName + Salt] into a 3-character hex shard (e.g. EFD).');
-bodyText('• Sorting Rule: Members MUST be sorted alphabetically (A to Z) by FULL NAME.');
-bodyText('• Joining Rule: Shards are joined with hyphens. Example:');
-bodyText('   - Asha Rao -> EFD,  Bharat K -> 82D,  Chitra S -> 326');
-bodyText('   - Sorted A-Z: Asha Rao (EFD) -> Bharat K (82D) -> Chitra S (326)');
-bodyText('   - Stage 5 Key: EFD-82D-326');
-bodyText('• Anti-Cheat Multi-Device Block: If all registered members have not actively claimed their session token on separate devices, Stage 5 submission is hard-blocked with an error prompting missing members to join!');
+subSection('🔢 Mission 5: Hexadecimal Memory Core & Bus Decoupler');
+bodyText('• Concept: The challenge runs on one command console for the registered squad, encouraging close in-person collaboration. Stage 5 features an advanced hexadecimal memory architecture.');
+bodyText('• Memory Grid: A 6x4 matrix of hexadecimal memory registers across Channels A through F.');
+bodyText('• Memory Bus Rule: High-voltage data flows along Column 1 across Channels A through F.');
+bodyText('   - Channel A: 48  |  Channel B: 45  |  Channel C: 58');
+bodyText('   - Channel D: 38  |  Channel E: 32  |  Channel F: 44');
+bodyText('   - Recovered Raw Hex Stream: 48 45 58 38 32 44');
+bodyText('• Hexadecimal ASCII Decryption:');
+bodyText('   - 0x48 = "H", 0x45 = "E", 0x58 = "X", 0x38 = "8", 0x32 = "2", 0x44 = "D"');
+bodyText('   - Decoded Plaintext Fragment: HEX82D');
+bodyText('• Built-in Decoder Workbench: Players can click "Read Active Bus Line", paste the bytes into the workbench, and click "Decode Hex to Text" to obtain HEX82D.');
 
 subSection('🧩 Mission 6: Final Integration & Master Override Synthesis');
 bodyText('• Concept: The culmination of the entire challenge. Teams combine all 5 fragments into the master override code.');
 bodyText('• Alphabetical Ordering by Mission NAME (Crucial Rule):');
-bodyText('   1. CTF Challenges (Mission 4)  -> f4 = 91X');
-bodyText('   2. Decoding (Mission 2)        -> f2 = 7K2');
-bodyText('   3. Signal Intercept / Media (Mission 1)  -> f1 = NOVA');
-bodyText('   4. Prompt the AI (Mission 3)   -> REVERSED f3 = TIBRO  (ORBIT reversed)');
-bodyText('   5. Team Sync (Mission 5)       -> f5 with hyphens removed = EFD82D326');
-bodyText('• Key Body: FO{91X-7K2-NOVA-TIBRO-EFD82D326}');
+bodyText('   1. Cyber Defense (Mission 4)            -> f4 = 91X');
+bodyText('   2. Decoding (Mission 2)                 -> f2 = 7K2');
+bodyText('   3. Hex Decryption (Mission 5)           -> f5 = HEX82D');
+bodyText('   4. Prompt the AI (Mission 3)            -> REVERSED f3 = TIBRO  (ORBIT reversed)');
+bodyText('   5. Signal Intercept (Mission 1)         -> f1 = NOVA');
+bodyText('• Key Body: FO{91X-7K2-HEX82D-TIBRO-NOVA}');
 bodyText('• Checksum Calculation: Sum of all single digits (0–9) appearing in the key body:');
-bodyText('   Digits: 9 + 1 + 7 + 2 + 8 + 2 + 3 + 2 + 6 = 40');
-bodyText('• Final Complete Key: FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40');
+bodyText('   Digits: 9 + 1 + 7 + 2 + 8 + 2 = 29');
+bodyText('• Final Complete Key: FO{91X-7K2-HEX82D-TIBRO-NOVA}#29');
 bodyText('• Entering this key triggers the victory celebration, stops the team clock, and records rank on the official leaderboard.');
 
 sectionTitle('6. Master Admin Operations & Troubleshooting Manual', '⚡');

@@ -5,15 +5,20 @@ function reverseString(str) {
 }
 
 function computeFinalKey(f1, f2, f3, f4, f5) {
-  // f1 = NOVA, f2 = 7K2, f3 = ORBIT, f4 = 91X, f5 = team code with dashes
-  // Alphabetical order: CTF Challenges (f4), Decoding (f2), Media Analysis (f1), Prompt the AI (reverse f3), Team Sync (f5 without dashes)
-  const f5NoDashes = String(f5).replace(/-/g, '');
+  // f1 = NOVA, f2 = 7K2, f3 = ORBIT, f4 = 91X, f5 = HEX82D
+  // Alphabetical order by Mission Name:
+  // 1. Cyber Defense (f4)
+  // 2. Decoding (f2)
+  // 3. Hex Decryption (f5 without dashes)
+  // 4. Prompt the AI (reverse f3)
+  // 5. Signal Intercept (f1)
+  const f5Clean = String(f5 || 'HEX82D').replace(/-/g, '');
   const body = [
-    f4,
-    f2,
-    f1,
-    reverseString(f3),
-    f5NoDashes
+    f4 || '91X',
+    f2 || '7K2',
+    f5Clean,
+    reverseString(f3 || 'ORBIT'),
+    f1 || 'NOVA'
   ].join('-');
 
   let digitSum = 0;

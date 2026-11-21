@@ -191,13 +191,34 @@ router.get('/state', requireTeam, async (req, res) => {
       };
     } else if (currentStage === 4) {
       stageContent = {
-        commentToken: stageConfig.commentToken
+        firewallActive: true,
+        ports: [
+          { id: 'p21', name: 'PORT 21 (FTP Data Stream)', defaultState: false, required: false },
+          { id: 'p80', name: 'PORT 80 (HTTP Ingress Bridge)', defaultState: false, required: true },
+          { id: 'p443', name: 'PORT 443 (TLS Security Tunnel)', defaultState: false, required: true },
+          { id: 'p8080', name: 'PORT 8080 (Proxy Relay Daemon)', defaultState: false, required: false }
+        ],
+        logs: [
+          '[INGRESS] Analyzing network traffic packets on AEGIS-44 firewall gateway...',
+          '[POLICY] Core Rule: Ingress requires Port 80 and Port 443 OPEN. Isolate Port 21 and Port 8080.',
+          '[TELEMETRY] Quadrant Alpha packet header decrypted -> Node Token 1 = 9',
+          '[TELEMETRY] Quadrant Beta handshake sequence verified -> Node Token 2 = 1',
+          '[TELEMETRY] Quadrant Gamma TLS common name extracted -> Node Token 3 = X',
+          '[READY] Align firewall switches or concatenate tokens in quadrant order (Alpha + Beta + Gamma).'
+        ]
       };
     } else if (currentStage === 5) {
       stageContent = {
-        joinedCount,
-        totalMembers,
-        leaderShard,
+        hexStream: '48 45 58 38 32 44',
+        matrix: [
+          ['48', '1A', '3F', '7C'],
+          ['45', '9B', '02', 'E1'],
+          ['58', '88', 'D4', '5A'],
+          ['38', 'FF', '11', '6E'],
+          ['32', 'CC', '4A', 'B9'],
+          ['44', '00', '8F', '23']
+        ],
+        busRule: 'High-Voltage Line: Column 1 across Channels A through F (Cells A1, B1, C1, D1, E1, F1)',
         members: members.map(m => m.fullName)
       };
     } else if (currentStage === 6) {
@@ -302,18 +323,10 @@ router.post('/submit', requireTeam, async (req, res) => {
       isCorrect = normalizedInput === '91X';
       fragmentFound = '91X';
     } else if (stage === 5) {
-      // Check device requirement: at least 3 distinct member sessions must have joined
-      const joinedDistinct = members.filter(m => m.isLeader === 1 || m.deviceToken !== null);
-      if (joinedDistinct.length < 3) {
-        return res.status(400).json({
-          error: 'Waiting for your teammates to join on their own laptops. 🤝'
-        });
-      }
-
-      const memberNames = members.map(m => m.fullName);
-      const expectedTeamCode = computeTeamCode(team.name, memberNames);
-      isCorrect = normalizedInput === norm(expectedTeamCode);
-      fragmentFound = expectedTeamCode;
+      // Hexadecimal puzzle: hex stream 48 45 58 38 32 44 decodes to HEX82D
+      // Single-device gameplay: accept HEX82D (or raw hex 484558383244)
+      isCorrect = (normalizedInput === 'HEX82D' || normalizedInput === '484558383244');
+      fragmentFound = 'HEX82D';
     } else if (stage === 6) {
       // Stage 6 final key
       const progressList = await ds.getProgress(team.id);
@@ -325,8 +338,7 @@ router.post('/submit', requireTeam, async (req, res) => {
       const f2 = fMap[2] || '7K2';
       const f3 = fMap[3] || 'ORBIT';
       const f4 = fMap[4] || '91X';
-      const memberNames = members.map(m => m.fullName);
-      const f5 = fMap[5] || computeTeamCode(team.name, memberNames);
+      const f5 = fMap[5] || 'HEX82D';
 
       const expectedKey = computeFinalKey(f1, f2, f3, f4, f5);
       isCorrect = normalizedInput === norm(expectedKey);

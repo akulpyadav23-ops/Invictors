@@ -473,15 +473,15 @@ async function renderStartScreen(container) {
         </div>
         <div class="stage-poster-card s4">
           <div class="stage-badge-num">4</div>
-          <div style="font-size: 1.6rem;">🚩</div>
-          <div class="stage-poster-title">CTF Flags</div>
-          <div class="stage-poster-desc">Hunt terminal tokens & inspect web metadata</div>
+          <div style="font-size: 1.6rem;">🛡️</div>
+          <div class="stage-poster-title">Cyber Defense</div>
+          <div class="stage-poster-desc">Bypass firewall node grid & packet telemetry</div>
         </div>
         <div class="stage-poster-card s5">
           <div class="stage-badge-num">5</div>
-          <div style="font-size: 1.6rem;">🧩</div>
-          <div class="stage-poster-title">Sync & Override</div>
-          <div class="stage-poster-desc">Merge all squad member shards & unlock vault</div>
+          <div style="font-size: 1.6rem;">🔢</div>
+          <div class="stage-poster-title">Hex Decryption</div>
+          <div class="stage-poster-desc">Solve memory bus puzzle & decode hex stream to ASCII</div>
         </div>
       </div>
     </div>
@@ -501,7 +501,7 @@ async function renderStartScreen(container) {
         <strong>What you must know before entering the game:</strong> Carefully inspect and analyze everything on this front briefing page before you start. Do not rush into registration without reviewing the mission parameters!
       </p>
       <div style="background: rgba(3, 8, 20, 0.9); border: 1px solid rgba(245, 158, 11, 0.4); border-left: 5px solid var(--gold); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 0.95rem; color: #fef08a; line-height: 1.65;">
-        🔍 <strong>Vital Clue for Stage 6 Override:</strong> Observe and record the exact <strong>Mission Names</strong> displayed on this briefing board (<em>Signal Intercept</em>, <em>Decoding</em>, <em>Prompt the AI</em>, <em>CTF Challenges</em>, <em>Team Sync</em>). When your squad unlocks the final master override in <strong>Stage 6</strong>, the system requires you to arrange and synthesize your recovered pieces based on these exact mission names! Take note of them now before lockdown begins!
+        🔍 <strong>Vital Clue for Stage 6 Override:</strong> Observe and record the exact <strong>Mission Names</strong> displayed on this briefing board (<em>Signal Intercept</em>, <em>Decoding</em>, <em>Prompt the AI</em>, <em>Cyber Defense</em>, <em>Hex Decryption</em>). When your squad unlocks the final master override in <strong>Stage 6</strong>, the system requires you to arrange and synthesize your recovered pieces based on these exact mission names! Take note of them now before lockdown begins!
       </div>
     </div>
 
@@ -521,7 +521,7 @@ async function renderStartScreen(container) {
         <li><strong style="color: var(--cyan-neon);">2️⃣ Auto Notebook:</strong> Solved fragments are automatically recorded in your team's live notebook.</li>
         <li><strong style="color: var(--gold);">3️⃣ Hints:</strong> Need clues? 1st hint adds <span style="color:var(--gold);">+3m</span> penalty, 2nd hint adds <span style="color:var(--gold);">+5m</span> penalty.</li>
         <li><strong style="color: var(--ok);">4️⃣ Wrong Attempts:</strong> First 5 incorrect submissions are free. From the 6th onwards, each wrong try adds <span style="color:var(--bad);">+1m</span>.</li>
-        <li><strong style="color: var(--stage5-color);">5️⃣ Team Synchronization:</strong> Stage 5 requires every team member on their own device to retrieve their individual shard!</li>
+        <li><strong style="color: var(--stage5-color);">5️⃣ Team Collaboration:</strong> Teams of 3–4 members collaborate around one command console. Stage 5 features an advanced Hexadecimal Memory Core puzzle.</li>
         <li><strong style="color: var(--bad);">🚨 Anti-Cheat:</strong> Tab switches and switching to unauthorized tools incur an automatic <span style="color:var(--bad);">+2m penalty</span>.</li>
       </ul>
     </div>
@@ -563,29 +563,6 @@ async function renderStartScreen(container) {
         </button>
       </form>
     </div>
-
-    <!-- Member Join Form -->
-    <div class="card">
-      <h2 class="card-title">🙋 Joining as a team member?</h2>
-      <p style="margin-bottom: 14px; font-size: 0.95rem; color: var(--muted);">
-        "Use this on your own laptop when your leader reaches Mission 5. Type your team name and your full name exactly as registered."
-      </p>
-      <form id="member-join-form">
-        <div class="form-group">
-          <label for="join-team-name">Team name or ID *</label>
-          <input type="text" id="join-team-name" class="input-control" placeholder="Team name" required />
-        </div>
-        <div class="form-group">
-          <label for="join-member-name">Your full name *</label>
-          <input type="text" id="join-member-name" class="input-control" placeholder="Your full name as registered" required />
-        </div>
-        <div id="join-error" class="feedback-line error"></div>
-        <button type="submit" class="btn btn-gold" style="width: 100%; margin-top: 10px;">
-          Show my shard
-        </button>
-      </form>
-      <div id="shard-result-container" style="display: none; margin-top: 20px;"></div>
-    </div>
   `;
 
   document.getElementById('team-register-form').addEventListener('submit', async (e) => {
@@ -616,44 +593,6 @@ async function renderStartScreen(container) {
       }
     } catch {
       errorEl.textContent = 'Server connection error. Please try again.';
-    }
-  });
-
-  document.getElementById('member-join-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const errorEl = document.getElementById('join-error');
-    const resultBox = document.getElementById('shard-result-container');
-    errorEl.textContent = '';
-    resultBox.style.display = 'none';
-
-    const payload = {
-      teamName: document.getElementById('join-team-name').value.trim(),
-      fullName: document.getElementById('join-member-name').value.trim()
-    };
-
-    try {
-      const res = await fetch('/api/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        errorEl.textContent = data.error || 'Failed to retrieve shard.';
-      } else {
-        resultBox.style.display = 'block';
-        resultBox.innerHTML = `
-          <div class="shard-display-box">
-            <p style="font-size: 1.1rem;">Hi <strong>${escapeHtml(data.name)}</strong>! Your shard for team <strong>${escapeHtml(data.team)}</strong>:</p>
-            <div class="shard-token">${escapeHtml(data.shard)}</div>
-            <p style="color: var(--gold); font-weight: bold; margin-top: 10px;">
-              Tell it to your team leader. Keep it away from other teams!
-            </p>
-          </div>
-        `;
-      }
-    } catch {
-      errorEl.textContent = 'Server connection error.';
     }
   });
 }
@@ -912,66 +851,193 @@ function renderStageScreen(container, state) {
     `;
   } else if (stage === 4) {
     specificHtml = `
-      <div id="stage-4-secret-anchor"><!-- token1 = 9 --></div>
-      <p style="margin-bottom: 10px;">
-        📖 The story: You reached the vault’s gateway! 🏰 Three tiny tokens 🪙 are hidden inside it. Find all three and join them in order (1st + 2nd + 3rd) to make the secret piece.
-      </p>
-      <p style="margin-bottom: 14px;">
-        🔎 Token 1: it is hiding in this page’s code. Right-click this section and choose Inspect, then look for a note. 💻<br/>
-        Tokens 2 and 3: use the terminal below. Type help to see what you can do, then explore with ls, cat and exif. 🛠️
-      </p>
-
-      <div id="terminal-history" class="terminal-window">Type help\n</div>
-      <div class="terminal-input-bar">
-        <span class="terminal-prompt">&gt;</span>
-        <input type="text" id="terminal-cmd-input" class="terminal-input" placeholder="Type command here..." autofocus />
-      </div>
-
-      <p style="font-size: 0.9rem; color: var(--muted); margin-top: 10px;">
-        ✍️ Found all 3 tokens? Join them in order and type the fragment below.
-      </p>
-    `;
-  } else if (stage === 5) {
-    const leaderShard = content.leaderShard || '???';
-    const joinedCount = content.joinedCount || 1;
-    const totalMembers = content.totalMembers || 3;
-    const playersStr = (content.members || []).join(' · ');
-
-    specificHtml = `
-      <p style="margin-bottom: 10px;">
-        📖 The story: The vault door has ${totalMembers} locks 🔒 and each one answers to a different person at the same time! 🤝 One player cannot do this alone.
-      </p>
-      <ol style="display: flex; flex-direction: column; gap: 8px; margin-left: 20px; font-size: 0.95rem; margin-bottom: 16px;">
-        <li>1) 📱 Every teammate opens this page on their own laptop and uses “Joining as a team member” on the start screen.</li>
-        <li>2) ⌨️ They type the team name and their own full name exactly as registered. A 3-character shard appears.</li>
-        <li>3) 🗣️ Everyone reads their shard to the leader. Your own shard (leader): <strong style="color: var(--gold);">${escapeHtml(leaderShard)}</strong></li>
-        <li>4) 🔤 Sort the players A to Z by full name, write their shards in that order with dashes, like A1F-3C9-77B.</li>
-      </ol>
-
-      <div style="background: rgba(3, 8, 19, 0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px;">
-        <p>👥 Players: <strong>${escapeHtml(playersStr)}</strong></p>
-        <p style="margin-top: 4px; color: ${joinedCount >= 3 ? 'var(--ok)' : 'var(--gold)'}; font-weight: bold;">
-          ${joinedCount}/${totalMembers} teammates have joined on their own devices
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <span style="font-weight: 700; color: var(--accent); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+            🛡️ AEGIS-44 FIREWALL MATRIX &amp; PACKET TRIAGE
+          </span>
+          <span style="background: rgba(14, 165, 233, 0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 0.78rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono);">
+            FIREWALL: ACTIVE LOCK
+          </span>
+        </div>
+        <p style="margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.5;">
+          The mainframe is defended by adaptive ingress rules and multi-quadrant packet filters. Calibrate the firewall ports to match traffic rules, or decrypt the quadrant packet telemetry to recover the 3 security tokens.
         </p>
       </div>
 
-      <p style="font-size: 0.9rem; color: var(--muted);">
-        ✍️ Type the team code below.
+      <!-- Interactive 4-Port Matrix -->
+      <div style="background: #020612; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); font-weight: 700; margin-bottom: 10px;">
+          ⚡ INGRESS PORT CALIBRATION MATRIX:
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px;">
+          <div class="port-switch-card" data-port="21" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; user-select: none; transition: all 0.2s;">
+            <div style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #94a3b8;">PORT 21</div>
+            <div style="font-size: 0.72rem; color: var(--muted); margin: 2px 0;">FTP STREAM</div>
+            <div class="port-status-badge" style="font-size: 0.75rem; font-weight: bold; color: var(--bad); background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 6px;">BLOCKED</div>
+          </div>
+          <div class="port-switch-card" data-port="80" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; user-select: none; transition: all 0.2s;">
+            <div style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #94a3b8;">PORT 80</div>
+            <div style="font-size: 0.72rem; color: var(--muted); margin: 2px 0;">HTTP INGRESS</div>
+            <div class="port-status-badge" style="font-size: 0.75rem; font-weight: bold; color: var(--bad); background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 6px;">BLOCKED</div>
+          </div>
+          <div class="port-switch-card" data-port="443" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; user-select: none; transition: all 0.2s;">
+            <div style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #94a3b8;">PORT 443</div>
+            <div style="font-size: 0.72rem; color: var(--muted); margin: 2px 0;">TLS TUNNEL</div>
+            <div class="port-status-badge" style="font-size: 0.75rem; font-weight: bold; color: var(--bad); background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 6px;">BLOCKED</div>
+          </div>
+          <div class="port-switch-card" data-port="8080" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; user-select: none; transition: all 0.2s;">
+            <div style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #94a3b8;">PORT 8080</div>
+            <div style="font-size: 0.72rem; color: var(--muted); margin: 2px 0;">PROXY RELAY</div>
+            <div class="port-status-badge" style="font-size: 0.75rem; font-weight: bold; color: var(--bad); background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 6px;">BLOCKED</div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <span style="font-size: 0.8rem; color: var(--muted);">Click cards to toggle port routing state (BLOCKED / ROUTED).</span>
+          <button id="btn-firewall-test" class="btn btn-outline btn-sm" style="font-size: 0.82rem; border-color: var(--accent); color: var(--accent);">⚡ Test Ingress Alignment</button>
+        </div>
+        <div id="firewall-feedback" style="display: none; margin-top: 10px; padding: 8px 12px; border-radius: 4px; font-size: 0.85rem;"></div>
+      </div>
+
+      <!-- Telemetry Packet Logs -->
+      <div style="background: #010409; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: var(--radius-sm); padding: 12px; font-family: var(--font-mono); font-size: 0.82rem; margin-bottom: 14px;">
+        <div style="font-size: 0.72rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: bold;">
+          📡 Real-Time Packet Telemetry Logs:
+        </div>
+        <div style="color: #94a3b8; line-height: 1.6;">
+          <div><span style="color: var(--gold);">[RULE 1]</span> INGRESS POLICY: Only standard web gateways (Port 80 &amp; Port 443) may route. Isolate Port 21 and Port 8080.</div>
+          <div><span style="color: var(--cyan-neon);">[TELEMETRY-α]</span> Quadrant Alpha packet payload offset -&gt; <strong style="color: var(--ok);">Token 1 = 9</strong></div>
+          <div><span style="color: var(--cyan-neon);">[TELEMETRY-β]</span> Quadrant Beta parity checksum handshake -&gt; <strong style="color: var(--ok);">Token 2 = 1</strong></div>
+          <div><span style="color: var(--cyan-neon);">[TELEMETRY-γ]</span> Quadrant Gamma TLS common name symbol -&gt; <strong style="color: var(--ok);">Token 3 = X</strong></div>
+          <div><span style="color: var(--gold);">[SYNTHESIS]</span> Concatenate the 3 quadrant tokens in order (α + β + γ) to assemble Fragment 4!</div>
+        </div>
+      </div>
+
+      <p style="font-size: 0.9rem; color: var(--muted); margin-top: 10px;">
+        ✍️ Align the firewall ports or synthesize the tokens to submit Fragment 4 below.
+      </p>
+    `;
+  } else if (stage === 5) {
+    specificHtml = `
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <span style="font-weight: 700; color: #c084fc; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+            🔢 CENTRAL MEMORY BUS &amp; HEXADECIMAL CORE
+          </span>
+          <span style="background: rgba(168, 85, 247, 0.15); border: 1px solid #c084fc; color: #c084fc; font-size: 0.78rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono);">
+            MEMORY BUS: ACTIVE
+          </span>
+        </div>
+        <p style="margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.5;">
+          The firewall breach has unlocked the mainframe's hexadecimal core memory bus. Solve the memory vector line to extract the raw hexadecimal stream, then decode the hex bytes into ASCII text to reveal Fragment 5.
+        </p>
+      </div>
+
+      <!-- Hex Memory Matrix Grid -->
+      <div style="background: #020612; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); font-weight: 700;">
+            ⚡ 6x4 Hexadecimal Memory Registers:
+          </div>
+          <button id="btn-read-bus" class="btn btn-primary btn-sm" style="font-size: 0.78rem; padding: 4px 10px;">⚡ Read Active Bus Line (Col 1)</button>
+        </div>
+
+        <p style="font-size: 0.82rem; color: var(--muted); margin: 0 0 10px 0;">
+          Vector Clue: The high-voltage memory line is located along <strong>Column 1</strong> across Channels A through F.
+        </p>
+
+        <div style="overflow-x: auto;">
+          <table id="hex-memory-grid" style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.9rem; text-align: center;">
+            <thead>
+              <tr style="border-bottom: 1px solid #334155; color: var(--muted); font-size: 0.75rem;">
+                <th style="padding: 6px;">CH</th>
+                <th style="padding: 6px; color: var(--accent);">COL 1 [BUS]</th>
+                <th style="padding: 6px;">COL 2</th>
+                <th style="padding: 6px;">COL 3</th>
+                <th style="padding: 6px;">COL 4</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
+                <td style="color: var(--muted); font-weight: bold; padding: 6px;">A</td>
+                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">48</td>
+                <td style="padding: 6px; color: #64748b;">1A</td>
+                <td style="padding: 6px; color: #64748b;">3F</td>
+                <td style="padding: 6px; color: #64748b;">7C</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
+                <td style="color: var(--muted); font-weight: bold; padding: 6px;">B</td>
+                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">45</td>
+                <td style="padding: 6px; color: #64748b;">9B</td>
+                <td style="padding: 6px; color: #64748b;">02</td>
+                <td style="padding: 6px; color: #64748b;">E1</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
+                <td style="color: var(--muted); font-weight: bold; padding: 6px;">C</td>
+                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">58</td>
+                <td style="padding: 6px; color: #64748b;">88</td>
+                <td style="padding: 6px; color: #64748b;">D4</td>
+                <td style="padding: 6px; color: #64748b;">5A</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
+                <td style="color: var(--muted); font-weight: bold; padding: 6px;">D</td>
+                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">38</td>
+                <td style="padding: 6px; color: #64748b;">FF</td>
+                <td style="padding: 6px; color: #64748b;">11</td>
+                <td style="padding: 6px; color: #64748b;">6E</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
+                <td style="color: var(--muted); font-weight: bold; padding: 6px;">E</td>
+                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">32</td>
+                <td style="padding: 6px; color: #64748b;">CC</td>
+                <td style="padding: 6px; color: #64748b;">4A</td>
+                <td style="padding: 6px; color: #64748b;">B9</td>
+              </tr>
+              <tr>
+                <td style="color: var(--muted); font-weight: bold; padding: 6px;">F</td>
+                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">44</td>
+                <td style="padding: 6px; color: #64748b;">00</td>
+                <td style="padding: 6px; color: #64748b;">8F</td>
+                <td style="padding: 6px; color: #64748b;">23</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Hex Stream Buffer & Decoder Workbench -->
+      <div class="toolkit-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <h3 style="font-size: 0.95rem; color: #c084fc; margin: 0;">🧰 Hexadecimal ASCII Decoder Workbench</h3>
+          <button id="btn-load-stream" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 3px 8px;">📋 Paste Bus Stream</button>
+        </div>
+        <textarea id="hex-workbench-input" rows="2" placeholder="Paste or type hexadecimal bytes here (e.g. 48 45 58 38 32 44)..."></textarea>
+        <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap;">
+          <button id="btn-convert-hex" class="btn btn-gold btn-sm">Decode Hex to Text</button>
+          <div id="hex-decode-output" style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: bold; color: var(--ok); min-height: 24px; padding: 4px 8px;"></div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; border-radius: 4px; padding: 8px 10px; margin-top: 10px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); line-height: 1.6;">
+          <span style="color: var(--accent); font-weight: bold;">ASCII Hex Table:</span> 0x48='H' | 0x45='E' | 0x58='X' | 0x38='8' | 0x32='2' | 0x44='D'
+        </div>
+      </div>
+
+      <p style="font-size: 0.9rem; color: var(--muted); margin-top: 10px;">
+        ✍️ Decode the hexadecimal sequence and type the resulting fragment below.
       </p>
     `;
   } else if (stage === 6) {
     specificHtml = `
       <p style="margin-bottom: 10px;">
-        📖 The story: This is it, the final lock! 🔐 It is trickier than the rest. Open your 📒 notebook and gather all 5 pieces. 🧩
+        📖 The story: This is it, the final lock! 🔐 Open your 📒 notebook and gather all 5 pieces. 🧩
       </p>
       <ol style="display: flex; flex-direction: column; gap: 8px; margin-left: 20px; font-size: 0.95rem; margin-bottom: 16px;">
-        <li>1) 🔤 Put the pieces in alphabetical order of the mission NAMES (the names are in the progress bar and stage titles).</li>
+        <li>1) 🔤 Put the pieces in alphabetical order of the mission NAMES: <strong>Cyber Defense</strong>, <strong>Decoding</strong>, <strong>Hex Decryption</strong>, <strong>Prompt the AI</strong>, and <strong>Signal Intercept</strong>.</li>
         <li>2) 🔁 The piece from Prompt the AI must be written backwards.</li>
-        <li>3) ➖ Join them with dashes inside FO{ … } (the team code loses its dashes).</li>
-        <li>4) ➕ Add up every digit (0–9) inside the braces and write it after a #.</li>
+        <li>3) ➖ Join them with dashes inside <code>FO{ … }</code>.</li>
+        <li>4) ➕ Add up every digit (0–9) inside the braces and write it after a <code>#</code>.</li>
       </ol>
       <div style="background: rgba(3, 8, 19, 0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px; font-family: ui-monospace, monospace; font-size: 0.92rem; color: var(--accent);">
-        Example shape: FO{AAA-BBB-CCC-DDD-EEE}#12<br/>
+        Example shape: FO{AAA-BBB-CCC-DDD-EEE}#29<br/>
         <span style="color: var(--bad);">⚠️ Use only the real pieces from your notebook. Fake ones are traps! 🪤</span>
       </div>
     `;
@@ -1531,30 +1597,103 @@ function attachStageEvents(stage) {
   }
 
   if (stage === 4) {
-    const termInput = document.getElementById('terminal-cmd-input');
-    const termHistory = document.getElementById('terminal-history');
+    const portCards = document.querySelectorAll('.port-switch-card');
+    const portStates = { '21': false, '80': false, '443': false, '8080': false };
 
-    termInput.addEventListener('keydown', async (e) => {
-      if (e.key === 'Enter') {
-        const cmd = termInput.value.trim();
-        termInput.value = '';
-
-        termHistory.textContent += `> ${cmd}\n`;
-
-        try {
-          const res = await fetch('/api/terminal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cmd })
-          });
-          const data = await res.json();
-          termHistory.textContent += `${data.output || data.error}\n\n`;
-          termHistory.scrollTop = termHistory.scrollHeight;
-        } catch {
-          termHistory.textContent += `Error executing command.\n\n`;
+    portCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const port = card.getAttribute('data-port');
+        portStates[port] = !portStates[port];
+        const isRouted = portStates[port];
+        const badge = card.querySelector('.port-status-badge');
+        if (isRouted) {
+          card.style.borderColor = 'var(--ok)';
+          card.style.background = 'rgba(34, 197, 94, 0.12)';
+          badge.textContent = 'ROUTED';
+          badge.style.color = 'var(--ok)';
+          badge.style.background = 'rgba(34, 197, 94, 0.2)';
+        } else {
+          card.style.borderColor = '#334155';
+          card.style.background = 'rgba(15, 23, 42, 0.8)';
+          badge.textContent = 'BLOCKED';
+          badge.style.color = 'var(--bad)';
+          badge.style.background = 'rgba(239, 68, 68, 0.15)';
         }
-      }
+      });
     });
+
+    const testBtn = document.getElementById('btn-firewall-test');
+    const fb = document.getElementById('firewall-feedback');
+    if (testBtn && fb) {
+      testBtn.addEventListener('click', () => {
+        const correct = !portStates['21'] && portStates['80'] && portStates['443'] && !portStates['8080'];
+        fb.style.display = 'block';
+        if (correct) {
+          fb.style.background = 'rgba(34, 197, 94, 0.15)';
+          fb.style.border = '1px solid var(--ok)';
+          fb.style.color = '#86efac';
+          fb.innerHTML = '✅ <strong>INGRESS ALIGNMENT VERIFIED!</strong> Security gates breached. Decoupled quadrant tokens: Alpha: <strong>9</strong>, Beta: <strong>1</strong>, Gamma: <strong>X</strong> → Fragment: <strong>91X</strong> (Auto-filled below!)';
+          const ansInput = document.getElementById('answer-input');
+          if (ansInput) ansInput.value = '91X';
+        } else {
+          fb.style.background = 'rgba(245, 158, 11, 0.15)';
+          fb.style.border = '1px solid var(--gold)';
+          fb.style.color = '#fde047';
+          fb.innerHTML = '⚠️ <strong>ALIGNMENT MISMATCH:</strong> Rule requires Port 80 &amp; Port 443 ROUTED, while Port 21 &amp; Port 8080 must remain BLOCKED.';
+        }
+      });
+    }
+  }
+
+  if (stage === 5) {
+    const readBusBtn = document.getElementById('btn-read-bus');
+    const loadStreamBtn = document.getElementById('btn-load-stream');
+    const hexInput = document.getElementById('hex-workbench-input');
+    const convertBtn = document.getElementById('btn-convert-hex');
+    const hexOutput = document.getElementById('hex-decode-output');
+
+    const stream = '48 45 58 38 32 44';
+
+    function loadBusStream() {
+      if (hexInput) hexInput.value = stream;
+      const activeCells = document.querySelectorAll('.hex-cell.active-col');
+      activeCells.forEach(cell => {
+        cell.style.background = 'rgba(168, 85, 247, 0.35)';
+        cell.style.color = '#c084fc';
+        setTimeout(() => {
+          cell.style.background = 'rgba(56, 189, 248, 0.12)';
+          cell.style.color = 'var(--accent)';
+        }, 1200);
+      });
+    }
+
+    if (readBusBtn) readBusBtn.addEventListener('click', loadBusStream);
+    if (loadStreamBtn) loadStreamBtn.addEventListener('click', loadBusStream);
+
+    if (convertBtn && hexInput && hexOutput) {
+      convertBtn.addEventListener('click', () => {
+        const raw = hexInput.value.trim().replace(/0x/g, '').replace(/[\s,]+/g, ' ');
+        if (!raw) {
+          hexOutput.textContent = 'Please enter or paste hex bytes.';
+          hexOutput.style.color = 'var(--bad)';
+          return;
+        }
+        try {
+          const bytes = raw.split(' ').filter(b => b.length > 0);
+          let decoded = '';
+          for (const b of bytes) {
+            decoded += String.fromCharCode(parseInt(b, 16));
+          }
+          hexOutput.style.color = 'var(--ok)';
+          hexOutput.innerHTML = `Decoded Plaintext: <strong style="color: var(--gold);">${escapeHtml(decoded)}</strong> (Auto-filled below!)`;
+          const ansInput = document.getElementById('answer-input');
+          if (ansInput) ansInput.value = decoded;
+        } catch (_) {
+          hexOutput.textContent = 'Invalid hexadecimal string format.';
+          hexOutput.style.color = 'var(--bad)';
+        }
+      });
+    }
   }
 }
 
@@ -1977,7 +2116,7 @@ function renderMergedPortal(container) {
         </div>
 
         <div id="admin-answers-panel" style="display: none;">
-          <!-- Static Stages 1 to 4 -->
+          <!-- Static Stages 1 to 6 Master Solutions -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-bottom: 16px;">
             <div class="answer-key-box">
               <h4>📡 Stage 1: Signal Intercept (Morse Matrix)</h4>
@@ -1995,16 +2134,26 @@ function renderMergedPortal(container) {
               <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">AURORA + Role (technician) + Task<br/>Decoy: <span style="color:var(--bad);">ZETA9</span></div>
             </div>
             <div class="answer-key-box">
-              <h4>🚩 Stage 4: CTF Challenges</h4>
+              <h4>🛡️ Stage 4: Cyber Defense</h4>
               <div>Key: <span class="solution-token">91X</span></div>
-              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Comment: 9 | note.txt: 1 | exif: X</div>
+              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Ports: 80 &amp; 443 ROUTED | 21 &amp; 8080 BLOCKED<br/>Tokens: α=9 | β=1 | γ=X ➔ 91X</div>
+            </div>
+            <div class="answer-key-box">
+              <h4>🔢 Stage 5: Hex Decryption</h4>
+              <div>Key: <span class="solution-token">HEX82D</span></div>
+              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Bus Col 1: 48 45 58 38 32 44<br/>Hex-to-ASCII: 48=H, 45=E, 58=X, 38=8, 32=2, 44=D</div>
+            </div>
+            <div class="answer-key-box">
+              <h4>🧩 Stage 6: Master Override</h4>
+              <div>Key: <span class="solution-token" style="color: #34d399; border-color: #34d399;">FO{91X-7K2-HEX82D-TIBRO-NOVA}#29</span></div>
+              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">A-Z Missions: Cyber, Decode, Hex, Prompt(rev), Signal<br/>Checksum: 9+1+7+2+8+2 = 29</div>
             </div>
           </div>
 
           <!-- Dynamic Team Solutions Table -->
-          <h4 style="color: var(--accent); font-size: 1rem; margin-bottom: 8px;">🤝 Dynamic Stage 5 & 6 Team Solutions:</h4>
+          <h4 style="color: var(--accent); font-size: 1rem; margin-bottom: 8px;">📋 Registered Squads &amp; Solutions Reference:</h4>
           <div id="dynamic-answers-table" class="data-table-container">
-            <p style="color: var(--muted); padding: 10px;">Loading dynamic solutions...</p>
+            <p style="color: var(--muted); padding: 10px;">Loading solutions...</p>
           </div>
         </div>
       </div>
@@ -2112,13 +2261,13 @@ function renderMergedPortal(container) {
       }
 
       let rows = solutions.map(t => {
-        const shardsStr = t.memberShards.map(m => `<strong>${escapeHtml(m.name)}:</strong> <span class="solution-token">${escapeHtml(m.shard)}</span>`).join(' &nbsp;|&nbsp; ');
+        const membersList = (t.memberShards || []).map(m => `<strong>${escapeHtml(m.name)}</strong>`).join(' · ');
         return `
           <tr>
             <td><strong>${escapeHtml(t.teamName)}</strong></td>
             <td><span style="color: var(--accent);">${escapeHtml(t.coordinator)}</span></td>
-            <td style="font-size: 0.88rem;">${shardsStr}</td>
-            <td><span class="solution-token">${escapeHtml(t.stage5Code)}</span></td>
+            <td style="font-size: 0.88rem;">${membersList || '-'}</td>
+            <td><span class="solution-token">${escapeHtml(t.stage5Code || 'HEX82D')}</span></td>
             <td><span class="solution-token" style="color: #34d399; border-color: #34d399;">${escapeHtml(t.stage6Key)}</span></td>
           </tr>
         `;
@@ -2130,9 +2279,9 @@ function renderMergedPortal(container) {
             <tr>
               <th>Team</th>
               <th>Coordinator</th>
-              <th>Stage 5 Member Shards</th>
-              <th>Stage 5 Team Code</th>
-              <th>Stage 6 Final Key</th>
+              <th>Squad Members</th>
+              <th>Stage 5 Solution</th>
+              <th>Stage 6 Master Key</th>
             </tr>
           </thead>
           <tbody>

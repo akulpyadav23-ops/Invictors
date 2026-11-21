@@ -344,49 +344,16 @@ async function runTests() {
     console.log('✅ Test 4 Passed: WARDEN returns decoy ZETA9 when unauthenticated, and ORBIT when authenticated.');
 
     // -------------------------------------------------------------
-    // Test 5: Stage 4 Terminal outputs & HTML comment token
+    // Test 5: Stage 4 Cyber Defense Firewall Matrix
     // -------------------------------------------------------------
-    console.log('Test 5: Stage 4 Terminal commands & comment token...');
+    console.log('Test 5: Stage 4 Cyber Defense Firewall Matrix...');
     const stateStage4 = await request('/api/state', {
       cookies: { fo_leader_token: leaderToken }
     });
     assert.strictEqual(stateStage4.data.team.stage, 4);
-    assert.strictEqual(stateStage4.data.stageContent.commentToken, '<!-- token1 = 9 -->');
-
-    const cmdHelp = await request('/api/terminal', {
-      method: 'POST',
-      cookies: { fo_leader_token: leaderToken },
-      body: { cmd: 'help' }
-    });
-    assert.strictEqual(cmdHelp.data.output, 'Commands: ls, ls <folder>, cat <file>, exif <file>');
-
-    const cmdLs = await request('/api/terminal', {
-      method: 'POST',
-      cookies: { fo_leader_token: leaderToken },
-      body: { cmd: 'ls' }
-    });
-    assert.strictEqual(cmdLs.data.output, 'index.html robots.txt badge.jpg');
-
-    const cmdRobots = await request('/api/terminal', {
-      method: 'POST',
-      cookies: { fo_leader_token: leaderToken },
-      body: { cmd: 'cat robots.txt' }
-    });
-    assert.strictEqual(cmdRobots.data.output, 'User-agent: *\nDisallow: /vault-7f3a/');
-
-    const cmdNote = await request('/api/terminal', {
-      method: 'POST',
-      cookies: { fo_leader_token: leaderToken },
-      body: { cmd: 'cat vault-7f3a/note.txt' }
-    });
-    assert.strictEqual(cmdNote.data.output, 'token2 = 1');
-
-    const cmdExif = await request('/api/terminal', {
-      method: 'POST',
-      cookies: { fo_leader_token: leaderToken },
-      body: { cmd: 'exif badge.jpg' }
-    });
-    assert.strictEqual(cmdExif.data.output, 'File: badge.jpg\nComment: token3 = X');
+    assert.strictEqual(stateStage4.data.stageContent.firewallActive, true);
+    assert.strictEqual(stateStage4.data.stageContent.ports.length, 4);
+    assert.ok(stateStage4.data.stageContent.logs.length >= 3);
 
     // Solve Stage 4: " 91x "
     await new Promise(r => setTimeout(r, 1050));
@@ -397,7 +364,7 @@ async function runTests() {
     });
     assert.strictEqual(subStage4.data.success, true);
     assert.strictEqual(subStage4.data.nextStage, 5);
-    console.log('✅ Test 5 Passed: Terminal outputs match specification exactly and comment token delivered.');
+    console.log('✅ Test 5 Passed: Cyber Defense Firewall Matrix telemetry validated and 91X unlocks Stage 5.');
 
     // -------------------------------------------------------------
     // Test 6: Penalties logic
@@ -488,76 +455,41 @@ async function runTests() {
       assert.strictEqual(skipRes.status, 200);
     }
 
-    // Try submitting before teammates join -> must be blocked
-    await new Promise(r => setTimeout(r, 1050));
-    const blockedSub = await request('/api/submit', {
-      method: 'POST',
-      cookies: { fo_leader_token: alphaLeaderToken },
-      body: { answer: 'EFD-82D-326' }
-    });
-    assert.strictEqual(blockedSub.status, 400);
-    assert.ok(blockedSub.data.error.includes('Waiting for your teammates to join on their own laptops. 🤝'));
-
-    // Teammate 1 (Asha Rao) joins from their device
-    const joinAsha = await request('/api/join', {
-      method: 'POST',
-      body: { teamName: 'Team Alpha', fullName: 'Asha Rao' }
-    });
-    assert.strictEqual(joinAsha.status, 200);
-    assert.strictEqual(joinAsha.data.shard, 'EFD');
-    const ashaCookie = joinAsha.rawCookies.split('fo_member_token=')[1].split(';')[0];
-
-    // Teammate 2 (Bharat K) joins from their device
-    const joinBharat = await request('/api/join', {
-      method: 'POST',
-      body: { teamName: 'Team Alpha', fullName: 'Bharat K' }
-    });
-    assert.strictEqual(joinBharat.status, 200);
-    assert.strictEqual(joinBharat.data.shard, '82D');
-
-    // Chitra S shard check:
-    const { getMemberShard, computeTeamCode } = require('../logic/shard');
-    const chitraShard = getMemberShard('Team Alpha', 'Chitra S');
-    assert.strictEqual(chitraShard, '326');
-
-    // Team code check: Asha Rao (EFD) - Bharat K (82D) - Chitra S (326)
-    const alphaTeamCode = computeTeamCode('Team Alpha', ['Chitra S', 'Asha Rao', 'Bharat K']);
-    assert.strictEqual(alphaTeamCode, 'EFD-82D-326');
-
-    // Now 3 distinct sessions exist -> Submit team code
+    // Submit Stage 5: Hexadecimal decoded fragment HEX82D
     await new Promise(r => setTimeout(r, 1050));
     const subAlphaStage5 = await request('/api/submit', {
       method: 'POST',
       cookies: { fo_leader_token: alphaLeaderToken },
-      body: { answer: 'EFD-82D-326' }
+      body: { answer: 'HEX82D' }
     });
     assert.strictEqual(subAlphaStage5.status, 200);
     assert.strictEqual(subAlphaStage5.data.success, true);
     assert.strictEqual(subAlphaStage5.data.nextStage, 6);
-    console.log('✅ Test 7 Passed: Shards (Asha Rao: EFD, Bharat K: 82D, Chitra S: 326) -> EFD-82D-326. Multi-device block enforced.');
+    console.log('✅ Test 7 Passed: Hexadecimal Puzzle (48 45 58 38 32 44 -> HEX82D) unlocks Stage 6.');
 
     // -------------------------------------------------------------
     // Test 8: Final key test vector
     // -------------------------------------------------------------
     console.log('Test 8: Final key test vector...');
-    // Vector with fragments NOVA, 7K2, ORBIT, 91X and team code EFD-82D-326:
-    // Expected: FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40
+    // Vector with fragments NOVA, 7K2, ORBIT, 91X and HEX82D:
+    // Mission names alphabetical order: Cyber Defense (91X) - Decoding (7K2) - Hex Decryption (HEX82D) - Prompt the AI (TIBRO) - Signal Intercept (NOVA)
+    // Expected: FO{91X-7K2-HEX82D-TIBRO-NOVA}#29
     const { computeFinalKey } = require('../logic/finalKey');
-    const computedKey = computeFinalKey('NOVA', '7K2', 'ORBIT', '91X', 'EFD-82D-326');
-    assert.strictEqual(computedKey, 'FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40');
+    const computedKey = computeFinalKey('NOVA', '7K2', 'ORBIT', '91X', 'HEX82D');
+    assert.strictEqual(computedKey, 'FO{91X-7K2-HEX82D-TIBRO-NOVA}#29');
 
     // Submit final key
     await new Promise(r => setTimeout(r, 1050));
     const subFinal = await request('/api/submit', {
       method: 'POST',
       cookies: { fo_leader_token: alphaLeaderToken },
-      body: { answer: 'FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40' }
+      body: { answer: 'FO{91X-7K2-HEX82D-TIBRO-NOVA}#29' }
     });
     assert.strictEqual(subFinal.status, 200);
     assert.strictEqual(subFinal.data.success, true);
     assert.strictEqual(subFinal.data.finished, true);
     assert.ok(subFinal.data.verificationCode);
-    console.log('✅ Test 8 Passed: Final key FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40 unlocks the system.');
+    console.log('✅ Test 8 Passed: Final key FO{91X-7K2-HEX82D-TIBRO-NOVA}#29 unlocks the system.');
 
     // -------------------------------------------------------------
     // Test 9: Device isolation rules
@@ -573,6 +505,11 @@ async function runTests() {
     assert.ok(leaderTryJoin.data.error.includes('This device is running the team'));
 
     // Member device cannot be reused for another member name without reset
+    const joinAsha = await request('/api/join', {
+      method: 'POST',
+      body: { teamName: 'Team Alpha', fullName: 'Asha Rao' }
+    });
+    const ashaCookie = joinAsha.rawCookies.split('fo_member_token=')[1].split(';')[0];
     const memberTryHijack = await request('/api/join', {
       method: 'POST',
       cookies: { fo_member_token: ashaCookie },
