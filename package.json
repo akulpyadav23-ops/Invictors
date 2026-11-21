@@ -1,21 +1,35 @@
 {
   "name": "final-override",
   "version": "1.0.0",
-  "description": "FINAL OVERRIDE - Escape Room Tech Challenge for Invictors Club",
+  "description": "FINAL OVERRIDE - Timed Escape-Room Style Tech Challenge for Invictors Club (Dept. of CSE, VVCE Mysuru)",
   "main": "server/index.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node server/index.js",
-    "seed": "node server/seed.js",
-    "test": "node server/tests/acceptance.test.js"
+    "dev": "node server/index.js",
+    "test": "node tests/runner.js",
+    "lint": "npx eslint . && npx prettier --check .",
+    "format": "npx prettier --write .",
+    "build": "node scripts/buildValidation.js",
+    "migrate": "node server/migrations/runner.js",
+    "seed": "node scripts/seed.js",
+    "wipe": "node scripts/wipe.js",
+    "loadtest": "node tests/load/loadtest.js",
+    "dryrun": "node scripts/dryrun.js",
+    "admin-guide": "node scripts/generate_admin_guide_pdf.js"
   },
   "keywords": [
     "final-override",
     "invictors",
     "tech-challenge",
-    "escape-room"
+    "escape-room",
+    "vvce-mysuru",
+    "cybersecurity"
   ],
-  "author": "Invictors Club",
-  "license": "ISC",
+  "author": "Invictors Club · Dept. of CSE, VVCE Mysuru",
+  "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",
     "cookie-parser": "^1.4.7",
@@ -23,6 +37,10 @@
     "express": "^5.3.0",
     "pdfkit": "^0.20.2",
     "ws": "^8.23.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.15.0",
+    "prettier": "^3.10.1"
   },
   "optionalDependencies": {
     "better-sqlite3": "^9.6.0"

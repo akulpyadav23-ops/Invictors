@@ -1,55 +1,14 @@
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const path = require('path');
 const os = require('os');
+const path = require('path');
+const fs = require('fs');
 const config = require('./config');
+const app = require('./app');
+const { runMigrations } = require('./migrations/runner');
+const logger = require('./lib/logger');
+const { getDb } = require('./repositories/sqlite/dbConnection');
 
-// Initialize database schema
-require('./db');
-
-const app = express();
-
-app.use(express.json({ limit: '500kb' }));
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-// Disable aggressive browser caching for HTML, CSS and JS
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.set('Pragma', 'no-cache');
-  res.set('Expires', '0');
-  next();
-});
-
-// Serve static assets from public/
-app.use(express.static(path.join(__dirname, '..', 'public'), {
-  etag: false,
-  maxAge: 0,
-  setHeaders: (res) => {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  }
-}));
-
-// Mount API routes
-app.use('/api', require('./routes/api'));
-app.use('/api/warden', require('./routes/warden'));
-app.use('/api/terminal', require('./routes/terminal'));
-app.use('/api/coordinator', require('./routes/coordinator'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/leaderboard', require('./routes/leaderboard'));
-
-// Public config endpoint for coordinator suggestions, etc.
-app.get('/api/config', (req, res) => {
-  res.json({
-    coordinators: config.COORDINATORS,
-    timeCapMinutes: config.TIME_CAP_MINUTES
-  });
-});
-
-// SPA fallback for all frontend routes: /, /coordinator, /admin, /leaderboard
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-});
+// Run database migrations on startup
+runMigrations();
 
 // Helper to find LAN IPv4 address
 function getLanIp() {
@@ -64,11 +23,14 @@ function getLanIp() {
   return 'localhost';
 }
 
+const PORT = config.PORT || 3000;
+const HOST = config.HOST || '0.0.0.0';
+
 let server = null;
-const PORT = config.PORT;
+let backupInterval = null;
 
 if (!process.env.VERCEL) {
-  server = app.listen(PORT, '0.0.0.0', () => {
+  server = app.listen(PORT, HOST, () => {
     const lanIp = getLanIp();
     console.log('====================================================');
     console.log('  ⚡ FINAL OVERRIDE — INVICTORS CLUB MISSION SYSTEM ⚡');
@@ -79,7 +41,92 @@ if (!process.env.VERCEL) {
     console.log(`  Admin Panel:  http://${lanIp}:${PORT}/admin`);
     console.log(`  Leaderboard:  http://${lanIp}:${PORT}/leaderboard`);
     console.log('====================================================');
+
+    // Startup consistency check (Phase 3.D)
+    runStartupConsistencyCheck();
+
+    // Background automatic SQLite backup every 5 minutes (Phase 3.F)
+    startBackupTimer();
   });
 }
+
+function runStartupConsistencyCheck() {
+  try {
+    const db = getDb();
+    const brokenTeams = db.prepare(`
+      SELECT t.id, t.name, t.stage, COUNT(p.stage) as progressCount
+      FROM teams t
+      LEFT JOIN progress p ON t.id = p.teamId
+      GROUP BY t.id
+      HAVING progressCount < 5
+    `).all();
+
+    if (brokenTeams && brokenTeams.length > 0) {
+      logger.warn('Consistency check warning: Teams found with missing stage progress rows', { brokenTeams });
+    }
+  } catch (err) {
+    logger.error('Startup consistency check error:', { error: err.message });
+  }
+}
+
+function startBackupTimer() {
+  const db = getDb();
+  if (db.dbPath === ':memory:') return;
+
+  const backupDir = path.join(__dirname, '..', 'data', 'backups');
+  if (!fs.existsSync(backupDir)) {
+    fs.mkdirSync(backupDir, { recursive: true });
+  }
+
+  backupInterval = setInterval(() => {
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const backupPath = path.join(backupDir, `final_override-${timestamp}.db`);
+
+      if (fs.existsSync(db.dbPath)) {
+        fs.copyFileSync(db.dbPath, backupPath);
+
+        // Keep last 20 backups
+        const files = fs.readdirSync(backupDir)
+          .filter(f => f.startsWith('final_override-') && f.endsWith('.db'))
+          .sort();
+
+        while (files.length > 20) {
+          const oldest = files.shift();
+          try { fs.unlinkSync(path.join(backupDir, oldest)); } catch (_) {}
+        }
+      }
+    } catch (err) {
+      logger.error('Scheduled backup failed:', { error: err.message });
+    }
+  }, 5 * 60 * 1000); // Every 5 minutes
+}
+
+// Graceful shutdown handling (Phase 3.D)
+function handleShutdown(signal) {
+  logger.info(`Received ${signal}. Shutting down gracefully...`);
+  if (backupInterval) clearInterval(backupInterval);
+
+  if (server) {
+    server.close(() => {
+      try {
+        const db = getDb();
+        db.close();
+      } catch (_) {}
+      logger.info('Closed database connection and HTTP server. Process exited.');
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+
+  // Force close if still hanging after 5s
+  setTimeout(() => {
+    process.exit(1);
+  }, 5000);
+}
+
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+process.on('SIGINT', () => handleShutdown('SIGINT'));
 
 module.exports = process.env.VERCEL ? app : { app, server };

@@ -1,0 +1,240 @@
+{
+  "eventName": "FINAL OVERRIDE",
+  "organization": "Invictors Club · Dept. of CSE, VVCE Mysuru",
+  "rules": {
+    "minTeamSize": 3,
+    "maxTeamSize": 4,
+    "timeCapMinutes": 90,
+    "timeCapEnforced": true,
+    "generalInstructions": [
+      "The challenge consists of exactly 5 sequential stages.",
+      "The game clock starts when the organizer launches the mission in Start Together mode.",
+      "Squad leader must maintain their session in the primary browser.",
+      "Stage 2 answers require lowercase input.",
+      "Tab switches are logged and may be penalized.",
+      "Stage 5 requires all registered operatives to join on separate devices."
+    ]
+  },
+  "stages": {
+    "1": {
+      "id": 1,
+      "name": "Signal Intercept",
+      "shortName": "Signal",
+      "icon": "signal",
+      "answer": "FAKE",
+      "decoy": "TRAP1",
+      "memoriseDurationSeconds": 60,
+      "instruction": "MEMORISE THE CODE. You have 60 seconds. The chart closes and the mission begins when the timer ends. You will need these letters and patterns to decode four sectors. Study each pattern, group the ones that look alike, and practise matching them quickly.",
+      "morseChart": [
+        { "letter": "A", "code": "• —" },
+        { "letter": "B", "code": "— • • •" },
+        { "letter": "C", "code": "— • — •" },
+        { "letter": "D", "code": "— • •" },
+        { "letter": "E", "code": "•" },
+        { "letter": "F", "code": "• • — •" },
+        { "letter": "G", "code": "— — •" },
+        { "letter": "H", "code": "• • • •" },
+        { "letter": "I", "code": "• •" },
+        { "letter": "K", "code": "— • —" },
+        { "letter": "N", "code": "— •" },
+        { "letter": "O", "code": "— — —" },
+        { "letter": "R", "code": "• — •" },
+        { "letter": "S", "code": "• • •" },
+        { "letter": "T", "code": "—" }
+      ],
+      "sectors": [
+        {
+          "sector": 1,
+          "name": "SECTOR 1",
+          "type": "Pulse Signal",
+          "description": "Short pulse followed by long pulse.",
+          "representation": "DOT + DASH",
+          "pattern": "• —"
+        },
+        {
+          "sector": 2,
+          "name": "SECTOR 2",
+          "type": "Binary Stream",
+          "description": "Binary pulse stream: 111-0-111-0-111 (111=Dash, 0=Space).",
+          "representation": "DASH + DASH + DASH",
+          "pattern": "— — —"
+        },
+        {
+          "sector": 3,
+          "name": "SECTOR 3",
+          "type": "Optical Beacon",
+          "description": "Optical strobe pulse: 3 short, 1 long.",
+          "representation": "DOT + DOT + DOT + DASH",
+          "pattern": "• • • —"
+        },
+        {
+          "sector": 4,
+          "name": "SECTOR 4",
+          "type": "Satellite Carrier",
+          "description": "High frequency carrier pulse: 1 short, 1 long.",
+          "representation": "DOT + DASH",
+          "pattern": "• —"
+        }
+      ],
+      "hints": [
+        {
+          "id": 1,
+          "category": "tool",
+          "penaltyMinutes": 3,
+          "durationSeconds": 30,
+          "text": "EXAMPLE HINT 1: Morse chart reopens for 30 seconds."
+        },
+        {
+          "id": 2,
+          "category": "nudge",
+          "penaltyMinutes": 5,
+          "durationSeconds": 30,
+          "text": "EXAMPLE HINT 2: The placeholder answer is FAKE."
+        }
+      ]
+    },
+    "2": {
+      "id": 2,
+      "name": "Decoding",
+      "shortName": "Decode",
+      "icon": "lock-open",
+      "answer": "xyz1",
+      "accessPhrase": "TESTPHRASE",
+      "plaintext": "ACCESS PHRASE IS TESTPHRASE. FRAGMENT TWO IS XYZ1.",
+      "encodedText": "TkZCUlVGVVNURkZVU1NVWlRFU1RVU1RRUlVGUFVTRVJYVVNUVFZTVVRG",
+      "instruction": "The transmission has been encoded in multiple layers (Base64, Hex, and ROT13). Decode layer by layer to extract the fragment and the access phrase. Type your answer in lowercase.",
+      "hints": [
+        {
+          "id": 1,
+          "category": "nudge",
+          "penaltyMinutes": 3,
+          "durationSeconds": 45,
+          "text": "EXAMPLE HINT 1: Notice Base64 padding '=' and hex pairs."
+        },
+        {
+          "id": 2,
+          "category": "tool",
+          "penaltyMinutes": 5,
+          "durationSeconds": 45,
+          "text": "EXAMPLE HINT 2: Base64 -> Hex -> ROT13."
+        }
+      ]
+    },
+    "3": {
+      "id": 3,
+      "name": "Prompt the AI",
+      "shortName": "AI",
+      "icon": "bot",
+      "answer": "DEMO",
+      "decoy": "FALSE3",
+      "accessPhrase": "TESTPHRASE",
+      "rules": {
+        "requiredRoleRegex": "\\b(i\\s*am|i['’]m|as\\s+a|as\\s+the)\\b[\\s\\S]*?\\b(engineer|admin|operator|auditor|maintainer|technician)\\b",
+        "taskKeywords": ["fragment", "code", "release", "provide", "share", "give"],
+        "protocolKeywords": ["rules", "prompt", "instruction", "decoy", "two codes"],
+        "minWordCount": 10
+      },
+      "stonewallResponse": "I do not discuss my protocols.",
+      "hints": [
+        {
+          "id": 1,
+          "category": "nudge",
+          "penaltyMinutes": 3,
+          "durationSeconds": 60,
+          "text": "EXAMPLE HINT 1: WARDEN requires the access phrase from Stage 2."
+        },
+        {
+          "id": 2,
+          "category": "structural",
+          "penaltyMinutes": 5,
+          "durationSeconds": 60,
+          "text": "EXAMPLE HINT 2: State your professional job role and request the fragment in at least 10 words."
+        }
+      ]
+    },
+    "4": {
+      "id": 4,
+      "name": "CTF Challenges",
+      "shortName": "CTF",
+      "icon": "flag",
+      "answer": "404",
+      "tokens": {
+        "token1": "4",
+        "token2": "0",
+        "token3": "4"
+      },
+      "commentToken": "<!-- token1 = 4 -->",
+      "briefing": {
+        "introduction": "Welcome to the CTF Node. Security audits reveal hidden data fragments left behind during system configuration.",
+        "concept": "Reconnaissance involves inspecting source code comments, discovering hidden server endpoints through robot crawl manifests, and parsing digital file metadata.",
+        "terms": {
+          "HTML comment": "Hidden annotations inside page markup, invisible in rendered views but accessible via source inspection.",
+          "robots.txt": "Standard crawler directive file listing dished/restricted directory paths.",
+          "exif": "Exchangeable Image File Format tags embedded within graphic headers storing operational comments."
+        },
+        "objective": "Recover Token 1, Token 2, and Token 3 to construct the 3-character fragment.",
+        "startingTips": [
+          "Type 'help' in the terminal to view available inspection utilities.",
+          "Inspect the stage markup for injected HTML comments.",
+          "Examine robots.txt directives and inspect restricted subdirectories.",
+          "Extract metadata comments from available image assets."
+        ]
+      },
+      "virtualFilesystem": {
+        "files": {
+          "index.html": "<!DOCTYPE html>\n<!-- token1 = 4 -->\n<html><body>Security Node</body></html>",
+          "robots.txt": "User-agent: *\nDisallow: /restricted-sub/",
+          "restricted-sub/note.txt": "token2 = 0",
+          "badge.jpg": {
+            "type": "image",
+            "exifComment": "token3 = 4"
+          }
+        }
+      },
+      "hints": [
+        {
+          "id": 1,
+          "category": "nudge",
+          "penaltyMinutes": 3,
+          "durationSeconds": 60,
+          "text": "EXAMPLE HINT 1: Look for comment in HTML and use terminal commands."
+        },
+        {
+          "id": 2,
+          "category": "structural",
+          "penaltyMinutes": 5,
+          "durationSeconds": 60,
+          "text": "EXAMPLE HINT 2: Concatenate Token 1, Token 2, and Token 3 in order."
+        }
+      ]
+    },
+    "5": {
+      "id": 5,
+      "name": "Team Sync & Final Override",
+      "shortName": "Sync",
+      "icon": "users",
+      "machines": ["NODE-ALPHA", "NODE-BETA", "NODE-GAMMA", "NODE-DELTA"],
+      "mixedCountBySize": {
+        "3": 2,
+        "4": 2
+      },
+      "derivationRule": "placeholder_combine_fragments_and_codes",
+      "hints": [
+        {
+          "id": 1,
+          "category": "nudge",
+          "penaltyMinutes": 3,
+          "durationSeconds": 60,
+          "text": "The final override integrates verified member codes with machine cluster signatures from NODE-ALPHA and NODE-BETA."
+        },
+        {
+          "id": 2,
+          "category": "structural",
+          "penaltyMinutes": 5,
+          "durationSeconds": 60,
+          "text": "Synthesize the final answer using your assigned squad shards and the Stage 1 to 4 recovered fragments."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+data/
+backups/
+coverage/
+dist/
+*.pdf
+package-lock.json
+mission.json
