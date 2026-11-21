@@ -22,8 +22,8 @@ describe('Stage 5 Unit Tests (Code Formats A10 & Multi-Device Sync A9)', () => {
     const members = repos.members.getByTeamId(res.team.id);
     assert.strictEqual(members.length, 4);
 
-    const mixed = members.filter(m => m.assignedCodeType === 'mixed');
-    const alpha = members.filter(m => m.assignedCodeType === 'alpha');
+    const mixed = members.filter((m) => m.assignedCodeType === 'mixed');
+    const alpha = members.filter((m) => m.assignedCodeType === 'alpha');
 
     assert.strictEqual(mixed.length, 2, 'Must have exactly 2 mixed alphanumeric codes');
     assert.strictEqual(alpha.length, 2, 'Must have exactly 2 alphabetic codes');
@@ -50,8 +50,8 @@ describe('Stage 5 Unit Tests (Code Formats A10 & Multi-Device Sync A9)', () => {
     const members = repos.members.getByTeamId(res.team.id);
     assert.strictEqual(members.length, 3);
 
-    const mixed = members.filter(m => m.assignedCodeType === 'mixed');
-    const alpha = members.filter(m => m.assignedCodeType === 'alpha');
+    const mixed = members.filter((m) => m.assignedCodeType === 'mixed');
+    const alpha = members.filter((m) => m.assignedCodeType === 'alpha');
 
     assert.strictEqual(mixed.length, 2, 'Must have exactly 2 mixed codes');
     assert.strictEqual(alpha.length, 1, 'Must have exactly 1 alphabetic code');
@@ -66,11 +66,11 @@ describe('Stage 5 Unit Tests (Code Formats A10 & Multi-Device Sync A9)', () => {
       member3: 'P3'
     });
 
-    const notebook = { '1': 'CORE', '2': '4M7', '3': 'NEXUS', '4': '82K' };
+    const notebook = { 1: 'CORE', 2: '4M7', 3: 'NEXUS', 4: '82K' };
 
     // Only leader joined so far
     try {
-      stage5Service.validateSubmission(res.team, 'FO-TEST', notebook);
+      stage5Service.validateSubmission(res.team, 'TEST-CODE');
       assert.fail('Should block until all members join');
     } catch (err) {
       assert.strictEqual(err.status, 400);
@@ -81,13 +81,12 @@ describe('Stage 5 Unit Tests (Code Formats A10 & Multi-Device Sync A9)', () => {
     await teamService.joinMember({ teamName: res.team.name, fullName: 'P2' });
     await teamService.joinMember({ teamName: res.team.name, fullName: 'P3' });
 
-    // Derive correct answer
+    // Assemble team code from sorted member shards
     const members = repos.members.getByTeamId(res.team.id);
-    const codes = members.map(m => m.assignedShard);
-    const expected = stage5Service.deriveFinalAnswer(res.team.name, codes, notebook);
+    const expectedTeamCode = stage5Service.computeTeamCode(members);
 
-    const validation = stage5Service.validateSubmission(res.team, expected, notebook);
+    const validation = stage5Service.validateSubmission(res.team, expectedTeamCode);
     assert.strictEqual(validation.isCorrect, true);
-    assert.strictEqual(validation.finished, true);
+    assert.strictEqual(validation.fragment, expectedTeamCode);
   });
 });

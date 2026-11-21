@@ -6,6 +6,7 @@ const { getMission } = require('../content/loader');
 const Stage1Service = require('../services/stage1Service');
 const Stage2Service = require('../services/stage2Service');
 const Stage5Service = require('../services/stage5Service');
+const { Stage6Service } = require('../services/stage6Service');
 const HintService = require('../services/hintService');
 const clock = require('../lib/clock');
 const config = require('../config');
@@ -15,6 +16,7 @@ const repos = getRepositories();
 const stage1Service = new Stage1Service(repos);
 const stage2Service = new Stage2Service(repos);
 const stage5Service = new Stage5Service(repos);
+const stage6Service = new Stage6Service(repos);
 const hintService = new HintService(repos);
 const mission = getMission();
 
@@ -49,14 +51,14 @@ router.get('/', requireLeader, async (req, res, next) => {
     const isIndividuallyPaused = team.isPaused === 1;
     const isPaused = isClockPaused || isIndividuallyPaused;
 
-    // Progress and solved fragments
+    // Progress and solved fragments for notebook (Holds 5 fragments: Stages 1 to 5)
     const progressRows = repos.progress.getByTeamId(team.id);
     const notebook = {};
-    progressRows.forEach(row => {
-      if (row.fragment) notebook[row.stage] = row.fragment;
+    progressRows.forEach((row) => {
+      if (row.stage <= 5 && row.fragment) notebook[row.stage] = row.fragment;
     });
 
-    const currentProg = progressRows.find(p => p.stage === currentStage) || { wrongAttempts: 0, hintsUsed: 0 };
+    const currentProg = progressRows.find((p) => p.stage === currentStage) || { wrongAttempts: 0, hintsUsed: 0 };
 
     // Revealed hints with server countdowns
     const activeHints = hintService.getActiveHintsForStage(team, currentStage);
@@ -79,7 +81,9 @@ router.get('/', requireLeader, async (req, res, next) => {
           commentToken: mission.stages['4'].commentToken
         };
       } else if (currentStage === 5) {
-        stageContent = stage5Service.getStatePayload(team);
+        stageContent = stage5Service.getStatePayload(team, req.cookies.fo_member_token);
+      } else if (currentStage === 6) {
+        stageContent = stage6Service.getStatePayload(team);
       }
     }
 
@@ -111,7 +115,11 @@ router.get('/', requireLeader, async (req, res, next) => {
       gameStarted: isGameStarted,
       waitingInLobby: team.status === 'waiting',
       waitingCount: repos.teams.getWaitingCount(),
-      members: members.map(m => ({ fullName: m.fullName, isLeader: !!m.isLeader, hasJoined: m.deviceToken !== null })),
+      members: members.map((m) => ({
+        fullName: m.fullName,
+        isLeader: !!m.isLeader,
+        hasJoined: m.deviceToken !== null
+      })),
       currentProg: {
         wrongAttempts: currentProg.wrongAttempts,
         hintsUsed: currentProg.hintsUsed

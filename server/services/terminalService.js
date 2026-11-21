@@ -17,7 +17,8 @@ class TerminalService {
     const target = parts[1] ? parts[1].toLowerCase().replace(/^\.?\//, '') : '';
 
     // Security path traversal checks
-    const hasTraversal = cmd.includes('..') || cmd.includes('\\') || parts.some(p => p.startsWith('/') || p.startsWith('~'));
+    const hasTraversal =
+      cmd.includes('..') || cmd.includes('\\') || parts.some((p) => p.startsWith('/') || p.startsWith('~'));
     if (hasTraversal) {
       return 'Access denied: Path traversal and absolute paths are prohibited.';
     }

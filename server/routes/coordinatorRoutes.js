@@ -39,27 +39,27 @@ router.get('/', requireCoordinator, (req, res) => {
   const allTeams = repos.teams.getAll();
 
   // Filter only teams assigned to this coordinator
-  const matchedTeams = allTeams.filter(t => norm(t.coordinator) === norm(coordName));
+  const matchedTeams = allTeams.filter((t) => norm(t.coordinator) === norm(coordName));
 
-  const teamIds = matchedTeams.map(t => t.id);
+  const teamIds = matchedTeams.map((t) => t.id);
   const allMembers = repos.members.getForTeams(teamIds);
   const allProgress = repos.progress.getForTeams(teamIds);
 
   const membersByTeam = {};
-  allMembers.forEach(m => {
+  allMembers.forEach((m) => {
     if (!membersByTeam[m.teamId]) membersByTeam[m.teamId] = [];
     membersByTeam[m.teamId].push(m);
   });
 
   const progressByTeam = {};
-  allProgress.forEach(p => {
+  allProgress.forEach((p) => {
     if (!progressByTeam[p.teamId]) progressByTeam[p.teamId] = [];
     progressByTeam[p.teamId].push(p);
   });
 
   const now = clock.now();
 
-  const teams = matchedTeams.map(t => {
+  const teams = matchedTeams.map((t) => {
     const members = membersByTeam[t.id] || [];
     const prog = progressByTeam[t.id] || [];
 
@@ -84,9 +84,9 @@ router.get('/', requireCoordinator, (req, res) => {
       name: t.name,
       coordinator: t.coordinator,
       memberCount: t.memberCount,
-      players: members.map(m => m.fullName),
+      players: members.map((m) => m.fullName),
       stage: t.stage,
-      stageText: t.finishedAt ? 'Completed' : (t.status === 'waiting' ? 'Lobby' : `${t.stage}/5`),
+      stageText: t.finishedAt ? 'Completed' : t.status === 'waiting' ? 'Lobby' : `${t.stage}/6`,
       formattedTime,
       totalSeconds,
       penaltyMin: t.penaltyMin,

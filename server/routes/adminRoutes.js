@@ -11,6 +11,7 @@ const AdminService = require('../services/adminService');
 const TeamService = require('../services/teamService');
 const HintService = require('../services/hintService');
 const Stage5Service = require('../services/stage5Service');
+const { Stage6Service, deriveFinalAnswer } = require('../services/stage6Service');
 const { generateVerificationCode } = require('../lib/hmac');
 
 const repos = getRepositories();
@@ -18,6 +19,7 @@ const adminService = new AdminService(repos);
 const teamService = new TeamService(repos);
 const hintService = new HintService(repos);
 const stage5Service = new Stage5Service(repos);
+const stage6Service = new Stage6Service(repos);
 const mission = getMission();
 
 // Admin session tracking
@@ -48,7 +50,9 @@ router.post('/verify', (req, res) => {
   pruneSessions();
   const limit = config.ADMIN_SESSION_LIMIT || 2;
   if (!sessionId && adminSessions.size >= limit) {
-    return res.status(429).json({ error: `Admin portal session cap reached (${limit} active sessions). Please close another tab.` });
+    return res
+      .status(429)
+      .json({ error: `Admin portal session cap reached (${limit} active sessions). Please close another tab.` });
   }
 
   const assignedSessionId = sessionId || crypto.randomUUID();
@@ -79,19 +83,19 @@ router.post('/logout-session', (req, res) => {
 // GET /api/admin/teams
 router.get('/teams', requireAdmin, (req, res) => {
   const teams = repos.teams.getAll();
-  const teamIds = teams.map(t => t.id);
+  const teamIds = teams.map((t) => t.id);
 
   const allMembers = repos.members.getForTeams(teamIds);
   const allProgress = repos.progress.getForTeams(teamIds);
 
   const membersByTeam = {};
-  allMembers.forEach(m => {
+  allMembers.forEach((m) => {
     if (!membersByTeam[m.teamId]) membersByTeam[m.teamId] = [];
     membersByTeam[m.teamId].push(m);
   });
 
   const progressByTeam = {};
-  allProgress.forEach(p => {
+  allProgress.forEach((p) => {
     if (!progressByTeam[p.teamId]) progressByTeam[p.teamId] = [];
     progressByTeam[p.teamId].push(p);
   });
@@ -99,7 +103,7 @@ router.get('/teams', requireAdmin, (req, res) => {
   const settings = repos.settings.getAll();
   const now = clock.now();
 
-  const fullTeams = teams.map(t => {
+  const fullTeams = teams.map((t) => {
     const members = membersByTeam[t.id] || [];
     const prog = progressByTeam[t.id] || [];
 
@@ -194,13 +198,13 @@ router.post('/reissue-leader', requireAdmin, async (req, res, next) => {
 router.get('/hints', requireAdmin, (req, res) => {
   const allHints = hintService.getAllHintsForAdmin();
   const stages = {};
-  for (let s = 1; s <= 5; s++) {
+  for (let s = 1; s <= 6; s++) {
     const stg = mission.stages[String(s)];
     stages[s] = {
       stage: s,
       name: stg ? stg.name : `Stage ${s}`,
       icon: stg ? stg.icon : 'flag',
-      hints: allHints.filter(h => h.stage === s)
+      hints: allHints.filter((h) => h.stage === s)
     };
   }
   return res.json({ stages, allHints });
@@ -237,41 +241,50 @@ router.get('/answers', requireAdmin, (req, res) => {
   const teams = repos.teams.getAll();
   teams.sort((a, b) => a.name.localeCompare(b.name));
 
-  const teamIds = teams.map(t => t.id);
+  const teamIds = teams.map((t) => t.id);
   const allMembers = repos.members.getForTeams(teamIds);
 
   const membersByTeam = {};
-  allMembers.forEach(m => {
+  allMembers.forEach((m) => {
     if (!membersByTeam[m.teamId]) membersByTeam[m.teamId] = [];
     membersByTeam[m.teamId].push(m);
   });
 
-  const teamSolutions = teams.map(t => {
+  const teamSolutions = teams.map((t) => {
     const members = membersByTeam[t.id] || [];
-    const memberCodes = members.map(m => m.assignedShard);
+    const memberCodes = members.map((m) => m.assignedShard);
+    const stage5TeamCode = stage5Service.computeTeamCode(members);
     const fragments = {
       1: mission.stages['1'].answer,
       2: mission.stages['2'].answer.toUpperCase(),
       3: mission.stages['3'].answer,
-      4: mission.stages['4'].answer
+      4: mission.stages['4'].answer,
+      5: stage5TeamCode
     };
-    const finalKey = stage5Service.deriveFinalAnswer(t.name, memberCodes, fragments);
+    const finalKey = deriveFinalAnswer(t.name, fragments, memberCodes);
 
     return {
       teamId: t.id,
       teamName: t.name,
       coordinator: t.coordinator,
-      memberShards: members.map(m => ({ name: m.fullName, shard: m.assignedShard, type: m.assignedCodeType })),
-      stage5FinalKey: finalKey
+      memberShards: members.map((m) => ({ name: m.fullName, shard: m.assignedShard, type: m.assignedCodeType })),
+      stage5TeamCode,
+      stage6FinalKey: finalKey
     };
   });
 
   return res.json({
     staticAnswers: {
       stage1: { title: 'Stage 1: Signal Intercept', answer: mission.stages['1'].answer },
-      stage2: { title: 'Stage 2: Decoding', answer: mission.stages['2'].answer.toUpperCase(), accessPhrase: mission.stages['2'].accessPhrase },
+      stage2: {
+        title: 'Stage 2: Decoding',
+        answer: mission.stages['2'].answer.toUpperCase(),
+        accessPhrase: mission.stages['2'].accessPhrase
+      },
       stage3: { title: 'Stage 3: Prompt the AI', answer: mission.stages['3'].answer, decoy: mission.stages['3'].decoy },
-      stage4: { title: 'Stage 4: CTF Challenges', answer: mission.stages['4'].answer }
+      stage4: { title: 'Stage 4: CTF Challenges', answer: mission.stages['4'].answer },
+      stage5: { title: 'Stage 5: Team Sync', note: 'Assembled from sorted member shards' },
+      stage6: { title: 'Stage 6: Final Integration', note: 'Derived from 5 fragments + hint machine targets' }
     },
     teamSolutions
   });
@@ -329,8 +342,10 @@ router.post('/skip', requireAdmin, (req, res, next) => {
     if (!team) return res.status(404).json({ error: 'Team not found' });
 
     const currentStage = team.stage;
-    const nextStage = currentStage < 5 ? currentStage + 1 : 5;
+    const isFinalStage = currentStage >= 6;
+    const nextStage = isFinalStage ? 6 : currentStage + 1;
     const now = clock.now();
+    const finishedAt = isFinalStage ? now : null;
 
     repos.transaction(() => {
       repos.progress.update(team.id, currentStage, {
@@ -339,6 +354,7 @@ router.post('/skip', requireAdmin, (req, res, next) => {
       });
       repos.teams.update(team.id, {
         stage: nextStage,
+        finishedAt: finishedAt || team.finishedAt,
         stage1OpensAt: now
       });
     })();

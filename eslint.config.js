@@ -1,5 +1,3 @@
-const js = require('@eslint/js');
-
 module.exports = [
   {
     ignores: [
@@ -16,7 +14,6 @@ module.exports = [
       'mission.json'
     ]
   },
-  js.configs.recommended,
   {
     files: ['**/*.js', '**/*.mjs'],
     languageOptions: {

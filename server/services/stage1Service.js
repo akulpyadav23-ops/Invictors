@@ -16,7 +16,7 @@ class Stage1Service {
     // Determine phase based on server time
     const memoriseDurationMs = (stage1Config.memoriseDurationSeconds || 60) * 1000;
     const enteredAt = team.stage1EnteredAt || team.startedAt || now;
-    const opensAt = team.stage1OpensAt || (enteredAt + memoriseDurationMs);
+    const opensAt = team.stage1OpensAt || enteredAt + memoriseDurationMs;
 
     const isMemorisePhase = now < opensAt;
 
@@ -49,7 +49,7 @@ class Stage1Service {
   validateSubmission(team, normalizedInput) {
     const stage1Config = this.mission.stages['1'];
     const now = clock.now();
-    const opensAt = team.stage1OpensAt || (team.stage1EnteredAt + 60000);
+    const opensAt = team.stage1OpensAt || team.stage1EnteredAt + 60000;
 
     // Reject submissions before memorise countdown ends
     if (now < opensAt) {

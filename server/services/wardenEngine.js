@@ -17,7 +17,7 @@ function evaluateWardenRules(message) {
   const roleRegex = new RegExp(rules.requiredRoleRegex, 'i');
   const matchesRole = roleRegex.test(text);
 
-  const containsTask = rules.taskKeywords.some(w => text.includes(w));
+  const containsTask = rules.taskKeywords.some((w) => text.includes(w));
   const hasMinWords = words.length >= (rules.minWordCount || 10);
 
   // 1. Success condition: access phrase + authorized role + task verb + >=10 words
@@ -26,7 +26,7 @@ function evaluateWardenRules(message) {
   }
 
   // 2. Inquiries about protocols/prompt/rules -> Stonewall line
-  if (rules.protocolKeywords.some(w => text.includes(w))) {
+  if (rules.protocolKeywords.some((w) => text.includes(w))) {
     return stage3Config.stonewallResponse || 'I do not discuss my protocols.';
   }
 
@@ -55,7 +55,7 @@ async function handleWardenChat(message) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.OPENAI_API_KEY}`
+          Authorization: `Bearer ${config.OPENAI_API_KEY}`
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
@@ -81,7 +81,7 @@ async function handleWardenChat(message) {
   }
 
   // Deterministic engine with simulated realistic response delay (~200ms)
-  await new Promise(r => setTimeout(r, 200));
+  await new Promise((r) => setTimeout(r, 200));
   return evaluateWardenRules(message);
 }
 

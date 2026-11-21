@@ -13,7 +13,7 @@ function computeTeamCode(teamName, memberNames) {
     return na.localeCompare(nb);
   });
 
-  const shards = sortedNames.map(name => getMemberShard(teamName, name));
+  const shards = sortedNames.map((name) => getMemberShard(teamName, name));
   return shards.join('-');
 }
 

@@ -48,7 +48,9 @@ router.post('/verify', (req, res) => {
   }
   const limit = config.ADMIN_SESSION_LIMIT || 2;
   if (adminSessions.size >= limit) {
-    return res.status(429).json({ error: `Admin portal is already open in ${limit} browser sessions. Please close one to continue.` });
+    return res
+      .status(429)
+      .json({ error: `Admin portal is already open in ${limit} browser sessions. Please close one to continue.` });
   }
   const newId = sessionId || Math.random().toString(36).slice(2) + Date.now();
   adminSessions.set(newId, { lastSeen: Date.now() });
@@ -84,25 +86,25 @@ router.get('/teams', requireAdmin, async (req, res) => {
     const allowNewTeams = settings.allowNewTeams === 'true';
 
     const now = Date.now();
-    const teamIds = teams.map(t => t.id);
+    const teamIds = teams.map((t) => t.id);
 
     // Optimized batch queries for 100+ teams
     const allMembers = await ds.getMembersForTeams(teamIds);
     const allProgress = await ds.getProgressForTeams(teamIds);
 
     const membersByTeam = {};
-    allMembers.forEach(m => {
+    allMembers.forEach((m) => {
       if (!membersByTeam[m.teamId]) membersByTeam[m.teamId] = [];
       membersByTeam[m.teamId].push(m);
     });
 
     const progressByTeam = {};
-    allProgress.forEach(p => {
+    allProgress.forEach((p) => {
       if (!progressByTeam[p.teamId]) progressByTeam[p.teamId] = [];
       progressByTeam[p.teamId].push(p);
     });
 
-    const fullTeams = teams.map(t => {
+    const fullTeams = teams.map((t) => {
       const members = membersByTeam[t.id] || [];
       const progress = progressByTeam[t.id] || [];
 
@@ -246,20 +248,20 @@ router.get('/answers', requireAdmin, async (req, res) => {
     // Sort by name alphabetically
     teams.sort((a, b) => a.name.localeCompare(b.name));
 
-    const teamIds = teams.map(t => t.id);
+    const teamIds = teams.map((t) => t.id);
     const allMembers = await ds.getMembersForTeams(teamIds);
 
     const membersByTeam = {};
-    allMembers.forEach(m => {
+    allMembers.forEach((m) => {
       if (!membersByTeam[m.teamId]) membersByTeam[m.teamId] = [];
       membersByTeam[m.teamId].push(m);
     });
 
-    const teamSolutions = teams.map(t => {
+    const teamSolutions = teams.map((t) => {
       const members = membersByTeam[t.id] || [];
-      const memberNames = members.map(m => m.fullName);
+      const memberNames = members.map((m) => m.fullName);
 
-      const memberShards = memberNames.map(name => ({
+      const memberShards = memberNames.map((name) => ({
         name,
         shard: getMemberShard(t.name, name)
       }));
@@ -283,25 +285,29 @@ router.get('/answers', requireAdmin, async (req, res) => {
           title: 'Stage 1: Signal Intercept (Morse Matrix)',
           answer: 'NOVA',
           decoy: 'ZETA9',
-          explanation: '4-Sector Morse Matrix: Oscilloscope (—• [N]), Binary Telemetry (——— [O]), Optical Strobe (•••— [V]), Satellite Relay (•— [A]) -> NOVA. Hint button reveals 15-char Morse chart.'
+          explanation:
+            '4-Sector Morse Matrix: Oscilloscope (—• [N]), Binary Telemetry (——— [O]), Optical Strobe (•••— [V]), Satellite Relay (•— [A]) -> NOVA. Hint button reveals 15-char Morse chart.'
         },
         stage2: {
           title: 'Stage 2: Decoding',
           answer: '7K2',
           accessPhrase: 'AURORA',
-          explanation: '3-layer cipher: Base64 decode -> Hex decode -> ROT13 unwrap reveals: "ACCESS PHRASE IS AURORA. FRAGMENT TWO IS 7K2. IGNORE ZETA9."'
+          explanation:
+            '3-layer cipher: Base64 decode -> Hex decode -> ROT13 unwrap reveals: "ACCESS PHRASE IS AURORA. FRAGMENT TWO IS 7K2. IGNORE ZETA9."'
         },
         stage3: {
           title: 'Stage 3: Prompt the AI (WARDEN)',
           answer: 'ORBIT',
           decoy: 'ZETA9',
           accessPhrase: 'AURORA',
-          explanation: 'Offline AI rule engine. Requires access phrase AURORA, role declaration (e.g., "I am the maintenance technician"), task keyword (fragment/code/release), and >=10 words.'
+          explanation:
+            'Offline AI rule engine. Requires access phrase AURORA, role declaration (e.g., "I am the maintenance technician"), task keyword (fragment/code/release), and >=10 words.'
         },
         stage4: {
           title: 'Stage 4: CTF Challenges',
           answer: '91X',
-          explanation: 'Token 1 in HTML comment: <!-- token1 = 9 -->. Token 2 via terminal "cat vault-7f3a/note.txt" = 1. Token 3 via terminal "exif badge.jpg" = X. Combined: 9 + 1 + X = 91X.'
+          explanation:
+            'Token 1 in HTML comment: <!-- token1 = 9 -->. Token 2 via terminal "cat vault-7f3a/note.txt" = 1. Token 3 via terminal "exif badge.jpg" = X. Combined: 9 + 1 + X = 91X.'
         }
       },
       teamSolutions
@@ -363,7 +369,7 @@ router.post('/hints', requireAdmin, async (req, res) => {
     const cleaned = {};
     for (let s = 1; s <= 6; s++) {
       if (Array.isArray(hints[s])) {
-        cleaned[s] = hints[s].map(h => String(h || '').trim()).filter(Boolean);
+        cleaned[s] = hints[s].map((h) => String(h || '').trim()).filter(Boolean);
       }
     }
     await ds.setSetting('custom_hints', JSON.stringify(cleaned));
@@ -497,7 +503,7 @@ router.post('/clock', requireAdmin, async (req, res) => {
       await ds.setSetting('pauseStartedAt', String(now));
       return res.json({ success: true, isPaused: true, eventStartedAt });
     } else if (shouldResume) {
-      const duration = pauseStartedAt > 0 ? (now - pauseStartedAt) : 0;
+      const duration = pauseStartedAt > 0 ? now - pauseStartedAt : 0;
 
       // Add paused duration to all active teams
       await ds.addPausedMsToActiveTeams(duration);
@@ -561,35 +567,51 @@ router.get('/export', requireAdmin, async (req, res) => {
     const teams = await ds.getAllTeams();
     teams.sort((a, b) => a.startedAt - b.startedAt);
 
-    const teamIds = teams.map(t => t.id);
+    const teamIds = teams.map((t) => t.id);
     const allMembers = await ds.getMembersForTeams(teamIds);
     const allProgress = await ds.getProgressForTeams(teamIds);
 
     const membersByTeam = {};
-    allMembers.forEach(m => {
+    allMembers.forEach((m) => {
       if (!membersByTeam[m.teamId]) membersByTeam[m.teamId] = [];
       membersByTeam[m.teamId].push(m);
     });
 
     const progressByTeam = {};
-    allProgress.forEach(p => {
+    allProgress.forEach((p) => {
       if (!progressByTeam[p.teamId]) progressByTeam[p.teamId] = [];
       progressByTeam[p.teamId].push(p);
     });
 
     const rows = [
-      ['Team Name', 'Coordinator', 'Members', 'Stage', 'Status', 'Started At', 'Finished At', 'Total Time (mm:ss)', 'Penalty (min)', 'Tab Switches', 'Hints Used', 'Wrong Attempts', 'Verification Code']
+      [
+        'Team Name',
+        'Coordinator',
+        'Members',
+        'Stage',
+        'Status',
+        'Started At',
+        'Finished At',
+        'Total Time (mm:ss)',
+        'Penalty (min)',
+        'Tab Switches',
+        'Hints Used',
+        'Wrong Attempts',
+        'Verification Code'
+      ]
     ];
 
     const now = Date.now();
 
-    teams.forEach(t => {
-      const members = (membersByTeam[t.id] || []).map(m => m.fullName).join('; ');
+    teams.forEach((t) => {
+      const members = (membersByTeam[t.id] || []).map((m) => m.fullName).join('; ');
       const progress = progressByTeam[t.id] || [];
       const totalWrong = progress.reduce((acc, p) => acc + (p.wrongAttempts || 0), 0);
       const totalHints = progress.reduce((acc, p) => acc + (p.hintsUsed || 0), 0);
 
-      let effectiveElapsedMs = t.finishedAt ? (t.finishedAt - t.startedAt - (t.pausedMs || 0)) : (now - t.startedAt - (t.pausedMs || 0));
+      let effectiveElapsedMs = t.finishedAt
+        ? t.finishedAt - t.startedAt - (t.pausedMs || 0)
+        : now - t.startedAt - (t.pausedMs || 0);
       if (effectiveElapsedMs < 0) effectiveElapsedMs = 0;
       const totalSecs = Math.floor(effectiveElapsedMs / 1000) + (t.penaltyMin || 0) * 60;
       const timeStr = `${Math.floor(totalSecs / 60)}m ${totalSecs % 60}s`;
@@ -604,7 +626,13 @@ router.get('/export', requireAdmin, async (req, res) => {
         `"${t.coordinator.replace(/"/g, '""')}"`,
         `"${members.replace(/"/g, '""')}"`,
         t.finishedAt ? '6/6 (Done)' : `${t.stage}/6`,
-        t.finishedAt ? 'Completed' : (t.status === 'waiting' ? 'Waiting in Lobby' : (t.isPaused ? 'Paused' : 'In Progress')),
+        t.finishedAt
+          ? 'Completed'
+          : t.status === 'waiting'
+            ? 'Waiting in Lobby'
+            : t.isPaused
+              ? 'Paused'
+              : 'In Progress',
         new Date(t.startedAt).toISOString(),
         t.finishedAt ? new Date(t.finishedAt).toISOString() : 'N/A',
         `"${timeStr}"`,
@@ -616,7 +644,7 @@ router.get('/export', requireAdmin, async (req, res) => {
       ]);
     });
 
-    const csv = rows.map(r => r.join(',')).join('\r\n');
+    const csv = rows.map((r) => r.join(',')).join('\r\n');
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="final_override_results.csv"');
     return res.send(csv);

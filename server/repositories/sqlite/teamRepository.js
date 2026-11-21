@@ -22,9 +22,11 @@ class SqliteTeamRepository {
 
   getByRecoveryCode(teamName, code) {
     if (!teamName || !code) return null;
-    return this.db.prepare(
-      'SELECT * FROM teams WHERE name = ? COLLATE NOCASE AND leaderRecoveryCode = ?'
-    ).get(teamName.trim(), code.trim()) || null;
+    return (
+      this.db
+        .prepare('SELECT * FROM teams WHERE name = ? COLLATE NOCASE AND leaderRecoveryCode = ?')
+        .get(teamName.trim(), code.trim()) || null
+    );
   }
 
   getAll() {
@@ -86,13 +88,13 @@ class SqliteTeamRepository {
 
     // Increment version if version not explicitly provided
     let setKeys = [...keys];
-    let values = keys.map(k => fields[k]);
+    let values = keys.map((k) => fields[k]);
 
     if (!keys.includes('version')) {
       setKeys.push('version = version + 1');
     }
 
-    const setClause = setKeys.map(k => k.includes('=') ? k : `${k} = ?`).join(', ');
+    const setClause = setKeys.map((k) => (k.includes('=') ? k : `${k} = ?`)).join(', ');
     values.push(id);
 
     this.db.prepare(`UPDATE teams SET ${setClause} WHERE id = ?`).run(...values);
@@ -104,15 +106,19 @@ class SqliteTeamRepository {
     const keys = Object.keys(fields);
     if (keys.length === 0) return true;
 
-    const setClause = keys.map(k => `${k} = ?`).join(', ') + ', version = version + 1';
-    const values = keys.map(k => fields[k]);
+    const setClause = keys.map((k) => `${k} = ?`).join(', ') + ', version = version + 1';
+    const values = keys.map((k) => fields[k]);
     values.push(id, currentStage, currentVersion);
 
-    const res = this.db.prepare(`
+    const res = this.db
+      .prepare(
+        `
       UPDATE teams
       SET ${setClause}
       WHERE id = ? AND stage = ? AND version = ?
-    `).run(...values);
+    `
+      )
+      .run(...values);
 
     return res.changes > 0;
   }
@@ -124,16 +130,22 @@ class SqliteTeamRepository {
 
   addPausedMsToActive(duration) {
     if (duration <= 0) return true;
-    this.db.prepare('UPDATE teams SET pausedMs = pausedMs + ? WHERE finishedAt IS NULL AND status = "active"').run(duration);
+    this.db
+      .prepare('UPDATE teams SET pausedMs = pausedMs + ? WHERE finishedAt IS NULL AND status = "active"')
+      .run(duration);
     return true;
   }
 
   startAll(now) {
-    const res = this.db.prepare(`
+    const res = this.db
+      .prepare(
+        `
       UPDATE teams
       SET status = 'active', startedAt = ?
       WHERE status = 'waiting'
-    `).run(now);
+    `
+      )
+      .run(now);
     return res.changes;
   }
 }

@@ -47,17 +47,23 @@ function validateEnv(rawEnv = process.env) {
 
   // 5. COORDINATORS and COORDINATOR_PINS
   const rawCoords = rawEnv.COORDINATORS || 'Arun,Divya,Kiran,Pooja,Rakshith';
-  const coordinators = rawCoords.split(',').map(c => c.trim()).filter(Boolean);
+  const coordinators = rawCoords
+    .split(',')
+    .map((c) => c.trim())
+    .filter(Boolean);
 
   const rawPins = rawEnv.COORDINATOR_PINS || '';
   const coordinatorPins = {};
 
   if (rawPins) {
     // Format: "Name1:Pin1,Name2:Pin2" or comma-separated pins matching coordinators array
-    const parts = rawPins.split(',').map(p => p.trim()).filter(Boolean);
+    const parts = rawPins
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
     if (parts[0] && parts[0].includes(':')) {
       for (const pair of parts) {
-        const [name, pin] = pair.split(':').map(s => s.trim());
+        const [name, pin] = pair.split(':').map((s) => s.trim());
         if (name && pin) {
           if (pin.length < 6 && !isTest) {
             errors.push(`Coordinator PIN for "${name}" must be at least 6 characters long`);
@@ -89,7 +95,7 @@ function validateEnv(rawEnv = process.env) {
     if (!isTest) {
       errors.push('COORDINATOR_PINS is required and each PIN must be at least 6 characters long');
     } else {
-      coordinators.forEach(c => {
+      coordinators.forEach((c) => {
         coordinatorPins[c.toLowerCase()] = 'pin_123456';
       });
     }
@@ -128,7 +134,7 @@ function validateEnv(rawEnv = process.env) {
     const errorMsg = [
       '======================================================',
       '❌ FATAL CONFIGURATION ERROR: Invalid environment configuration:',
-      ...errors.map(e => `  - ${e}`),
+      ...errors.map((e) => `  - ${e}`),
       '======================================================'
     ].join('\n');
     const err = new Error(errorMsg);

@@ -15,7 +15,7 @@ class HintService {
     const usageList = this.repos.hints.getUsageByTeamAndStage(team.id, stage);
     const now = clock.now();
 
-    return usageList.map(u => {
+    return usageList.map((u) => {
       const isVisible = now < u.hintVisibleUntil;
       const hintDef = this.repos.hints.getById(u.hintId);
 
@@ -53,7 +53,7 @@ class HintService {
       throw { status: 400, message: 'All hints for this stage have already been utilized.' };
     }
 
-    const hintDef = availableHints.find(h => h.hintNumber === nextHintNumber) || availableHints[nextHintNumber - 1];
+    const hintDef = availableHints.find((h) => h.hintNumber === nextHintNumber) || availableHints[nextHintNumber - 1];
     if (!hintDef || !hintDef.enabled) {
       throw { status: 400, message: 'Requested hint is currently disabled by organizers.' };
     }
@@ -116,8 +116,10 @@ class HintService {
 
     const cleanFields = {};
     if (fields.text !== undefined) cleanFields.text = String(fields.text).trim().slice(0, 500);
-    if (fields.durationSeconds !== undefined) cleanFields.durationSeconds = Math.max(10, Math.min(300, parseInt(fields.durationSeconds, 10) || 30));
-    if (fields.penaltyMinutes !== undefined) cleanFields.penaltyMinutes = Math.max(0, Math.min(60, parseInt(fields.penaltyMinutes, 10) || 3));
+    if (fields.durationSeconds !== undefined)
+      cleanFields.durationSeconds = Math.max(10, Math.min(300, parseInt(fields.durationSeconds, 10) || 30));
+    if (fields.penaltyMinutes !== undefined)
+      cleanFields.penaltyMinutes = Math.max(0, Math.min(60, parseInt(fields.penaltyMinutes, 10) || 3));
     if (fields.enabled !== undefined) cleanFields.enabled = fields.enabled ? 1 : 0;
     if (fields.category !== undefined) cleanFields.category = String(fields.category).trim();
 

@@ -15,7 +15,9 @@ if (isSupabaseConfigured) {
     const { createClient } = require('@supabase/supabase-js');
     // Use ws transport only when available (not needed on serverless/Vercel)
     let wsTransport;
-    try { wsTransport = require('ws'); } catch (_) {}
+    try {
+      wsTransport = require('ws');
+    } catch (_) {}
     const supabaseOpts = { auth: { persistSession: false } };
     if (wsTransport) supabaseOpts.realtime = { transport: wsTransport };
     supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, supabaseOpts);
@@ -49,12 +51,16 @@ const dataService = {
     if (this.isSupabase()) {
       const { data } = await supabase.from('settings').select('*');
       const map = {};
-      (data || []).forEach(r => { map[r.key] = r.value; });
+      (data || []).forEach((r) => {
+        map[r.key] = r.value;
+      });
       return map;
     }
     const rows = sqliteDb.prepare('SELECT key, value FROM settings').all();
     const map = {};
-    (rows || []).forEach(r => { map[r.key] = r.value; });
+    (rows || []).forEach((r) => {
+      map[r.key] = r.value;
+    });
     return map;
   },
 
@@ -110,7 +116,10 @@ const dataService = {
 
   async getWaitingTeamsCount() {
     if (this.isSupabase()) {
-      const { count } = await supabase.from('teams').select('*', { count: 'exact', head: true }).eq('status', 'waiting');
+      const { count } = await supabase
+        .from('teams')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'waiting');
       return count || 0;
     }
     const row = sqliteDb.prepare("SELECT COUNT(*) as c FROM teams WHERE status = 'waiting'").get();
@@ -144,10 +153,14 @@ const dataService = {
     }
 
     const tx = sqliteDb.transaction(() => {
-      sqliteDb.prepare(`
+      sqliteDb
+        .prepare(
+          `
         INSERT INTO teams (id, name, coordinator, startedAt, finishedAt, stage, penaltyMin, pausedMs, sessionToken, status, isPaused, teamPauseStartedAt, tabSwitches)
         VALUES (?, ?, ?, ?, NULL, 1, 0, 0, ?, ?, 0, 0, 0)
-      `).run(team.id, team.name, team.coordinator, team.startedAt, team.sessionToken, team.status);
+      `
+        )
+        .run(team.id, team.name, team.coordinator, team.startedAt, team.sessionToken, team.status);
 
       const insMember = sqliteDb.prepare(`
         INSERT INTO members (id, teamId, fullName, isLeader, deviceToken)
@@ -179,8 +192,8 @@ const dataService = {
 
     const keys = Object.keys(fields);
     if (keys.length === 0) return true;
-    const setClause = keys.map(k => `${k} = ?`).join(', ');
-    const values = keys.map(k => fields[k]);
+    const setClause = keys.map((k) => `${k} = ?`).join(', ');
+    const values = keys.map((k) => fields[k]);
     values.push(id);
     sqliteDb.prepare(`UPDATE teams SET ${setClause} WHERE id = ?`).run(...values);
     return true;
@@ -202,7 +215,10 @@ const dataService = {
       const { data: activeTeams } = await supabase.from('teams').select('id, pausedMs').is('finishedAt', null);
       if (activeTeams && activeTeams.length > 0) {
         for (const t of activeTeams) {
-          await supabase.from('teams').update({ pausedMs: (t.pausedMs || 0) + duration }).eq('id', t.id);
+          await supabase
+            .from('teams')
+            .update({ pausedMs: (t.pausedMs || 0) + duration })
+            .eq('id', t.id);
         }
       }
       return true;
@@ -265,17 +281,20 @@ const dataService = {
         }
         await supabase.from('progress').insert(progRows);
 
-        await supabase.from('teams').update({
-          stage: 1,
-          finishedAt: null,
-          penaltyMin: 0,
-          pausedMs: 0,
-          isPaused: 0,
-          teamPauseStartedAt: 0,
-          tabSwitches: 0,
-          startedAt: now,
-          status: targetStatus
-        }).neq('id', '0');
+        await supabase
+          .from('teams')
+          .update({
+            stage: 1,
+            finishedAt: null,
+            penaltyMin: 0,
+            pausedMs: 0,
+            isPaused: 0,
+            teamPauseStartedAt: 0,
+            tabSwitches: 0,
+            startedAt: now,
+            status: targetStatus
+          })
+          .neq('id', '0');
       }
 
       await this.setSetting('gameStarted', mode === 'active' ? 'true' : 'false');
@@ -293,14 +312,18 @@ const dataService = {
       sqliteDb.prepare('DELETE FROM progress').run();
 
       const teams = sqliteDb.prepare('SELECT id FROM teams').all();
-      const insertProg = sqliteDb.prepare('INSERT INTO progress (teamId, stage, fragment, wrongAttempts, hintsUsed, solvedAt) VALUES (?, ?, NULL, 0, 0, NULL)');
+      const insertProg = sqliteDb.prepare(
+        'INSERT INTO progress (teamId, stage, fragment, wrongAttempts, hintsUsed, solvedAt) VALUES (?, ?, NULL, 0, 0, NULL)'
+      );
       for (const t of teams) {
         for (let s = 1; s <= 6; s++) {
           insertProg.run(t.id, s);
         }
       }
 
-      sqliteDb.prepare(`
+      sqliteDb
+        .prepare(
+          `
         UPDATE teams
         SET stage = 1,
             finishedAt = NULL,
@@ -311,9 +334,13 @@ const dataService = {
             tabSwitches = 0,
             startedAt = ?,
             status = ?
-      `).run(now, targetStatus);
+      `
+        )
+        .run(now, targetStatus);
 
-      sqliteDb.prepare("UPDATE settings SET value = ? WHERE key = 'gameStarted'").run(mode === 'active' ? 'true' : 'false');
+      sqliteDb
+        .prepare("UPDATE settings SET value = ? WHERE key = 'gameStarted'")
+        .run(mode === 'active' ? 'true' : 'false');
       sqliteDb.prepare("UPDATE settings SET value = '0' WHERE key = 'eventStartedAt'").run();
       sqliteDb.prepare("UPDATE settings SET value = '0' WHERE key = 'totalPausedMs'").run();
       sqliteDb.prepare("UPDATE settings SET value = 'false' WHERE key = 'clockPaused'").run();
@@ -352,8 +379,8 @@ const dataService = {
     }
     const keys = Object.keys(fields);
     if (keys.length === 0) return true;
-    const setClause = keys.map(k => `${k} = ?`).join(', ');
-    const values = keys.map(k => fields[k]);
+    const setClause = keys.map((k) => `${k} = ?`).join(', ');
+    const values = keys.map((k) => fields[k]);
     values.push(id);
     sqliteDb.prepare(`UPDATE members SET ${setClause} WHERE id = ?`).run(...values);
     return true;
@@ -377,7 +404,11 @@ const dataService = {
   // --------------------------------------------------------------------------
   async getProgress(teamId) {
     if (this.isSupabase()) {
-      const { data } = await supabase.from('progress').select('*').eq('teamId', teamId).order('stage', { ascending: true });
+      const { data } = await supabase
+        .from('progress')
+        .select('*')
+        .eq('teamId', teamId)
+        .order('stage', { ascending: true });
       return data || [];
     }
     return sqliteDb.prepare('SELECT * FROM progress WHERE teamId = ? ORDER BY stage ASC').all(teamId) || [];
@@ -400,8 +431,8 @@ const dataService = {
     }
     const keys = Object.keys(fields);
     if (keys.length === 0) return true;
-    const setClause = keys.map(k => `${k} = ?`).join(', ');
-    const values = keys.map(k => fields[k]);
+    const setClause = keys.map((k) => `${k} = ?`).join(', ');
+    const values = keys.map((k) => fields[k]);
     values.push(teamId, stage);
     sqliteDb.prepare(`UPDATE progress SET ${setClause} WHERE teamId = ? AND stage = ?`).run(...values);
     return true;
@@ -423,16 +454,19 @@ const dataService = {
       }
       await supabase.from('progress').insert(rows);
 
-      await supabase.from('teams').update({
-        stage: 1,
-        finishedAt: null,
-        penaltyMin: 0,
-        pausedMs: 0,
-        isPaused: 0,
-        teamPauseStartedAt: 0,
-        tabSwitches: 0,
-        startedAt: now
-      }).eq('id', teamId);
+      await supabase
+        .from('teams')
+        .update({
+          stage: 1,
+          finishedAt: null,
+          penaltyMin: 0,
+          pausedMs: 0,
+          isPaused: 0,
+          teamPauseStartedAt: 0,
+          tabSwitches: 0,
+          startedAt: now
+        })
+        .eq('id', teamId);
 
       await supabase.from('submissions').delete().eq('teamId', teamId);
       await supabase.from('chat').delete().eq('teamId', teamId);
@@ -442,12 +476,16 @@ const dataService = {
 
     const tx = sqliteDb.transaction(() => {
       sqliteDb.prepare('DELETE FROM progress WHERE teamId = ?').run(teamId);
-      const insertProg = sqliteDb.prepare('INSERT INTO progress (teamId, stage, fragment, wrongAttempts, hintsUsed, solvedAt) VALUES (?, ?, NULL, 0, 0, NULL)');
+      const insertProg = sqliteDb.prepare(
+        'INSERT INTO progress (teamId, stage, fragment, wrongAttempts, hintsUsed, solvedAt) VALUES (?, ?, NULL, 0, 0, NULL)'
+      );
       for (let s = 1; s <= 6; s++) {
         insertProg.run(teamId, s);
       }
 
-      sqliteDb.prepare(`
+      sqliteDb
+        .prepare(
+          `
         UPDATE teams
         SET stage = 1,
             finishedAt = NULL,
@@ -458,7 +496,9 @@ const dataService = {
             tabSwitches = 0,
             startedAt = ?
         WHERE id = ?
-      `).run(now, teamId);
+      `
+        )
+        .run(now, teamId);
 
       sqliteDb.prepare('DELETE FROM submissions WHERE teamId = ?').run(teamId);
       sqliteDb.prepare('DELETE FROM chat WHERE teamId = ?').run(teamId);
@@ -483,7 +523,9 @@ const dataService = {
       });
       return !error;
     }
-    sqliteDb.prepare('INSERT INTO submissions (teamId, stage, valueHash, ok, at) VALUES (?, ?, ?, ?, ?)').run(teamId, stage, valueHash, ok, at);
+    sqliteDb
+      .prepare('INSERT INTO submissions (teamId, stage, valueHash, ok, at) VALUES (?, ?, ?, ?, ?)')
+      .run(teamId, stage, valueHash, ok, at);
     return true;
   },
 
@@ -501,7 +543,11 @@ const dataService = {
 
   async getChatHistory(teamId) {
     if (this.isSupabase()) {
-      const { data } = await supabase.from('chat').select('role, text, at').eq('teamId', teamId).order('at', { ascending: true });
+      const { data } = await supabase
+        .from('chat')
+        .select('role, text, at')
+        .eq('teamId', teamId)
+        .order('at', { ascending: true });
       return data || [];
     }
     return sqliteDb.prepare('SELECT role, text, at FROM chat WHERE teamId = ? ORDER BY at ASC').all(teamId) || [];
@@ -509,37 +555,53 @@ const dataService = {
 
   async getRecentChatCount(teamId, role, sinceTime) {
     if (this.isSupabase()) {
-      const { count } = await supabase.from('chat').select('*', { count: 'exact', head: true })
+      const { count } = await supabase
+        .from('chat')
+        .select('*', { count: 'exact', head: true })
         .eq('teamId', teamId)
         .eq('role', role)
         .gt('at', sinceTime);
       return count || 0;
     }
-    const row = sqliteDb.prepare('SELECT COUNT(*) as count FROM chat WHERE teamId = ? AND role = ? AND at > ?').get(teamId, role, sinceTime);
+    const row = sqliteDb
+      .prepare('SELECT COUNT(*) as count FROM chat WHERE teamId = ? AND role = ? AND at > ?')
+      .get(teamId, role, sinceTime);
     return row ? row.count : 0;
   },
 
   async getRecentWardenLogs(limit = 60) {
     if (this.isSupabase()) {
-      const { data: logs } = await supabase.from('chat').select('id, teamId, role, text, at').order('at', { ascending: false }).limit(limit);
+      const { data: logs } = await supabase
+        .from('chat')
+        .select('id, teamId, role, text, at')
+        .order('at', { ascending: false })
+        .limit(limit);
       if (!logs || logs.length === 0) return [];
-      const teamIds = [...new Set(logs.map(l => l.teamId))];
+      const teamIds = [...new Set(logs.map((l) => l.teamId))];
       const { data: teams } = await supabase.from('teams').select('id, name').in('id', teamIds);
       const teamMap = {};
-      (teams || []).forEach(t => { teamMap[t.id] = t.name; });
-      return logs.map(l => ({
+      (teams || []).forEach((t) => {
+        teamMap[t.id] = t.name;
+      });
+      return logs.map((l) => ({
         ...l,
         teamName: teamMap[l.teamId] || 'Unknown'
       }));
     }
 
-    return sqliteDb.prepare(`
+    return (
+      sqliteDb
+        .prepare(
+          `
       SELECT c.id, c.teamId, t.name as teamName, c.role, c.text, c.at
       FROM chat c
       JOIN teams t ON c.teamId = t.id
       ORDER BY c.at DESC
       LIMIT ?
-    `).all(limit) || [];
+    `
+        )
+        .all(limit) || []
+    );
   },
 
   // --------------------------------------------------------------------------
@@ -558,33 +620,45 @@ const dataService = {
       });
       return !error;
     }
-    sqliteDb.prepare('INSERT INTO violations (id, teamId, type, details, penaltyAdded, at) VALUES (?, ?, ?, ?, ?, ?)').run(
-      vId, teamId, type, details, penaltyAdded, at
-    );
+    sqliteDb
+      .prepare('INSERT INTO violations (id, teamId, type, details, penaltyAdded, at) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(vId, teamId, type, details, penaltyAdded, at);
     return true;
   },
 
   async getViolations(limit = 50) {
     if (this.isSupabase()) {
-      const { data: violations } = await supabase.from('violations').select('*').order('at', { ascending: false }).limit(limit);
+      const { data: violations } = await supabase
+        .from('violations')
+        .select('*')
+        .order('at', { ascending: false })
+        .limit(limit);
       if (!violations || violations.length === 0) return [];
-      const teamIds = [...new Set(violations.map(v => v.teamId))];
+      const teamIds = [...new Set(violations.map((v) => v.teamId))];
       const { data: teams } = await supabase.from('teams').select('id, name').in('id', teamIds);
       const teamMap = {};
-      (teams || []).forEach(t => { teamMap[t.id] = t.name; });
-      return violations.map(v => ({
+      (teams || []).forEach((t) => {
+        teamMap[t.id] = t.name;
+      });
+      return violations.map((v) => ({
         ...v,
         teamName: teamMap[v.teamId] || 'Unknown'
       }));
     }
 
-    return sqliteDb.prepare(`
+    return (
+      sqliteDb
+        .prepare(
+          `
       SELECT v.id, v.teamId, t.name as teamName, v.type, v.details, v.penaltyAdded, v.at
       FROM violations v
       JOIN teams t ON v.teamId = t.id
       ORDER BY v.at DESC
       LIMIT ?
-    `).all(limit) || [];
+    `
+        )
+        .all(limit) || []
+    );
   },
 
   async deleteViolation(id) {

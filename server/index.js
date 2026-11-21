@@ -53,13 +53,17 @@ if (!process.env.VERCEL) {
 function runStartupConsistencyCheck() {
   try {
     const db = getDb();
-    const brokenTeams = db.prepare(`
+    const brokenTeams = db
+      .prepare(
+        `
       SELECT t.id, t.name, t.stage, COUNT(p.stage) as progressCount
       FROM teams t
       LEFT JOIN progress p ON t.id = p.teamId
       GROUP BY t.id
-      HAVING progressCount < 5
-    `).all();
+      HAVING progressCount < 6
+    `
+      )
+      .all();
 
     if (brokenTeams && brokenTeams.length > 0) {
       logger.warn('Consistency check warning: Teams found with missing stage progress rows', { brokenTeams });
@@ -78,28 +82,34 @@ function startBackupTimer() {
     fs.mkdirSync(backupDir, { recursive: true });
   }
 
-  backupInterval = setInterval(() => {
-    try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const backupPath = path.join(backupDir, `final_override-${timestamp}.db`);
+  backupInterval = setInterval(
+    () => {
+      try {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupPath = path.join(backupDir, `final_override-${timestamp}.db`);
 
-      if (fs.existsSync(db.dbPath)) {
-        fs.copyFileSync(db.dbPath, backupPath);
+        if (fs.existsSync(db.dbPath)) {
+          fs.copyFileSync(db.dbPath, backupPath);
 
-        // Keep last 20 backups
-        const files = fs.readdirSync(backupDir)
-          .filter(f => f.startsWith('final_override-') && f.endsWith('.db'))
-          .sort();
+          // Keep last 20 backups
+          const files = fs
+            .readdirSync(backupDir)
+            .filter((f) => f.startsWith('final_override-') && f.endsWith('.db'))
+            .sort();
 
-        while (files.length > 20) {
-          const oldest = files.shift();
-          try { fs.unlinkSync(path.join(backupDir, oldest)); } catch (_) {}
+          while (files.length > 20) {
+            const oldest = files.shift();
+            try {
+              fs.unlinkSync(path.join(backupDir, oldest));
+            } catch (_) {}
+          }
         }
+      } catch (err) {
+        logger.error('Scheduled backup failed:', { error: err.message });
       }
-    } catch (err) {
-      logger.error('Scheduled backup failed:', { error: err.message });
-    }
-  }, 5 * 60 * 1000); // Every 5 minutes
+    },
+    5 * 60 * 1000
+  ); // Every 5 minutes
 }
 
 // Graceful shutdown handling (Phase 3.D)

@@ -46,16 +46,14 @@ router.post('/teams', async (req, res) => {
       return res.status(400).json({ error: 'Team name cannot exceed 24 characters.' });
     }
 
-    const rawMembers = [member1, member2, member3, member4]
-      .map(m => (m || '').trim())
-      .filter(Boolean);
+    const rawMembers = [member1, member2, member3, member4].map((m) => (m || '').trim()).filter(Boolean);
 
     if (rawMembers.length < 3) {
       return res.status(400).json({ error: 'A team needs at least 3 players. Enter 3 or 4 full names.' });
     }
 
     // Check unique member names (case-insensitive)
-    const normMembers = rawMembers.map(m => norm(m));
+    const normMembers = rawMembers.map((m) => norm(m));
     const uniqueNorms = new Set(normMembers);
     if (uniqueNorms.size !== rawMembers.length) {
       return res.status(400).json({ error: 'Each member must have a different name.' });
@@ -77,11 +75,9 @@ router.post('/teams', async (req, res) => {
     const isStartTogether = startTogetherVal === 'true';
     const isGameStarted = gameStartedVal === 'true';
 
-    const initialStatus = (isStartTogether && !isGameStarted) ? 'waiting' : 'active';
+    const initialStatus = isStartTogether && !isGameStarted ? 'waiting' : 'active';
 
-    const membersData = [
-      { id: crypto.randomUUID(), teamId, fullName: rawMembers[0], isLeader: 1, deviceToken: null }
-    ];
+    const membersData = [{ id: crypto.randomUUID(), teamId, fullName: rawMembers[0], isLeader: 1, deviceToken: null }];
     for (let i = 1; i < rawMembers.length; i++) {
       membersData.push({ id: crypto.randomUUID(), teamId, fullName: rawMembers[i], isLeader: 0, deviceToken: null });
     }
@@ -151,13 +147,13 @@ router.get('/state', requireTeam, async (req, res) => {
     const progressRows = await ds.getProgress(team.id);
 
     const notebook = {};
-    progressRows.forEach(row => {
+    progressRows.forEach((row) => {
       if (row.fragment) {
         notebook[row.stage] = row.fragment;
       }
     });
 
-    const currentProg = progressRows.find(p => p.stage === currentStage) || { wrongAttempts: 0, hintsUsed: 0 };
+    const currentProg = progressRows.find((p) => p.stage === currentStage) || { wrongAttempts: 0, hintsUsed: 0 };
 
     const stageConfig = STAGE_CONFIG[currentStage] || {};
     const effectiveHints = await getEffectiveStageHints(ds, currentStage);
@@ -167,10 +163,10 @@ router.get('/state', requireTeam, async (req, res) => {
     const members = await ds.getMembers(team.id);
     const totalMembers = members.length;
     // Distinct joined devices count:
-    const joinedMembers = members.filter(m => m.isLeader === 1 || m.deviceToken !== null);
+    const joinedMembers = members.filter((m) => m.isLeader === 1 || m.deviceToken !== null);
     const joinedCount = joinedMembers.length;
 
-    const leaderMember = members.find(m => m.isLeader === 1);
+    const leaderMember = members.find((m) => m.isLeader === 1);
     const leaderShard = leaderMember ? getMemberShard(team.name, leaderMember.fullName) : null;
 
     // Build stage-specific payload (ISOLATION ENFORCED: future stage details are never returned)
@@ -198,7 +194,7 @@ router.get('/state', requireTeam, async (req, res) => {
         joinedCount,
         totalMembers,
         leaderShard,
-        members: members.map(m => m.fullName)
+        members: members.map((m) => m.fullName)
       };
     } else if (currentStage === 6) {
       stageContent = {
@@ -230,7 +226,7 @@ router.get('/state', requireTeam, async (req, res) => {
       gameStarted: isGameStarted,
       waitingInLobby: team.status === 'waiting',
       waitingCount,
-      members: members.map(m => ({ fullName: m.fullName, isLeader: !!m.isLeader })),
+      members: members.map((m) => ({ fullName: m.fullName, isLeader: !!m.isLeader })),
       currentProg: {
         wrongAttempts: currentProg.wrongAttempts,
         hintsUsed: currentProg.hintsUsed
@@ -265,7 +261,9 @@ router.post('/submit', requireTeam, async (req, res) => {
     const clockPausedVal = await ds.getSetting('clockPaused', 'false');
     const isClockPaused = clockPausedVal === 'true';
     if (isClockPaused || team.isPaused === 1) {
-      return res.status(400).json({ error: 'Mission is currently paused by organisers. Submissions are temporarily on hold.' });
+      return res
+        .status(400)
+        .json({ error: 'Mission is currently paused by organisers. Submissions are temporarily on hold.' });
     }
 
     // Rate limit: 1 submission per second per team
@@ -303,14 +301,14 @@ router.post('/submit', requireTeam, async (req, res) => {
       fragmentFound = '91X';
     } else if (stage === 5) {
       // Check device requirement: at least 3 distinct member sessions must have joined
-      const joinedDistinct = members.filter(m => m.isLeader === 1 || m.deviceToken !== null);
+      const joinedDistinct = members.filter((m) => m.isLeader === 1 || m.deviceToken !== null);
       if (joinedDistinct.length < 3) {
         return res.status(400).json({
           error: 'Waiting for your teammates to join on their own laptops. 🤝'
         });
       }
 
-      const memberNames = members.map(m => m.fullName);
+      const memberNames = members.map((m) => m.fullName);
       const expectedTeamCode = computeTeamCode(team.name, memberNames);
       isCorrect = normalizedInput === norm(expectedTeamCode);
       fragmentFound = expectedTeamCode;
@@ -318,14 +316,16 @@ router.post('/submit', requireTeam, async (req, res) => {
       // Stage 6 final key
       const progressList = await ds.getProgress(team.id);
       const fMap = {};
-      progressList.forEach(p => { fMap[p.stage] = p.fragment; });
+      progressList.forEach((p) => {
+        fMap[p.stage] = p.fragment;
+      });
 
       // Fallbacks if somehow missing
       const f1 = fMap[1] || 'NOVA';
       const f2 = fMap[2] || '7K2';
       const f3 = fMap[3] || 'ORBIT';
       const f4 = fMap[4] || '91X';
-      const memberNames = members.map(m => m.fullName);
+      const memberNames = members.map((m) => m.fullName);
       const f5 = fMap[5] || computeTeamCode(team.name, memberNames);
 
       const expectedKey = computeFinalKey(f1, f2, f3, f4, f5);
@@ -343,7 +343,7 @@ router.post('/submit', requireTeam, async (req, res) => {
     });
 
     const progressRows = await ds.getProgress(team.id);
-    const prog = progressRows.find(p => p.stage === stage) || { wrongAttempts: 0, hintsUsed: 0 };
+    const prog = progressRows.find((p) => p.stage === stage) || { wrongAttempts: 0, hintsUsed: 0 };
 
     if (isCorrect) {
       // Update progress
@@ -432,7 +432,7 @@ router.post('/hint', requireTeam, async (req, res) => {
     }
 
     const progressRows = await ds.getProgress(team.id);
-    const prog = progressRows.find(p => p.stage === stage) || { hintsUsed: 0 };
+    const prog = progressRows.find((p) => p.stage === stage) || { hintsUsed: 0 };
     const currentHintsUsed = prog.hintsUsed || 0;
 
     if (currentHintsUsed >= 2) {
@@ -525,14 +525,14 @@ router.post('/join', async (req, res) => {
 
     // Find team (case/space-insensitive)
     const allTeams = await ds.getAllTeams();
-    const targetTeam = allTeams.find(t => norm(t.name) === norm(rawTeam));
+    const targetTeam = allTeams.find((t) => norm(t.name) === norm(rawTeam));
     if (!targetTeam) {
       return res.status(404).json({ error: 'Team not found. Please check the team name.' });
     }
 
     // Find member in team (case/space-insensitive)
     const teamMembers = await ds.getMembers(targetTeam.id);
-    const targetMember = teamMembers.find(m => norm(m.fullName) === norm(rawName));
+    const targetMember = teamMembers.find((m) => norm(m.fullName) === norm(rawName));
 
     if (!targetMember) {
       return res.status(404).json({ error: 'Member name not found in this team. Check exact spelling.' });
@@ -551,7 +551,7 @@ router.post('/join', async (req, res) => {
     } else {
       // If another member has already claimed this browser's device token, prevent re-use
       if (memberToken) {
-        const alreadyClaimed = teamMembers.find(m => m.deviceToken === memberToken && m.id !== targetMember.id);
+        const alreadyClaimed = teamMembers.find((m) => m.deviceToken === memberToken && m.id !== targetMember.id);
         if (alreadyClaimed) {
           return res.status(403).json({
             error: 'This device is already bound to another team member.'

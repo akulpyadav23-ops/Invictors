@@ -6,17 +6,21 @@ class SqliteAuditRepository {
   }
 
   log({ actor, action, targetId, oldValue, newValue, at }) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO audit_log (actor, action, targetId, oldValue, newValue, at)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      actor || 'system',
-      action,
-      targetId || null,
-      oldValue ? JSON.stringify(oldValue) : null,
-      newValue ? JSON.stringify(newValue) : null,
-      at || Date.now()
-    );
+    `
+      )
+      .run(
+        actor || 'system',
+        action,
+        targetId || null,
+        oldValue ? JSON.stringify(oldValue) : null,
+        newValue ? JSON.stringify(newValue) : null,
+        at || Date.now()
+      );
   }
 
   getRecent(limit = 100) {

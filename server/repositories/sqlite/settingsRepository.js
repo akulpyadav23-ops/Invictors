@@ -21,11 +21,15 @@ class SqliteSettingsRepository {
 
   set(key, value) {
     const strVal = String(value);
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO settings (key, value)
       VALUES (?, ?)
       ON CONFLICT(key) DO UPDATE SET value = excluded.value
-    `).run(key, strVal);
+    `
+      )
+      .run(key, strVal);
     return true;
   }
 }

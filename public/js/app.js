@@ -20,7 +20,10 @@ function setAdminSessionId(id) {
 function clearAdminSession() {
   sessionStorage.removeItem('fo_admin_pin');
   sessionStorage.removeItem('fo_admin_session_id');
-  if (adminHeartbeatInterval) { clearInterval(adminHeartbeatInterval); adminHeartbeatInterval = null; }
+  if (adminHeartbeatInterval) {
+    clearInterval(adminHeartbeatInterval);
+    adminHeartbeatInterval = null;
+  }
 }
 function startAdminHeartbeat(pin) {
   if (adminHeartbeatInterval) clearInterval(adminHeartbeatInterval);
@@ -50,8 +53,13 @@ window.addEventListener('beforeunload', () => {
 function isVercelDeployment() {
   const host = window.location.hostname;
   // localhost, 127.x, 10.x, 192.168.x, 172.x → local
-  return !(host === 'localhost' || host === '127.0.0.1' ||
-    /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host));
+  return !(
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+  );
 }
 
 // Anti-cheat alert notification banner
@@ -84,7 +92,13 @@ function initAntiCheat() {
   antiCheatInitDone = true;
 
   async function handleTabLeave() {
-    if (!gameState || !gameState.team || gameState.team.finishedAt || gameState.waitingInLobby || getRoute() !== 'game') {
+    if (
+      !gameState ||
+      !gameState.team ||
+      gameState.team.finishedAt ||
+      gameState.waitingInLobby ||
+      getRoute() !== 'game'
+    ) {
       return;
     }
     lastBlurTime = Date.now();
@@ -97,7 +111,13 @@ function initAntiCheat() {
 
     // Minimum 1500ms to avoid false triggers during modal/system popups
     if (elapsed < 1500) return;
-    if (!gameState || !gameState.team || gameState.team.finishedAt || gameState.waitingInLobby || getRoute() !== 'game') {
+    if (
+      !gameState ||
+      !gameState.team ||
+      gameState.team.finishedAt ||
+      gameState.waitingInLobby ||
+      getRoute() !== 'game'
+    ) {
       return;
     }
 
@@ -106,7 +126,9 @@ function initAntiCheat() {
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          showCheatAlert(`Tab shift or external window switch detected! +${data.penaltyAdded} min penalty applied (Violation #${data.tabSwitches}). Total penalty is now +${data.totalPenaltyMin}m.`);
+          showCheatAlert(
+            `Tab shift or external window switch detected! +${data.penaltyAdded} min penalty applied (Violation #${data.tabSwitches}). Total penalty is now +${data.totalPenaltyMin}m.`
+          );
           const updatedState = await fetchState();
           if (updatedState) {
             gameState = updatedState;
@@ -203,7 +225,7 @@ async function init() {
   initAntiCheat();
 
   // Intercept nav links for smooth SPA navigation
-  document.querySelectorAll('.portal-nav-link').forEach(link => {
+  document.querySelectorAll('.portal-nav-link').forEach((link) => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       const href = link.getAttribute('href');
@@ -293,12 +315,16 @@ function renderWaitingLobby(container, state) {
 
   const team = state.team;
   const members = state.members || [];
-  const memberListHtml = members.map(m => `
+  const memberListHtml = members
+    .map(
+      (m) => `
     <li style="padding: 6px 0; border-bottom: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: center;">
       <span>${m.isLeader ? '👑' : '👤'} <strong>${escapeHtml(m.fullName)}</strong></span>
       <span style="color: ${m.isLeader ? 'var(--gold)' : 'var(--muted)'}; font-size: 0.85rem;">${m.isLeader ? 'Squad Leader' : 'Operative'}</span>
     </li>
-  `).join('');
+  `
+    )
+    .join('');
 
   container.innerHTML = `
     <div class="card lobby-card">
@@ -446,13 +472,13 @@ async function renderStartScreen(container) {
     }
   } catch {}
 
-  const coordOptions = coordinators.map(c => `<option value="${c}">`).join('');
+  const coordOptions = coordinators.map((c) => `<option value="${c}">`).join('');
 
   container.innerHTML = `
-    <!-- The 5 Stages Showcase Card (from Official Poster) -->
+    <!-- The 6 Stages Showcase Card -->
     <div class="card poster-stages-section">
-      <div class="poster-stages-heading">⚡ THE 5 STAGES OF OVERRIDE ⚡</div>
-      <div class="poster-stages-grid">
+      <div class="poster-stages-heading">⚡ THE 6 STAGES OF OVERRIDE ⚡</div>
+      <div class="poster-stages-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
         <div class="stage-poster-card s1">
           <div class="stage-badge-num">1</div>
           <div style="font-size: 1.6rem;">📡</div>
@@ -479,37 +505,40 @@ async function renderStartScreen(container) {
         </div>
         <div class="stage-poster-card s5">
           <div class="stage-badge-num">5</div>
-          <div style="font-size: 1.6rem;">🧩</div>
-          <div class="stage-poster-title">Sync & Override</div>
-          <div class="stage-poster-desc">Merge all squad member shards & unlock vault</div>
+          <div style="font-size: 1.6rem;">🤝</div>
+          <div class="stage-poster-title">Team Sync</div>
+          <div class="stage-poster-desc">Authenticate on separate laptops to assemble team code</div>
+        </div>
+        <div class="stage-poster-card s6">
+          <div class="stage-badge-num">6</div>
+          <div style="font-size: 1.6rem;">🛡️</div>
+          <div class="stage-poster-title">Final Integration</div>
+          <div class="stage-poster-desc">Synthesize 5 notebook fragments targeting network nodes</div>
         </div>
       </div>
     </div>
 
-    <!-- CRITICAL PRE-MISSION BRIEFING & STRATEGIC NOTICE -->
+    <!-- PRE-MISSION BRIEFING & STRATEGIC NOTICE -->
     <div class="card" style="border: 2px solid var(--gold); background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.95)); box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);">
       <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
         <span style="font-size: 2rem; filter: drop-shadow(0 0 10px var(--gold));">⚠️</span>
         <div>
           <h2 style="font-size: 1.35rem; color: var(--gold); margin: 0; font-family: var(--font-display); letter-spacing: 1px;">
-            IMPORTANT NOTICE · READ &amp; ANALYZE BEFORE ENTERING
+            IMPORTANT NOTICE · OPERATIONAL DIRECTIVE
           </h2>
           <span style="font-size: 0.82rem; color: var(--accent); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Crucial Operational Intelligence for Mission Completion</span>
         </div>
       </div>
       <p style="font-size: 1.02rem; line-height: 1.7; color: var(--txt); margin: 0 0 12px 0;">
-        <strong>What you must know before entering the game:</strong> Carefully inspect and analyze everything on this front briefing page before you start. Do not rush into registration without reviewing the mission parameters!
+        <strong>Squad Protocol:</strong> Maintain an accurate operational log of all 5 recovered mission fragments. The final master override synthesis in Stage 6 requires the complete sequence of fragments and machine targeting data revealed in your tactical hints.
       </p>
-      <div style="background: rgba(3, 8, 20, 0.9); border: 1px solid rgba(245, 158, 11, 0.4); border-left: 5px solid var(--gold); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 0.95rem; color: #fef08a; line-height: 1.65;">
-        🔍 <strong>Vital Clue for Stage 6 Override:</strong> Observe and record the exact <strong>Mission Names</strong> displayed on this briefing board (<em>Signal Intercept</em>, <em>Decoding</em>, <em>Prompt the AI</em>, <em>CTF Challenges</em>, <em>Team Sync</em>). When your squad unlocks the final master override in <strong>Stage 6</strong>, the system requires you to arrange and synthesize your recovered pieces based on these exact mission names! Take note of them now before lockdown begins!
-      </div>
     </div>
 
     <!-- Story Card -->
     <div class="card">
       <h2 class="card-title">📖 Mission Storyline</h2>
       <p style="font-size: 1.05rem; line-height: 1.7; color: var(--txt-body);">
-        "Welcome, Agents! 🦸 The secret vault of Invictors Lab has initiated lockdown, and a stubborn guardian AI is shielding the master override key. Your squad is the tactical rescue unit. Collect secret fragment pieces 🧩 across 5 distinct puzzle stages, coordinate across your devices, and assemble the final master key to override the system. 🔐 The fastest verified team claims 1st place! 🏆"
+        "Welcome, Agents! 🦸 The secret vault of Invictors Lab has initiated lockdown, and a stubborn guardian AI is shielding the master override key. Your squad is the tactical rescue unit. Collect secret fragment pieces across 6 sequential puzzle stages, coordinate across your devices, and assemble the final master key to override the system. 🔐 The fastest verified team claims 1st place! 🏆"
       </p>
     </div>
 
@@ -668,9 +697,11 @@ function renderNotebookHtml(notebook) {
   if (keys.length === 0) {
     chipsHtml = '<span class="chips-empty">Nothing yet. Solve Mission 1.</span>';
   } else {
-    keys.sort((a, b) => Number(a) - Number(b)).forEach(stg => {
-      chipsHtml += `<div class="fragment-chip">${stg}: ${escapeHtml(notebook[stg])}</div>`;
-    });
+    keys
+      .sort((a, b) => Number(a) - Number(b))
+      .forEach((stg) => {
+        chipsHtml += `<div class="fragment-chip">${stg}: ${escapeHtml(notebook[stg])}</div>`;
+      });
   }
 
   return `
@@ -700,7 +731,7 @@ function renderStageScreen(container, state) {
     3: { icon: '🤖', name: 'Prompt the AI' },
     4: { icon: '🚩', name: 'CTF Challenges' },
     5: { icon: '🤝', name: 'Team Sync' },
-    6: { icon: '🧩', name: 'Final Integration (the tough one)' }
+    6: { icon: '🛡️', name: 'Final Integration' }
   };
 
   const currentInfo = stageTitles[stage] || { icon: '🎯', name: `Stage ${stage}` };
@@ -932,47 +963,68 @@ function renderStageScreen(container, state) {
       </p>
     `;
   } else if (stage === 5) {
-    const leaderShard = content.leaderShard || '???';
+    const leaderShard = content.currentMemberCode || content.leaderShard || '???';
     const joinedCount = content.joinedCount || 1;
     const totalMembers = content.totalMembers || 3;
-    const playersStr = (content.members || []).join(' · ');
+    const allJoined = joinedCount >= totalMembers;
+    const membersStatus = content.membersStatus || [];
+
+    const rosterHtml = membersStatus
+      .map((m) => {
+        const statusBadge = m.hasJoined
+          ? `<span style="color: var(--ok); font-weight: bold;">[JOINED]</span>`
+          : `<span style="color: var(--gold);">[WAITING]</span>`;
+        return `<div>👤 ${escapeHtml(m.fullName)} ${m.isLeader ? '(Leader)' : ''} — ${statusBadge}</div>`;
+      })
+      .join('');
 
     specificHtml = `
       <p style="margin-bottom: 10px;">
-        📖 The story: The vault door has ${totalMembers} locks 🔒 and each one answers to a different person at the same time! 🤝 One player cannot do this alone.
+        📖 The story: The vault door has ${totalMembers} authentication channels 🔒 and each one answers to a different operative simultaneously! 🤝 One player cannot do this alone.
       </p>
       <ol style="display: flex; flex-direction: column; gap: 8px; margin-left: 20px; font-size: 0.95rem; margin-bottom: 16px;">
-        <li>1) 📱 Every teammate opens this page on their own laptop and uses “Joining as a team member” on the start screen.</li>
-        <li>2) ⌨️ They type the team name and their own full name exactly as registered. A 3-character shard appears.</li>
-        <li>3) 🗣️ Everyone reads their shard to the leader. Your own shard (leader): <strong style="color: var(--gold);">${escapeHtml(leaderShard)}</strong></li>
-        <li>4) 🔤 Sort the players A to Z by full name, write their shards in that order with dashes, like A1F-3C9-77B.</li>
+        <li>📱 Every teammate opens this URL on their own device and clicks “Joining as a team member” on the start screen.</li>
+        <li>⌨️ Enter the team name and your own full name exactly as registered to reveal your isolated shard.</li>
+        <li>🗣️ Everyone reports their shard to the leader. Your own shard (leader): <strong style="color: var(--gold);">${escapeHtml(leaderShard)}</strong></li>
+        <li>🔤 Sort the squad operatives A to Z by registered full name, concatenate their shards with hyphens (e.g. SHARD1-SHARD2-SHARD3), and submit the team code.</li>
       </ol>
 
       <div style="background: rgba(3, 8, 19, 0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px;">
-        <p>👥 Players: <strong>${escapeHtml(playersStr)}</strong></p>
-        <p style="margin-top: 4px; color: ${joinedCount >= 3 ? 'var(--ok)' : 'var(--gold)'}; font-weight: bold;">
-          ${joinedCount}/${totalMembers} teammates have joined on their own devices
+        <div style="font-weight: bold; margin-bottom: 6px; color: var(--txt-heading);">👥 Squad Operatives Status:</div>
+        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; margin-bottom: 8px;">
+          ${rosterHtml}
+        </div>
+        <p style="margin-top: 6px; color: ${allJoined ? 'var(--ok)' : 'var(--gold)'}; font-weight: bold; margin-bottom: 0;">
+          ${joinedCount}/${totalMembers} squad operatives have joined on separate devices
         </p>
       </div>
 
       <p style="font-size: 0.9rem; color: var(--muted);">
-        ✍️ Type the team code below.
+        ✍️ Type the assembled team code below.
       </p>
     `;
   } else if (stage === 6) {
+    const machinesList = (content.machines || ['AERO-NODE', 'TERRA-CORE', 'QUANTUM-GATE', 'SOLAR-RELAY']).join(' · ');
     specificHtml = `
-      <p style="margin-bottom: 10px;">
-        📖 The story: This is it, the final lock! 🔐 It is trickier than the rest. Open your 📒 notebook and gather all 5 pieces. 🧩
-      </p>
-      <ol style="display: flex; flex-direction: column; gap: 8px; margin-left: 20px; font-size: 0.95rem; margin-bottom: 16px;">
-        <li>1) 🔤 Put the pieces in alphabetical order of the mission NAMES (the names are in the progress bar and stage titles).</li>
-        <li>2) 🔁 The piece from Prompt the AI must be written backwards.</li>
-        <li>3) ➖ Join them with dashes inside FO{ … } (the team code loses its dashes).</li>
-        <li>4) ➕ Add up every digit (0–9) inside the braces and write it after a #.</li>
-      </ol>
-      <div style="background: rgba(3, 8, 19, 0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px; font-family: ui-monospace, monospace; font-size: 0.92rem; color: var(--accent);">
-        Example shape: FO{AAA-BBB-CCC-DDD-EEE}#12<br/>
-        <span style="color: var(--bad);">⚠️ Use only the real pieces from your notebook. Fake ones are traps! 🪤</span>
+      <div style="background: rgba(3, 8, 22, 0.9); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 18px;">
+        <div style="font-weight: 800; font-family: var(--font-display); font-size: 1.1rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+          <span>🛡️ MISSION 6: FINAL INTEGRATION &amp; MASTER OVERRIDE</span>
+        </div>
+        <p style="margin: 8px 0 6px; font-size: 0.95rem; color: var(--txt); line-height: 1.6;">
+          This is the final lock! Open your dossier notebook to retrieve the 5 fragments collected across each completed mission. Synthesize the master override key to breach the security grid.
+        </p>
+      </div>
+
+      <div style="background: rgba(3, 8, 19, 0.6); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
+        <div style="font-size: 0.88rem; color: var(--gold); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+          🖥️ Machine Network Gateways
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 0.95rem; color: var(--accent); margin-bottom: 8px;">
+          ${escapeHtml(machinesList)}
+        </div>
+        <p style="font-size: 0.88rem; color: var(--muted); margin: 0; line-height: 1.5;">
+          💡 Consult the unlocked mission hint to identify the designated machine targets and derive the final override key from your 5 recovered notebook fragments.
+        </p>
       </div>
     `;
   }
@@ -986,22 +1038,23 @@ function renderStageScreen(container, state) {
   const hint1RemainingSec = Math.max(0, Math.ceil((hint1Exp - now) / 1000));
 
   if (revealedHints.length > 0) {
-    hintsHtml = revealedHints.map((h, idx) => {
-      const hintNum = idx + 1;
-      const storageKey = `fo_hint_expires_${team.id}_${stage}_${hintNum}`;
-      let expiresAt = parseInt(sessionStorage.getItem(storageKey) || '0', 10);
+    hintsHtml = revealedHints
+      .map((h, idx) => {
+        const hintNum = idx + 1;
+        const storageKey = `fo_hint_expires_${team.id}_${stage}_${hintNum}`;
+        let expiresAt = parseInt(sessionStorage.getItem(storageKey) || '0', 10);
 
-      // If hint was revealed on server, but no client timer exists yet:
-      if (!expiresAt) {
-        expiresAt = now + 30000;
-        sessionStorage.setItem(storageKey, String(expiresAt));
-      }
+        // If hint was revealed on server, but no client timer exists yet:
+        if (!expiresAt) {
+          expiresAt = now + 30000;
+          sessionStorage.setItem(storageKey, String(expiresAt));
+        }
 
-      const remainingMs = expiresAt - now;
-      const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+        const remainingMs = expiresAt - now;
+        const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
 
-      if (remainingSec > 0) {
-        return `
+        if (remainingSec > 0) {
+          return `
           <div class="hint-box active-timed-hint" id="hint-timed-card-${hintNum}" style="border: 2px solid var(--gold); background: rgba(245, 158, 11, 0.08); padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(245, 158, 11, 0.4); padding-bottom: 6px; margin-bottom: 8px; flex-wrap: wrap; gap: 4px;">
               <span style="font-weight: bold; color: var(--gold); font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
@@ -1016,8 +1069,8 @@ function renderStageScreen(container, state) {
             </div>
           </div>
         `;
-      } else {
-        return `
+        } else {
+          return `
           <div class="hint-box expired-hint" style="border: 1px solid var(--line); background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: var(--radius-sm); color: var(--muted); margin-bottom: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
               <span style="font-size: 0.85rem; font-weight: bold; color: var(--muted); display: flex; align-items: center; gap: 6px;">
@@ -1030,8 +1083,9 @@ function renderStageScreen(container, state) {
             </p>
           </div>
         `;
-      }
-    }).join('');
+        }
+      })
+      .join('');
   }
 
   const hintsUsed = currentProg.hintsUsed || 0;
@@ -1045,14 +1099,16 @@ function renderStageScreen(container, state) {
   }
 
   const isPaused = team.isPaused;
-  const pauseBannerHtml = isPaused ? `
+  const pauseBannerHtml = isPaused
+    ? `
     <div class="card" style="background: rgba(255, 184, 31, 0.12); border: 2px solid var(--gold); margin-bottom: 16px; text-align: center;">
       <span style="font-size: 1.25rem; font-weight: bold; color: var(--gold);">⏸ MISSION PAUSED BY ORGANISER</span>
       <p style="color: var(--muted); margin: 6px 0 0; font-size: 0.95rem;">
         Your mission timer and submissions are currently paused. Please stand by for organiser instructions.
       </p>
     </div>
-  ` : '';
+  `
+    : '';
 
   container.innerHTML = `
     ${pauseBannerHtml}
@@ -1080,7 +1136,7 @@ function renderStageScreen(container, state) {
             <span style="font-size: 0.9rem; color: var(--muted);">Need a clue? Hints add penalty minutes.</span>
             <div style="font-size: 0.78rem; color: var(--gold); margin-top: 2px;">⏱️ Warning: Hints are displayed for <strong>30 seconds only</strong> before auto-hiding!</div>
           </div>
-          <button id="btn-request-hint" class="btn btn-gold btn-sm" ${(hintDisabled || isPaused) ? 'disabled' : ''}>
+          <button id="btn-request-hint" class="btn btn-gold btn-sm" ${hintDisabled || isPaused ? 'disabled' : ''}>
             ${hintBtnText}
           </button>
         </div>
@@ -1088,7 +1144,11 @@ function renderStageScreen(container, state) {
           ${hintsHtml}
         </div>
 
-        ${stage === 1 ? (hintsUsed >= 1 ? (hint1RemainingSec > 0 ? `
+        ${
+          stage === 1
+            ? hintsUsed >= 1
+              ? hint1RemainingSec > 0
+                ? `
         <!-- UNLOCKED 15-Alphabet Morse Chart (Only visible during 30s Hint 1 Window) -->
         <div class="stage1-hint-chart" style="margin-top: 14px; background: rgba(3, 8, 22, 0.9); border: 2px solid var(--gold); border-radius: var(--radius-sm); padding: 14px 16px; animation: fadeIn 0.3s ease;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
@@ -1184,7 +1244,8 @@ function renderStageScreen(container, state) {
   
           </div>
         </div>
-        ` : `
+        `
+                : `
         <!-- EXPIRED Morse Chart Notice -->
         <div class="hint-box expired-hint" style="margin-top: 14px; border: 1px solid var(--line); background: rgba(15, 23, 42, 0.6); padding: 10px 14px; border-radius: var(--radius-sm); color: var(--muted);">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -1197,14 +1258,17 @@ function renderStageScreen(container, state) {
             The 30-second viewing period for Hint 1 has elapsed. The Morse decoder chart has been automatically hidden.
           </p>
         </div>
-        `) : `
+        `
+              : `
         <!-- Locked Hint Notice -->
         <div style="margin-top: 12px; background: rgba(3, 8, 22, 0.4); border: 1px dashed #334155; border-radius: var(--radius-sm); padding: 12px 14px; text-align: center;">
           <span style="font-size: 0.86rem; color: var(--muted);">
             🔒 <strong>Morse Code Chart is locked.</strong> Don't know Morse code? Click <strong>"💡 Hint (+3 min)"</strong> above to unlock the 15-alphabet decoder chart! (30-second viewing window applies).
           </span>
         </div>
-        `) : ''}
+        `
+            : ''
+        }
       </div>
     </div>
   `;
@@ -1284,7 +1348,7 @@ function attachStageEvents(stage) {
     hintTickerInterval = setInterval(() => {
       let anyLeft = false;
       let expiredFound = false;
-      badgeEls.forEach(el => {
+      badgeEls.forEach((el) => {
         const cur = parseInt(el.textContent, 10);
         if (cur > 1) {
           el.textContent = cur - 1;
@@ -1305,7 +1369,11 @@ function attachStageEvents(stage) {
   const hintBtn = document.getElementById('btn-request-hint');
   if (hintBtn) {
     hintBtn.addEventListener('click', async () => {
-      if (!confirm('Unlock hint? Penalty will be added to your score and the hint will be visible for 30 SECONDS ONLY before auto-hiding.')) {
+      if (
+        !confirm(
+          'Unlock hint? Penalty will be added to your score and the hint will be visible for 30 SECONDS ONLY before auto-hiding.'
+        )
+      ) {
         return;
       }
       hintBtn.disabled = true;
@@ -1377,7 +1445,7 @@ function attachStageEvents(stage) {
     }
 
     // Connect manual cards to insert letter into answer box
-    document.querySelectorAll('.morse-ref-card').forEach(card => {
+    document.querySelectorAll('.morse-ref-card').forEach((card) => {
       card.addEventListener('click', () => {
         const letter = card.getAttribute('data-letter');
         const input = document.getElementById('stage-answer-input');
@@ -1563,7 +1631,7 @@ function attachStageEvents(stage) {
 // ==========================================================================
 function renderResultScreen(container, state) {
   const team = state.team;
-  const members = (state.members || []).map(m => m.fullName).join(', ');
+  const members = (state.members || []).map((m) => m.fullName).join(', ');
 
   const elapsedMs = team.finishedAt - team.startedAt - (team.pausedMs || 0);
   const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000) + team.penaltyMin * 60);
@@ -1597,11 +1665,15 @@ function renderResultScreen(container, state) {
         <button id="btn-copy-result" class="btn btn-primary">
           📋 Copy result
         </button>
-        ${state.allowNewTeams ? `
+        ${
+          state.allowNewTeams
+            ? `
           <button id="btn-new-team" class="btn btn-gold">
             New team
           </button>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
     </div>
   `;
@@ -1823,7 +1895,7 @@ function renderMergedPortal(container) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pin })
-        }).then(r => {
+        }).then((r) => {
           if (r.ok) {
             sessionStorage.setItem('fo_admin_pin', pin);
             renderMergedPortal(container);
@@ -1850,7 +1922,9 @@ function renderMergedPortal(container) {
     async function loadCoordinatorTeams() {
       try {
         const coordPin = sessionStorage.getItem('fo_coord_pin') || '';
-        const res = await fetch(`/api/coordinator?name=${encodeURIComponent(coordName)}&pin=${encodeURIComponent(coordPin)}`);
+        const res = await fetch(
+          `/api/coordinator?name=${encodeURIComponent(coordName)}&pin=${encodeURIComponent(coordPin)}`
+        );
         if (!res.ok) return;
         const data = await res.json();
         const teams = data.teams || [];
@@ -1862,7 +1936,9 @@ function renderMergedPortal(container) {
           return;
         }
 
-        let rows = teams.map(t => `
+        let rows = teams
+          .map(
+            (t) => `
           <tr>
             <td><strong>${escapeHtml(t.name)}</strong></td>
             <td style="color: var(--muted); font-size: 0.85rem;">${escapeHtml(t.players.join(', '))}</td>
@@ -1872,7 +1948,9 @@ function renderMergedPortal(container) {
             <td>${t.totalWrong}</td>
             <td><span style="font-size: 0.85rem; padding: 2px 8px; border-radius: 4px; background: rgba(39, 180, 255, 0.1); color: var(--txt);">${t.status}</span></td>
           </tr>
-        `).join('');
+        `
+          )
+          .join('');
 
         tableEl.innerHTML = `
           <table class="data-table">
@@ -2111,9 +2189,15 @@ function renderMergedPortal(container) {
         return;
       }
 
-      let rows = solutions.map(t => {
-        const shardsStr = t.memberShards.map(m => `<strong>${escapeHtml(m.name)}:</strong> <span class="solution-token">${escapeHtml(m.shard)}</span>`).join(' &nbsp;|&nbsp; ');
-        return `
+      let rows = solutions
+        .map((t) => {
+          const shardsStr = t.memberShards
+            .map(
+              (m) =>
+                `<strong>${escapeHtml(m.name)}:</strong> <span class="solution-token">${escapeHtml(m.shard)}</span>`
+            )
+            .join(' &nbsp;|&nbsp; ');
+          return `
           <tr>
             <td><strong>${escapeHtml(t.teamName)}</strong></td>
             <td><span style="color: var(--accent);">${escapeHtml(t.coordinator)}</span></td>
@@ -2122,7 +2206,8 @@ function renderMergedPortal(container) {
             <td><span class="solution-token" style="color: #34d399; border-color: #34d399;">${escapeHtml(t.stage6Key)}</span></td>
           </tr>
         `;
-      }).join('');
+        })
+        .join('');
 
       containerEl.innerHTML = `
         <table class="data-table">
@@ -2185,7 +2270,7 @@ function renderMergedPortal(container) {
       const res = await fetch('/api/leaderboard');
       if (!res.ok) return;
       const lb = await res.json();
-      const finishedTeams = (lb.teams || []).filter(t => t.isFinished);
+      const finishedTeams = (lb.teams || []).filter((t) => t.isFinished);
       if (finishedTeams.length === 0) {
         showToast('No teams have finished the mission yet.');
         return;
@@ -2193,7 +2278,7 @@ function renderMergedPortal(container) {
       const top3 = finishedTeams.slice(0, 3);
       let snippet = `\n--- 🏆 TOP ${top3.length} TEAMS (Generated: ${new Date().toLocaleTimeString()}) ---\n`;
       top3.forEach((t, idx) => {
-        const medal = idx === 0 ? '🥇 1st' : (idx === 1 ? '🥈 2nd' : '🥉 3rd');
+        const medal = idx === 0 ? '🥇 1st' : idx === 1 ? '🥈 2nd' : '🥉 3rd';
         snippet += `${medal} Place: Team "${t.name}" (Coordinator: ${t.coordinator})\n`;
         snippet += `   Time: ${t.formattedTime} (+${t.penaltyMin}m penalties) | Verification: ${t.verificationCode || 'VERIFIED'}\n`;
       });
@@ -2218,13 +2303,15 @@ function renderMergedPortal(container) {
       const data = await res.json();
       const violations = data.violations || [];
       if (violations.length === 0) {
-        containerEl.innerHTML = '<p style="padding: 12px; color: var(--ok); text-align: center;">✅ No anti-cheat violations recorded. Clean play so far!</p>';
+        containerEl.innerHTML =
+          '<p style="padding: 12px; color: var(--ok); text-align: center;">✅ No anti-cheat violations recorded. Clean play so far!</p>';
         return;
       }
 
-      let rows = violations.map(v => {
-        const timeStr = new Date(v.at).toLocaleTimeString();
-        return `
+      let rows = violations
+        .map((v) => {
+          const timeStr = new Date(v.at).toLocaleTimeString();
+          return `
           <tr>
             <td><strong>${escapeHtml(v.teamName)}</strong></td>
             <td><span class="cheat-badge">${escapeHtml(v.type)}</span></td>
@@ -2236,7 +2323,8 @@ function renderMergedPortal(container) {
             </td>
           </tr>
         `;
-      }).join('');
+        })
+        .join('');
 
       containerEl.innerHTML = `
         <table class="data-table">
@@ -2256,7 +2344,7 @@ function renderMergedPortal(container) {
         </table>
       `;
 
-      containerEl.querySelectorAll('.btn-waive-penalty').forEach(btn => {
+      containerEl.querySelectorAll('.btn-waive-penalty').forEach((btn) => {
         btn.onclick = async () => {
           if (confirm('Waive this penalty and deduct the penalty minutes from the team?')) {
             await fetch('/api/admin/waive-penalty', {
@@ -2407,7 +2495,7 @@ function renderMergedPortal(container) {
       // Update Hero Status
       const statusEl = document.getElementById('admin-mission-status');
       const waitingCountEl = document.getElementById('admin-waiting-count');
-      const waitingTeams = allTeams.filter(t => t.status === 'waiting');
+      const waitingTeams = allTeams.filter((t) => t.status === 'waiting');
       if (waitingCountEl) waitingCountEl.textContent = `${waitingTeams.length} Waiting in Lobby`;
 
       if (statusEl) {
@@ -2449,7 +2537,9 @@ function renderMergedPortal(container) {
       const restartAllBtn = document.getElementById('btn-admin-restart-all');
       if (restartAllBtn) {
         restartAllBtn.onclick = async () => {
-          const mode = prompt('Type "lobby" to restart all teams to Waiting Lobby, or "active" to restart all immediately to Stage 1:');
+          const mode = prompt(
+            'Type "lobby" to restart all teams to Waiting Lobby, or "active" to restart all immediately to Stage 1:'
+          );
           if (mode === 'lobby' || mode === 'active') {
             await fetch('/api/admin/restart-all', {
               method: 'POST',
@@ -2508,7 +2598,7 @@ function renderMergedPortal(container) {
 
       // Populate Coordinator Filter Pills
       const coordCounts = {};
-      allTeams.forEach(t => {
+      allTeams.forEach((t) => {
         const c = t.coordinator || 'Unassigned';
         coordCounts[c] = (coordCounts[c] || 0) + 1;
       });
@@ -2516,13 +2606,15 @@ function renderMergedPortal(container) {
       const pillsContainer = document.getElementById('coord-pills-container');
       if (pillsContainer) {
         let pillsHtml = `<button class="coord-filter-pill ${currentCoordinatorFilter === 'ALL' ? 'active' : ''}" data-coord="ALL">All Teams (${allTeams.length})</button>`;
-        Object.keys(coordCounts).sort().forEach(c => {
-          const isActive = currentCoordinatorFilter.toLowerCase() === c.toLowerCase();
-          pillsHtml += `<button class="coord-filter-pill ${isActive ? 'active' : ''}" data-coord="${escapeHtml(c)}">${escapeHtml(c)} (${coordCounts[c]})</button>`;
-        });
+        Object.keys(coordCounts)
+          .sort()
+          .forEach((c) => {
+            const isActive = currentCoordinatorFilter.toLowerCase() === c.toLowerCase();
+            pillsHtml += `<button class="coord-filter-pill ${isActive ? 'active' : ''}" data-coord="${escapeHtml(c)}">${escapeHtml(c)} (${coordCounts[c]})</button>`;
+          });
         pillsContainer.innerHTML = pillsHtml;
 
-        pillsContainer.querySelectorAll('.coord-filter-pill').forEach(btn => {
+        pillsContainer.querySelectorAll('.coord-filter-pill').forEach((btn) => {
           btn.onclick = () => {
             currentCoordinatorFilter = btn.dataset.coord;
             loadMasterData();
@@ -2533,36 +2625,41 @@ function renderMergedPortal(container) {
       // Filter teams according to selected pill
       let filteredTeams = allTeams;
       if (currentCoordinatorFilter !== 'ALL') {
-        filteredTeams = allTeams.filter(t => (t.coordinator || '').toLowerCase() === currentCoordinatorFilter.toLowerCase());
+        filteredTeams = allTeams.filter(
+          (t) => (t.coordinator || '').toLowerCase() === currentCoordinatorFilter.toLowerCase()
+        );
       }
 
       // Render Teams Table
       const tableEl = document.getElementById('admin-teams-table');
       if (tableEl) {
         if (filteredTeams.length === 0) {
-          tableEl.innerHTML = '<p style="padding: 20px; color: var(--muted); text-align: center;">No teams match the selected filter.</p>';
+          tableEl.innerHTML =
+            '<p style="padding: 20px; color: var(--muted); text-align: center;">No teams match the selected filter.</p>';
         } else {
-          let rows = filteredTeams.map(t => {
-            let statusBadge = '';
-            if (t.isFinished) {
-              statusBadge = '<span style="color: var(--ok); font-weight: bold;">✅ Done</span>';
-            } else if (t.status === 'waiting') {
-              statusBadge = '<span style="color: var(--gold); font-weight: bold;">⏳ Lobby</span>';
-            } else if (t.isIndividuallyPaused) {
-              statusBadge = '<span style="color: var(--bad); font-weight: bold;">⏸ Paused</span>';
-            } else {
-              statusBadge = '<span style="color: var(--accent); font-weight: bold;">▶ Active</span>';
-            }
+          let rows = filteredTeams
+            .map((t) => {
+              let statusBadge = '';
+              if (t.isFinished) {
+                statusBadge = '<span style="color: var(--ok); font-weight: bold;">✅ Done</span>';
+              } else if (t.status === 'waiting') {
+                statusBadge = '<span style="color: var(--gold); font-weight: bold;">⏳ Lobby</span>';
+              } else if (t.isIndividuallyPaused) {
+                statusBadge = '<span style="color: var(--bad); font-weight: bold;">⏸ Paused</span>';
+              } else {
+                statusBadge = '<span style="color: var(--accent); font-weight: bold;">▶ Active</span>';
+              }
 
-            const cheatBadge = (t.tabSwitches && t.tabSwitches > 0)
-              ? `<span class="cheat-badge" title="${t.tabSwitches} anti-cheat violation(s)">🚨 ${t.tabSwitches}</span>`
-              : '<span style="color: var(--muted); font-size: 0.8rem;">0</span>';
+              const cheatBadge =
+                t.tabSwitches && t.tabSwitches > 0
+                  ? `<span class="cheat-badge" title="${t.tabSwitches} anti-cheat violation(s)">🚨 ${t.tabSwitches}</span>`
+                  : '<span style="color: var(--muted); font-size: 0.8rem;">0</span>';
 
-            const pauseBtnHtml = t.isIndividuallyPaused
-              ? `<button class="btn btn-gold btn-sm btn-team-resume" data-id="${t.id}" title="Resume this team">▶ Resume</button>`
-              : `<button class="btn btn-outline btn-sm btn-team-pause" data-id="${t.id}" title="Pause this team">⏸ Pause</button>`;
+              const pauseBtnHtml = t.isIndividuallyPaused
+                ? `<button class="btn btn-gold btn-sm btn-team-resume" data-id="${t.id}" title="Resume this team">▶ Resume</button>`
+                : `<button class="btn btn-outline btn-sm btn-team-pause" data-id="${t.id}" title="Pause this team">⏸ Pause</button>`;
 
-            return `
+              return `
               <tr>
                 <td><strong>${escapeHtml(t.name)}</strong></td>
                 <td><span style="color: var(--accent); font-weight: 600;">${escapeHtml(t.coordinator)}</span></td>
@@ -2582,7 +2679,8 @@ function renderMergedPortal(container) {
                 </td>
               </tr>
             `;
-          }).join('');
+            })
+            .join('');
 
           tableEl.innerHTML = `
             <table class="data-table">
@@ -2605,7 +2703,7 @@ function renderMergedPortal(container) {
           `;
 
           // Team Pause / Resume Listeners
-          tableEl.querySelectorAll('.btn-team-pause').forEach(b => {
+          tableEl.querySelectorAll('.btn-team-pause').forEach((b) => {
             b.onclick = async () => {
               await fetch('/api/admin/team-pause', {
                 method: 'POST',
@@ -2616,7 +2714,7 @@ function renderMergedPortal(container) {
             };
           });
 
-          tableEl.querySelectorAll('.btn-team-resume').forEach(b => {
+          tableEl.querySelectorAll('.btn-team-resume').forEach((b) => {
             b.onclick = async () => {
               await fetch('/api/admin/team-pause', {
                 method: 'POST',
@@ -2628,9 +2726,13 @@ function renderMergedPortal(container) {
           });
 
           // Individual Team Restart Listener
-          tableEl.querySelectorAll('.btn-team-restart').forEach(b => {
+          tableEl.querySelectorAll('.btn-team-restart').forEach((b) => {
             b.onclick = async () => {
-              if (confirm(`Restart team "${b.dataset.name}" back to Stage 1? Their progress, chat, and penalties will be reset.`)) {
+              if (
+                confirm(
+                  `Restart team "${b.dataset.name}" back to Stage 1? Their progress, chat, and penalties will be reset.`
+                )
+              ) {
                 await fetch('/api/admin/team-restart', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
@@ -2643,7 +2745,7 @@ function renderMergedPortal(container) {
           });
 
           // Attach Stage Skip
-          tableEl.querySelectorAll('.btn-action-skip').forEach(b => {
+          tableEl.querySelectorAll('.btn-action-skip').forEach((b) => {
             b.onclick = async () => {
               if (confirm('Skip current stage for this team?')) {
                 await fetch('/api/admin/skip', {
@@ -2657,9 +2759,9 @@ function renderMergedPortal(container) {
           });
 
           // Attach Reset Devices
-          tableEl.querySelectorAll('.btn-action-devices').forEach(b => {
+          tableEl.querySelectorAll('.btn-action-devices').forEach((b) => {
             b.onclick = async () => {
-              const targetTeam = allTeams.find(t => t.id === b.dataset.id);
+              const targetTeam = allTeams.find((t) => t.id === b.dataset.id);
               if (targetTeam && targetTeam.members) {
                 for (const m of targetTeam.members) {
                   await fetch('/api/admin/reset-member-device', {
@@ -2675,7 +2777,7 @@ function renderMergedPortal(container) {
           });
 
           // Attach Delete Team
-          tableEl.querySelectorAll('.btn-action-del').forEach(b => {
+          tableEl.querySelectorAll('.btn-action-del').forEach((b) => {
             b.onclick = async () => {
               if (confirm('Permanently delete this team?')) {
                 await fetch('/api/admin/reset-team', {
@@ -2701,18 +2803,19 @@ function renderMergedPortal(container) {
           if (!logsData.logs || logsData.logs.length === 0) {
             logsEl.textContent = 'No chat messages recorded yet.';
           } else {
-            logsEl.innerHTML = logsData.logs.map(l => {
-              const timeStr = new Date(l.at).toLocaleTimeString();
-              const color = l.role === 'warden' ? 'var(--accent)' : '#ffffff';
-              return `<div><span style="color: var(--muted);">[${timeStr}]</span> <strong>${escapeHtml(l.teamName)}</strong> (${l.role}): <span style="color: ${color};">${escapeHtml(l.text)}</span></div>`;
-            }).join('');
+            logsEl.innerHTML = logsData.logs
+              .map((l) => {
+                const timeStr = new Date(l.at).toLocaleTimeString();
+                const color = l.role === 'warden' ? 'var(--accent)' : '#ffffff';
+                return `<div><span style="color: var(--muted);">[${timeStr}]</span> <strong>${escapeHtml(l.teamName)}</strong> (${l.role}): <span style="color: ${color};">${escapeHtml(l.text)}</span></div>`;
+              })
+              .join('');
           }
         }
       }
 
       // Violations
       loadViolations();
-
     } catch (err) {
       console.error('Admin poll error:', err);
     }
@@ -2892,17 +2995,19 @@ function renderLeaderboardView(container) {
       if (!containerEl) return;
 
       if (teams.length === 0) {
-        containerEl.innerHTML = '<p style="padding: 24px; text-align: center; color: var(--muted);">No teams registered yet.</p>';
+        containerEl.innerHTML =
+          '<p style="padding: 24px; text-align: center; color: var(--muted);">No teams registered yet.</p>';
         return;
       }
 
-      let rows = teams.map((t, idx) => {
-        let rankBadge = `${idx + 1}`;
-        if (idx === 0) rankBadge = '🥇 1';
-        if (idx === 1) rankBadge = '🥈 2';
-        if (idx === 2) rankBadge = '🥉 3';
+      let rows = teams
+        .map((t, idx) => {
+          let rankBadge = `${idx + 1}`;
+          if (idx === 0) rankBadge = '🥇 1';
+          if (idx === 1) rankBadge = '🥈 2';
+          if (idx === 2) rankBadge = '🥉 3';
 
-        return `
+          return `
           <tr style="${t.isFinished ? 'background: rgba(52, 211, 153, 0.08);' : ''}">
             <td style="font-size: 1.1rem; font-weight: bold; color: var(--gold);">${rankBadge}</td>
             <td style="font-size: 1.15rem; font-weight: bold;">${escapeHtml(t.name)}</td>
@@ -2913,7 +3018,8 @@ function renderLeaderboardView(container) {
             <td style="color: var(--muted);">${t.totalWrong}</td>
           </tr>
         `;
-      }).join('');
+        })
+        .join('');
 
       containerEl.innerHTML = `
         <table class="data-table">

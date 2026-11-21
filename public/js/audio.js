@@ -175,8 +175,14 @@ class MorsePlayer {
   }
 
   clearTimers() {
-    if (this.flashTimer) { clearTimeout(this.flashTimer); this.flashTimer = null; }
-    if (this.resetFlashTimer) { clearTimeout(this.resetFlashTimer); this.resetFlashTimer = null; }
+    if (this.flashTimer) {
+      clearTimeout(this.flashTimer);
+      this.flashTimer = null;
+    }
+    if (this.resetFlashTimer) {
+      clearTimeout(this.resetFlashTimer);
+      this.resetFlashTimer = null;
+    }
   }
 
   stop() {

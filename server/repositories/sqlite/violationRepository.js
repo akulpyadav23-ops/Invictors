@@ -8,20 +8,30 @@ class SqliteViolationRepository {
 
   add({ id, teamId, stage, type, details, penaltyAdded, at }) {
     const vId = id || crypto.randomUUID();
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO violations (id, teamId, stage, type, details, penaltyAdded, at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(vId, teamId, stage || 1, type, details || null, penaltyAdded || 0, at || Date.now());
+    `
+      )
+      .run(vId, teamId, stage || 1, type, details || null, penaltyAdded || 0, at || Date.now());
   }
 
   getAll(limit = 100) {
-    return this.db.prepare(`
+    return (
+      this.db
+        .prepare(
+          `
       SELECT v.id, v.teamId, t.name as teamName, v.stage, v.type, v.details, v.penaltyAdded, v.at
       FROM violations v
       JOIN teams t ON v.teamId = t.id
       ORDER BY v.at DESC
       LIMIT ?
-    `).all(limit) || [];
+    `
+        )
+        .all(limit) || []
+    );
   }
 
   getByTeamId(teamId) {
@@ -29,12 +39,16 @@ class SqliteViolationRepository {
   }
 
   getRecentCount(teamId, stage, sinceTime) {
-    const row = this.db.prepare('SELECT COUNT(*) as c FROM violations WHERE teamId = ? AND stage = ? AND at > ?').get(teamId, stage, sinceTime);
+    const row = this.db
+      .prepare('SELECT COUNT(*) as c FROM violations WHERE teamId = ? AND stage = ? AND at > ?')
+      .get(teamId, stage, sinceTime);
     return row ? row.c : 0;
   }
 
   getTotalForStage(teamId, stage) {
-    const row = this.db.prepare('SELECT COUNT(*) as c FROM violations WHERE teamId = ? AND stage = ?').get(teamId, stage);
+    const row = this.db
+      .prepare('SELECT COUNT(*) as c FROM violations WHERE teamId = ? AND stage = ?')
+      .get(teamId, stage);
     return row ? row.c : 0;
   }
 

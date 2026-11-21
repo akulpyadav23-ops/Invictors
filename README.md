@@ -10,9 +10,11 @@
 The application runs entirely offline on the organizer's laptop over local campus Wi-Fi.
 
 ### Prerequisites
+
 - **Node.js 20+** installed on the organizer laptop.
 
 ### Installation & Launch
+
 ```bash
 # 1. Install dependencies
 npm install
@@ -25,6 +27,7 @@ npm start
 ```
 
 Upon startup, the console displays the exact URLs for both local access and participants on the LAN:
+
 ```
 ====================================================
   ⚡ FINAL OVERRIDE — INVICTORS CLUB MISSION SYSTEM ⚡
@@ -53,18 +56,19 @@ Upon startup, the console displays the exact URLs for both local access and part
 
 All configuration is managed in `.env` (copy from `.env.example`):
 
-| Variable | Default Value | Description |
-|---|---|---|
-| `PORT` | `3000` | Port on which the HTTP server listens (`0.0.0.0`) |
-| `ADMIN_PIN` | `INVICTORS` | Secret PIN to access the Organiser Admin Panel |
-| `COORDINATORS` | `Arun,Divya,Kiran,Pooja,Rakshith` | Comma-separated coordinator names suggested during registration |
-| `TIME_CAP_MINUTES` | `90` | Recommended mission duration cap |
-| `EVENT_SALT` | `invictors_final_override_salt_2026` | Per-event cryptographic salt for hashing answers |
-| `ALLOW_NEW_TEAMS` | `false` | When `true`, participants can register new teams from the result screen |
-| `OPENAI_API_KEY` | *(empty)* | Optional. If provided, WARDEN uses LLM; automatically falls back to deterministic rule engine if empty or offline |
-| `ANTHROPIC_API_KEY` | *(empty)* | Optional alternative LLM provider |
+| Variable            | Default Value                        | Description                                                                                                       |
+| ------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `PORT`              | `3000`                               | Port on which the HTTP server listens (`0.0.0.0`)                                                                 |
+| `ADMIN_PIN`         | `INVICTORS`                          | Secret PIN to access the Organiser Admin Panel                                                                    |
+| `COORDINATORS`      | `Arun,Divya,Kiran,Pooja,Rakshith`    | Comma-separated coordinator names suggested during registration                                                   |
+| `TIME_CAP_MINUTES`  | `90`                                 | Recommended mission duration cap                                                                                  |
+| `EVENT_SALT`        | `invictors_final_override_salt_2026` | Per-event cryptographic salt for hashing answers                                                                  |
+| `ALLOW_NEW_TEAMS`   | `false`                              | When `true`, participants can register new teams from the result screen                                           |
+| `OPENAI_API_KEY`    | _(empty)_                            | Optional. If provided, WARDEN uses LLM; automatically falls back to deterministic rule engine if empty or offline |
+| `ANTHROPIC_API_KEY` | _(empty)_                            | Optional alternative LLM provider                                                                                 |
 
 ### How to Change Secrets & Stage Fragments
+
 - **Stage 1 (NOVA)**: In `server/logic/stages.js`, update `STAGE_CONFIG[1].morsePattern` and answer checks.
 - **Stage 2 (7K2 & AURORA)**: In `server/logic/stages.js`, update `STAGE_CONFIG[2].encodedText` (ROT13 → Hex → Base64).
 - **Stage 3 (ORBIT, ZETA9, AURORA)**: In `.env`, optionally set `WARDEN_REAL`, `WARDEN_DECOY`, and `WARDEN_ACCESS`.
@@ -72,10 +76,13 @@ All configuration is managed in `.env` (copy from `.env.example`):
 - **Stage 5 & Stage 6**: Dynamically computed cryptographic shards (`SHA256("FO|" + team + "|" + member)`) and final composite key formula.
 
 ### How to Add Coordinators
+
 Simply add names to `COORDINATORS` in `.env`:
+
 ```env
 COORDINATORS=Arun,Divya,Kiran,Pooja,Rakshith,Suresh,Ananya
 ```
+
 Coordinators will immediately appear as auto-complete suggestions on the registration form.
 
 ---
@@ -83,6 +90,7 @@ Coordinators will immediately appear as auto-complete suggestions on the registr
 ## 4. Default Choices & Design Decisions
 
 Where parameters were unspecified, the following sensible defaults were selected:
+
 1. **Frontend Architecture**: Pure modular vanilla JavaScript + modern CSS design system with CSS custom properties. Zero external CDNs, fonts, or libraries, ensuring 100% offline LAN reliability.
 2. **Database Engine**: `better-sqlite3@9.6.0` running with WAL mode (`journal_mode = WAL`) and foreign key constraints enabled for instant atomic transactions.
 3. **HTTP Cookie Security**: `fo_leader_token` and `fo_member_token` are issued with `httpOnly: true` and `sameSite: 'lax'` to prevent cross-device session spoofing.
@@ -109,11 +117,13 @@ Where parameters were unspecified, the following sensible defaults were selected
 ## 6. Automated Test Suite Results
 
 The codebase contains full automated test coverage verifying criteria 1 to 11. Run via:
+
 ```bash
 npm test
 ```
 
 ### Verified Acceptance Criteria:
+
 - **Test 1**: Registration validation rejects <3 members, duplicate member names, and duplicate team names (case-insensitive).
 - **Test 2**: Server-side stage locking rejects future answers; stage content is isolated.
 - **Test 3**: Case/space-insensitive normalization (`nova`, `7k2`, `orbit`, `91x`). Decoy `ZETA9` rejected.
@@ -121,7 +131,7 @@ npm test
 - **Test 5**: Terminal commands (`help`, `ls`, `cat robots.txt`, `cat vault-7f3a/note.txt`, `exif badge.jpg`) output exactly as specified; DOM comment token delivered.
 - **Test 6**: Hint penalties (+3m, +5m, max 2 hints) and wrong attempts (1–5 free, 6th and later +1m each).
 - **Test 7**: Exact Team Sync test vector: Team Alpha (Chitra S, Asha Rao, Bharat K) yields shards `EFD`, `82D`, `326` and team code `EFD-82D-326`. Blocked until 3 distinct devices join.
-- **Test 8**: Exact Final Key test vector: `FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40` unlocks the vault.
+- **Test 8**: Exact Final Key test vector: Synthesized from all 5 fragments via `deriveFinalAnswer` unlocks the vault.
 - **Test 9**: Leader device blocked from fetching member shards; member device tokens cannot be hijacked.
 - **Test 10**: Coordinator data isolation: Coordinator A sees only their assigned teams; Admin panel sees all teams.
 - **Test 11**: Mid-game reload restores team state, fragments, and synchronizes with server clock.

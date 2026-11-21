@@ -29,9 +29,12 @@ function loadMissionContent(options = {}) {
     const rawData = fs.readFileSync(filePathToLoad, 'utf-8');
     const parsed = JSON.parse(rawData);
 
-    // Validation
-    if (!parsed.stages || !parsed.stages['1'] || !parsed.stages['2'] || !parsed.stages['3'] || !parsed.stages['4'] || !parsed.stages['5']) {
-      throw new Error('mission.json must define all 5 stages.');
+    // Validation: Exactly six stages required
+    const stages = parsed.stages || {};
+    for (let s = 1; s <= 6; s++) {
+      if (!stages[String(s)]) {
+        throw new Error(`mission.json must define all 6 stages. Stage ${s} is missing.`);
+      }
     }
 
     cachedMission = Object.freeze(parsed);
@@ -42,6 +45,9 @@ function loadMissionContent(options = {}) {
   }
 }
 
+const STAGE_COUNT = 6;
+
 module.exports = {
-  getMission: loadMissionContent
+  getMission: loadMissionContent,
+  STAGE_COUNT
 };

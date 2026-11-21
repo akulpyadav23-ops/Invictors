@@ -12,11 +12,15 @@ class SqliteNotesRepository {
 
   save(teamId, notes) {
     const cleanNotes = String(notes || '').slice(0, 1000);
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO team_notes (teamId, notes, updatedAt)
       VALUES (?, ?, ?)
       ON CONFLICT(teamId) DO UPDATE SET notes = excluded.notes, updatedAt = excluded.updatedAt
-    `).run(teamId, cleanNotes, Date.now());
+    `
+      )
+      .run(teamId, cleanNotes, Date.now());
     return cleanNotes;
   }
 }

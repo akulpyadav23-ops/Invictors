@@ -15,7 +15,7 @@ class RateLimiter {
     let timestamps = this.hits.get(key) || [];
 
     // Filter hits within window
-    timestamps = timestamps.filter(t => now - t < windowMs);
+    timestamps = timestamps.filter((t) => now - t < windowMs);
 
     if (timestamps.length >= maxRequests) {
       const oldest = timestamps[0];
@@ -37,7 +37,7 @@ class RateLimiter {
   prune(maxAgeMs = 3600000) {
     const now = Date.now();
     for (const [key, list] of this.hits.entries()) {
-      const active = list.filter(t => now - t < maxAgeMs);
+      const active = list.filter((t) => now - t < maxAgeMs);
       if (active.length === 0) {
         this.hits.delete(key);
       } else {

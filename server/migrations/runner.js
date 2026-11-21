@@ -15,11 +15,12 @@ function runMigrations(dbInstance = null) {
   `);
 
   const appliedRows = db.prepare('SELECT version FROM schema_version').all();
-  const appliedSet = new Set(appliedRows.map(r => r.version));
+  const appliedSet = new Set(appliedRows.map((r) => r.version));
 
   const migrationsDir = __dirname;
-  const files = fs.readdirSync(migrationsDir)
-    .filter(f => f.endsWith('.sql'))
+  const files = fs
+    .readdirSync(migrationsDir)
+    .filter((f) => f.endsWith('.sql'))
     .sort();
 
   for (const file of files) {
@@ -65,8 +66,10 @@ function seedDefaults(db) {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
       `);
 
-      for (let s = 1; s <= 5; s++) {
-        const stageConfig = mission.stages[String(s)];
+      const stageKeys = Object.keys(mission.stages || {});
+      for (const sStr of stageKeys) {
+        const s = parseInt(sStr, 10);
+        const stageConfig = mission.stages[sStr];
         if (stageConfig && stageConfig.hints) {
           stageConfig.hints.forEach((h, idx) => {
             const hId = `hint_s${s}_h${idx + 1}`;

@@ -6,9 +6,9 @@ class SqliteChatRepository {
   }
 
   add({ teamId, role, text, at }) {
-    this.db.prepare('INSERT INTO chat (teamId, role, text, at) VALUES (?, ?, ?, ?)').run(
-      teamId, role, text, at || Date.now()
-    );
+    this.db
+      .prepare('INSERT INTO chat (teamId, role, text, at) VALUES (?, ?, ?, ?)')
+      .run(teamId, role, text, at || Date.now());
   }
 
   getHistory(teamId) {
@@ -16,18 +16,26 @@ class SqliteChatRepository {
   }
 
   getRecentCount(teamId, role, sinceTime) {
-    const row = this.db.prepare('SELECT COUNT(*) as c FROM chat WHERE teamId = ? AND role = ? AND at > ?').get(teamId, role, sinceTime);
+    const row = this.db
+      .prepare('SELECT COUNT(*) as c FROM chat WHERE teamId = ? AND role = ? AND at > ?')
+      .get(teamId, role, sinceTime);
     return row ? row.c : 0;
   }
 
   getRecentLogs(limit = 60) {
-    return this.db.prepare(`
+    return (
+      this.db
+        .prepare(
+          `
       SELECT c.id, c.teamId, t.name as teamName, c.role, c.text, c.at
       FROM chat c
       JOIN teams t ON c.teamId = t.id
       ORDER BY c.at DESC
       LIMIT ?
-    `).all(limit) || [];
+    `
+        )
+        .all(limit) || []
+    );
   }
 }
 

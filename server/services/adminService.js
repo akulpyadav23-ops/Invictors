@@ -96,9 +96,19 @@ class AdminService {
   generateCsvExport() {
     const teams = this.repos.teams.getAll();
     const headers = [
-      'Rank', 'Team Name', 'Coordinator', 'Member Count', 'Status', 'Current Stage',
-      'Total Time (s)', 'Total Time (Formatted)', 'Penalty (min)', 'Hints Used',
-      'Wrong Attempts', 'Tab Violations', 'Verification Code'
+      'Rank',
+      'Team Name',
+      'Coordinator',
+      'Member Count',
+      'Status',
+      'Current Stage',
+      'Total Time (s)',
+      'Total Time (Formatted)',
+      'Penalty (min)',
+      'Hints Used',
+      'Wrong Attempts',
+      'Tab Violations',
+      'Verification Code'
     ];
 
     const rows = [headers.join(',')];
@@ -112,21 +122,23 @@ class AdminService {
       const formatted = `${Math.floor(totalSec / 60)}m ${totalSec % 60}s`;
       const code = t.finishedAt ? generateVerificationCode(t.name, t.startedAt, t.finishedAt) : '';
 
-      rows.push([
-        idx + 1,
-        `"${t.name.replace(/"/g, '""')}"`,
-        `"${(t.coordinator || '').replace(/"/g, '""')}"`,
-        t.memberCount,
-        t.status,
-        t.finishedAt ? 'Completed' : t.stage,
-        totalSec,
-        `"${formatted}"`,
-        t.penaltyMin || 0,
-        totalHints,
-        totalWrong,
-        t.tabSwitches || 0,
-        code
-      ].join(','));
+      rows.push(
+        [
+          idx + 1,
+          `"${t.name.replace(/"/g, '""')}"`,
+          `"${(t.coordinator || '').replace(/"/g, '""')}"`,
+          t.memberCount,
+          t.status,
+          t.finishedAt ? 'Completed' : t.stage,
+          totalSec,
+          `"${formatted}"`,
+          t.penaltyMin || 0,
+          totalHints,
+          totalWrong,
+          t.tabSwitches || 0,
+          code
+        ].join(',')
+      );
     });
 
     return rows.join('\n');

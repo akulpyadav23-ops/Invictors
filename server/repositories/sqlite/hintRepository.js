@@ -14,7 +14,9 @@ class SqliteHintRepository {
   }
 
   getByStage(stage) {
-    return this.db.prepare('SELECT * FROM hints WHERE stage = ? AND enabled = 1 ORDER BY displayOrder ASC').all(stage) || [];
+    return (
+      this.db.prepare('SELECT * FROM hints WHERE stage = ? AND enabled = 1 ORDER BY displayOrder ASC').all(stage) || []
+    );
   }
 
   getByStageAndNumber(stage, hintNumber) {
@@ -24,8 +26,8 @@ class SqliteHintRepository {
   update(id, fields) {
     const keys = Object.keys(fields);
     if (keys.length === 0) return true;
-    const setClause = keys.map(k => `${k} = ?`).join(', ');
-    const values = keys.map(k => fields[k]);
+    const setClause = keys.map((k) => `${k} = ?`).join(', ');
+    const values = keys.map((k) => fields[k]);
     values.push(id);
     this.db.prepare(`UPDATE hints SET ${setClause} WHERE id = ?`).run(...values);
     return true;
@@ -33,21 +35,29 @@ class SqliteHintRepository {
 
   // Record hint usage
   recordUsage({ teamId, stage, hintNumber, hintId, penaltyCharged, hintShownAt, hintVisibleUntil, idempotencyKey }) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT OR IGNORE INTO hint_usage (
         teamId, stage, hintNumber, hintId, penaltyCharged, hintShownAt, hintVisibleUntil, idempotencyKey
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      teamId, stage, hintNumber, hintId, penaltyCharged, hintShownAt, hintVisibleUntil, idempotencyKey || null
-    );
+    `
+      )
+      .run(teamId, stage, hintNumber, hintId, penaltyCharged, hintShownAt, hintVisibleUntil, idempotencyKey || null);
   }
 
   getUsageByTeamAndStage(teamId, stage) {
-    return this.db.prepare('SELECT * FROM hint_usage WHERE teamId = ? AND stage = ? ORDER BY hintNumber ASC').all(teamId, stage) || [];
+    return (
+      this.db
+        .prepare('SELECT * FROM hint_usage WHERE teamId = ? AND stage = ? ORDER BY hintNumber ASC')
+        .all(teamId, stage) || []
+    );
   }
 
   getAllUsageForTeam(teamId) {
-    return this.db.prepare('SELECT * FROM hint_usage WHERE teamId = ? ORDER BY stage ASC, hintNumber ASC').all(teamId) || [];
+    return (
+      this.db.prepare('SELECT * FROM hint_usage WHERE teamId = ? ORDER BY stage ASC, hintNumber ASC').all(teamId) || []
+    );
   }
 }
 

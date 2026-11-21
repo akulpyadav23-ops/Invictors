@@ -6,6 +6,7 @@ const { getMission } = require('../content/loader');
 const Stage1Service = require('../services/stage1Service');
 const Stage2Service = require('../services/stage2Service');
 const Stage5Service = require('../services/stage5Service');
+const { Stage6Service } = require('../services/stage6Service');
 const lock = require('../lib/lock');
 const idempotency = require('../lib/idempotency');
 const rateLimiter = require('../lib/rateLimiter');
@@ -17,6 +18,7 @@ const repos = getRepositories();
 const stage1Service = new Stage1Service(repos);
 const stage2Service = new Stage2Service(repos);
 const stage5Service = new Stage5Service(repos);
+const stage6Service = new Stage6Service(repos);
 const mission = getMission();
 
 // POST /api/submit - Submit answer (Phase 3.A: Mutex lock + BEGIN IMMEDIATE transaction)
@@ -76,7 +78,9 @@ router.post('/', requireLeader, async (req, res, next) => {
       // Solved notebook fragments
       const progressList = repos.progress.getByTeamId(team.id);
       const notebook = {};
-      progressList.forEach(p => { if (p.fragment) notebook[p.stage] = p.fragment; });
+      progressList.forEach((p) => {
+        if (p.fragment) notebook[p.stage] = p.fragment;
+      });
 
       let isCorrect = false;
       let fragmentFound = null;
@@ -95,7 +99,7 @@ router.post('/', requireLeader, async (req, res, next) => {
           return res.status(200).json({
             success: false,
             message: val.message,
-            wrongAttempts: progressList.find(p => p.stage === 2)?.wrongAttempts || 0,
+            wrongAttempts: progressList.find((p) => p.stage === 2)?.wrongAttempts || 0,
             penaltyApplied: false,
             totalPenaltyMin: team.penaltyMin || 0
           });
@@ -110,7 +114,13 @@ router.post('/', requireLeader, async (req, res, next) => {
         isCorrect = normalizedInput === mission.stages['4'].answer;
         fragmentFound = isCorrect ? mission.stages['4'].answer : null;
       } else if (stage === 5) {
-        const val = stage5Service.validateSubmission(team, rawAnswer, notebook);
+        const val = stage5Service.validateSubmission(team, rawAnswer);
+        isCorrect = val.isCorrect;
+        fragmentFound = val.fragment;
+      } else if (stage === 6) {
+        const members = repos.members.getByTeamId(team.id);
+        const memberCodes = members.map((m) => m.assignedShard);
+        const val = stage6Service.validateSubmission(team, rawAnswer, notebook, memberCodes);
         isCorrect = val.isCorrect;
         fragmentFound = val.expectedAnswer;
       }
@@ -132,12 +142,13 @@ router.post('/', requireLeader, async (req, res, next) => {
       let responseStatus = 200;
 
       if (isCorrect) {
-        const nextStage = stage < 5 ? stage + 1 : 5;
-        const finishedAt = stage === 5 ? now : null;
+        const isFinalStage = stage === 6;
+        const nextStage = stage < 6 ? stage + 1 : 6;
+        const finishedAt = isFinalStage ? now : null;
 
         repos.transaction(() => {
           repos.progress.update(team.id, stage, {
-            fragment: fragmentFound,
+            fragment: stage === 6 ? null : fragmentFound,
             solvedAt: now
           });
 

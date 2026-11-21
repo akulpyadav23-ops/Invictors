@@ -121,9 +121,10 @@ function getDb(customPath = null) {
   }
   if (!instance) {
     const config = require('../../config');
-    const targetPath = process.env.NODE_ENV === 'test'
-      ? (process.env.TEST_DB_PATH || path.join(__dirname, '..', '..', '..', 'data', 'test.db'))
-      : (config.DB_PATH || path.join(__dirname, '..', '..', '..', 'data', 'final_override.db'));
+    const targetPath =
+      process.env.NODE_ENV === 'test'
+        ? process.env.TEST_DB_PATH || path.join(__dirname, '..', '..', '..', 'data', 'test.db')
+        : config.DB_PATH || path.join(__dirname, '..', '..', '..', 'data', 'final_override.db');
     instance = new UnifiedDatabase(targetPath);
   }
   return instance;

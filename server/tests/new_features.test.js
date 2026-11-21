@@ -24,7 +24,7 @@ function parseCookies(res) {
   const setCookie = res.headers.get('set-cookie');
   if (!setCookie) return {};
   const cookies = {};
-  setCookie.split(',').forEach(str => {
+  setCookie.split(',').forEach((str) => {
     const parts = str.split(';')[0].split('=');
     if (parts.length >= 2) {
       cookies[parts[0].trim()] = parts.slice(1).join('=').trim();
@@ -153,7 +153,7 @@ async function runNewFeatureTests() {
     });
     assert.strictEqual(violationsRes.status, 200);
     assert(violationsRes.data.violations.length >= 1);
-    assert(violationsRes.data.violations.some(v => v.type === 'tab_switch'));
+    assert(violationsRes.data.violations.some((v) => v.type === 'tab_switch'));
     console.log('✅ Passed Test 3: Anti-cheat tab switch applies +2 min penalty and logs violation');
 
     console.log('--- Test 4: Individual Team Pause & Resume ---');
@@ -221,7 +221,7 @@ async function runNewFeatureTests() {
     assert.strictEqual(answersRes.data.staticAnswers.stage3.answer, 'ORBIT');
     assert.strictEqual(answersRes.data.staticAnswers.stage4.answer, '91X');
     assert(answersRes.data.teamSolutions.length >= 1);
-    const alphaSol = answersRes.data.teamSolutions.find(t => t.teamName === 'AlphaSquad');
+    const alphaSol = answersRes.data.teamSolutions.find((t) => t.teamName === 'AlphaSquad');
     assert(alphaSol.stage5Code, 'Dynamic Stage 5 code generated');
     assert(alphaSol.stage6Key, 'Dynamic Stage 6 composite key generated');
     assert.strictEqual(alphaSol.memberShards.length, 3);
@@ -286,7 +286,7 @@ async function runNewFeatureTests() {
   }
 }
 
-runNewFeatureTests().catch(err => {
+runNewFeatureTests().catch((err) => {
   console.error('Test failed:', err);
   process.exit(1);
 });

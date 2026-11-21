@@ -1,35 +1,14 @@
-let Database;
-try {
-  Database = require('better-sqlite3');
-} catch (err) {
-  console.warn('better-sqlite3 is not available in this environment. Continuing with Supabase cloud database.');
-}
+const { getDb } = require('./repositories/sqlite/dbConnection');
 const path = require('path');
 const fs = require('fs');
 
 let db = null;
 
-if (Database) {
-  try {
-    const isVercel = process.env.VERCEL || process.env.NOW_REGION;
-    const dbPath = isVercel
-      ? path.join('/tmp', 'final_override.db')
-      : path.join(__dirname, '..', 'data', 'final_override.db');
-    const dbDir = path.dirname(dbPath);
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true });
-    }
-
-    db = new Database(dbPath);
-
-    // Enable WAL mode for high performance concurrency
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
-
-    initSchema();
-  } catch (err) {
-    console.warn('SQLite initialization skipped:', err.message);
-  }
+try {
+  db = getDb();
+  initSchema();
+} catch (err) {
+  console.warn('SQLite initialization skipped:', err.message);
 }
 
 function initSchema() {
@@ -107,10 +86,18 @@ function initSchema() {
   `);
 
   // Migrate existing tables if columns are missing
-  try { db.exec("ALTER TABLE teams ADD COLUMN status TEXT DEFAULT 'active'"); } catch {}
-  try { db.exec("ALTER TABLE teams ADD COLUMN isPaused INTEGER DEFAULT 0"); } catch {}
-  try { db.exec("ALTER TABLE teams ADD COLUMN teamPauseStartedAt INTEGER DEFAULT 0"); } catch {}
-  try { db.exec("ALTER TABLE teams ADD COLUMN tabSwitches INTEGER DEFAULT 0"); } catch {}
+  try {
+    db.exec("ALTER TABLE teams ADD COLUMN status TEXT DEFAULT 'active'");
+  } catch {}
+  try {
+    db.exec('ALTER TABLE teams ADD COLUMN isPaused INTEGER DEFAULT 0');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE teams ADD COLUMN teamPauseStartedAt INTEGER DEFAULT 0');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE teams ADD COLUMN tabSwitches INTEGER DEFAULT 0');
+  } catch {}
 
   // Ensure default settings exist
   const setStmt = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
@@ -121,7 +108,10 @@ function initSchema() {
   setStmt.run('totalPausedMs', '0');
   setStmt.run('startTogetherMode', 'true');
   setStmt.run('gameStarted', 'false');
-  setStmt.run('winnersNotepad', '🏆 INVICTORS FINAL OVERRIDE — OFFICIAL WINNERS SCRATCHPAD\n=======================================================\n1st Place:\n2nd Place:\n3rd Place:\n\nSpecial Mentions:\nJudge Notes:\n');
+  setStmt.run(
+    'winnersNotepad',
+    '🏆 INVICTORS FINAL OVERRIDE — OFFICIAL WINNERS SCRATCHPAD\n=======================================================\n1st Place:\n2nd Place:\n3rd Place:\n\nSpecial Mentions:\nJudge Notes:\n'
+  );
 }
 
 initSchema();

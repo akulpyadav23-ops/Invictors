@@ -6,7 +6,9 @@ class SqliteMemberRepository {
   }
 
   getByTeamId(teamId) {
-    return this.db.prepare('SELECT * FROM members WHERE teamId = ? ORDER BY isLeader DESC, fullName ASC').all(teamId) || [];
+    return (
+      this.db.prepare('SELECT * FROM members WHERE teamId = ? ORDER BY isLeader DESC, fullName ASC').all(teamId) || []
+    );
   }
 
   getByDeviceToken(token) {
@@ -17,23 +19,31 @@ class SqliteMemberRepository {
   getForTeams(teamIds) {
     if (!teamIds || teamIds.length === 0) return [];
     const placeholders = teamIds.map(() => '?').join(',');
-    return this.db.prepare(`SELECT * FROM members WHERE teamId IN (${placeholders}) ORDER BY fullName ASC`).all(...teamIds) || [];
+    return (
+      this.db
+        .prepare(`SELECT * FROM members WHERE teamId IN (${placeholders}) ORDER BY fullName ASC`)
+        .all(...teamIds) || []
+    );
   }
 
   create(member) {
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO members (id, teamId, fullName, isLeader, deviceToken, assignedCodeType, assignedShard, joinedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      member.id,
-      member.teamId,
-      member.fullName,
-      member.isLeader ? 1 : 0,
-      member.deviceToken || null,
-      member.assignedCodeType || 'mixed',
-      member.assignedShard || null,
-      member.joinedAt || null
-    );
+    `
+      )
+      .run(
+        member.id,
+        member.teamId,
+        member.fullName,
+        member.isLeader ? 1 : 0,
+        member.deviceToken || null,
+        member.assignedCodeType || 'mixed',
+        member.assignedShard || null,
+        member.joinedAt || null
+      );
   }
 
   createBatch(members) {
@@ -58,8 +68,8 @@ class SqliteMemberRepository {
   update(id, fields) {
     const keys = Object.keys(fields);
     if (keys.length === 0) return true;
-    const setClause = keys.map(k => `${k} = ?`).join(', ');
-    const values = keys.map(k => fields[k]);
+    const setClause = keys.map((k) => `${k} = ?`).join(', ');
+    const values = keys.map((k) => fields[k]);
     values.push(id);
     this.db.prepare(`UPDATE members SET ${setClause} WHERE id = ?`).run(...values);
     return true;
@@ -72,7 +82,9 @@ class SqliteMemberRepository {
 
   resetAllDevicesForTeam(teamId) {
     // Keep leader device, reset other members
-    this.db.prepare('UPDATE members SET deviceToken = NULL, joinedAt = NULL WHERE teamId = ? AND isLeader = 0').run(teamId);
+    this.db
+      .prepare('UPDATE members SET deviceToken = NULL, joinedAt = NULL WHERE teamId = ? AND isLeader = 0')
+      .run(teamId);
     return true;
   }
 }

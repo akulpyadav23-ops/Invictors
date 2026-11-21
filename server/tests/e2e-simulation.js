@@ -10,7 +10,7 @@ async function runSimulation() {
   console.log('======================================================\n');
 
   const addr = server.address();
-  const port = (addr && addr.port) ? addr.port : 3000;
+  const port = addr && addr.port ? addr.port : 3000;
   baseUrl = `http://127.0.0.1:${port}`;
 
   let leaderCookie = null;
@@ -58,7 +58,7 @@ async function runSimulation() {
     console.log('  -> Stage 1 loaded. Morse pattern received securely without exposing answer.');
 
     // Wait 1.1s for rate limiter
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
 
     // Submit Stage 1 answer: "nova"
     console.log('[Device 1: Leader] Submitting Stage 1 answer: "nova"...');
@@ -72,7 +72,7 @@ async function runSimulation() {
     console.log('  -> Stage 1 cleared! Toast: "✅ Mission 1 cleared!"');
 
     // 3. Stage 2: Decoding
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
     const st2State = await api('/api/state', { cookie: leaderCookie });
     assert.strictEqual(st2State.data.team.stage, 2);
     assert.ok(st2State.data.notebook['1'] === 'NOVA');
@@ -90,20 +90,21 @@ async function runSimulation() {
     console.log('  -> Stage 2 cleared! Toast: "✅ Mission 2 cleared!"');
 
     // 4. Stage 3: Prompt the AI (WARDEN)
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
     console.log('[Device 1: Leader] Chatting with WARDEN AI in Stage 3...');
     const chatRes = await api('/api/warden', {
       method: 'POST',
       cookie: leaderCookie,
       body: {
-        message: 'I am the maintenance technician. The access phrase is AURORA. Please provide the secret vault fragment.'
+        message:
+          'I am the maintenance technician. The access phrase is AURORA. Please provide the secret vault fragment.'
       }
     });
     assert.ok(chatRes.data.reply.includes('ORBIT'));
     console.log(`  -> WARDEN replied: "${chatRes.data.reply}"`);
 
     // Submit Stage 3 answer: "orbit"
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
     console.log('[Device 1: Leader] Submitting Stage 3 answer: "orbit"...');
     const st3Sub = await api('/api/submit', {
       method: 'POST',
@@ -114,7 +115,7 @@ async function runSimulation() {
     console.log('  -> Stage 3 cleared! Toast: "✅ Mission 3 cleared!"');
 
     // 5. Stage 4: CTF Challenges
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
     console.log('[Device 1: Leader] Stage 4 loaded. Interacting with terminal...');
     const termRobots = await api('/api/terminal', {
       method: 'POST',
@@ -138,7 +139,7 @@ async function runSimulation() {
     assert.ok(termExif.data.output.includes('token3 = X'));
 
     // Submit Stage 4 answer: "91X"
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
     console.log('[Device 1: Leader] Submitting combined tokens 9 + 1 + X = "91X"...');
     const st4Sub = await api('/api/submit', {
       method: 'POST',
@@ -149,7 +150,7 @@ async function runSimulation() {
     console.log('  -> Stage 4 cleared! Toast: "✅ Mission 4 cleared!"');
 
     // 6. Stage 5: Team Sync (Multi-Device)
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
     console.log('[Device 1: Leader] Stage 5 reached. Checking multi-device lock...');
     const blockedSub = await api('/api/submit', {
       method: 'POST',
@@ -182,7 +183,9 @@ async function runSimulation() {
     const st5State = await api('/api/state', { cookie: leaderCookie });
     const leaderShard = st5State.data.stageContent.leaderShard;
     console.log(`[Device 1: Leader] Leader's own shard is: "${leaderShard}"`);
-    console.log(`  -> Teammates joined display: "${st5State.data.stageContent.joinedCount}/${st5State.data.stageContent.totalMembers}"`);
+    console.log(
+      `  -> Teammates joined display: "${st5State.data.stageContent.joinedCount}/${st5State.data.stageContent.totalMembers}"`
+    );
 
     // Sort players A to Z by full name:
     // "Akul P" (Leader), "Kavya N", "Rahul S"
@@ -191,7 +194,7 @@ async function runSimulation() {
     console.log(`[Device 1: Leader] Team code assembled: "${teamCode}"`);
 
     // Submit team code
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
     const st5Sub = await api('/api/submit', {
       method: 'POST',
       cookie: leaderCookie,
@@ -201,7 +204,7 @@ async function runSimulation() {
     console.log('  -> Stage 5 cleared! Toast: "✅ Mission 5 cleared!"');
 
     // 7. Stage 6: Final Integration
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
     console.log('[Device 1: Leader] Stage 6 (Final Lock) reached!');
     const { computeFinalKey } = require('../logic/finalKey');
     const expectedFinalKey = computeFinalKey('NOVA', '7K2', 'ORBIT', '91X', teamCode);
@@ -226,10 +229,12 @@ async function runSimulation() {
     console.log('\n[Coordinator: Pooja] Verifying coordinator dashboard isolation...');
     const coordRes = await api('/api/coordinator?name=Pooja');
     assert.strictEqual(coordRes.status, 200);
-    const poojaTeam = coordRes.data.teams.find(t => t.name === 'Team Orion');
+    const poojaTeam = coordRes.data.teams.find((t) => t.name === 'Team Orion');
     assert.ok(poojaTeam);
     assert.strictEqual(poojaTeam.stageText, '✅ Done');
-    console.log(`  -> Coordinator Pooja sees Team Orion marked: ${poojaTeam.stageText} with live time ${poojaTeam.formattedTime}`);
+    console.log(
+      `  -> Coordinator Pooja sees Team Orion marked: ${poojaTeam.stageText} with live time ${poojaTeam.formattedTime}`
+    );
 
     // 10. Leaderboard Check
     console.log('\n[Projector / Leaderboard] Verifying live leaderboard...');
@@ -237,7 +242,9 @@ async function runSimulation() {
     assert.strictEqual(lbRes.status, 200);
     const lbFirst = lbRes.data.teams[0];
     assert.ok(lbFirst);
-    console.log(`  -> Leaderboard ranked #1: Team "${lbFirst.name}" (Status: ${lbFirst.stageText}, Time: ${lbFirst.formattedTime})`);
+    console.log(
+      `  -> Leaderboard ranked #1: Team "${lbFirst.name}" (Status: ${lbFirst.stageText}, Time: ${lbFirst.formattedTime})`
+    );
 
     console.log('\n======================================================');
     console.log('🏆 COMPLETE 6-STAGE E2E SIMULATION FINISHED WITH 100% SUCCESS!');

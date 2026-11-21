@@ -11,7 +11,9 @@ async function wipe() {
   // 1. Wipe Supabase if configured
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     let wsTransport;
-    try { wsTransport = require('ws'); } catch (_) {}
+    try {
+      wsTransport = require('ws');
+    } catch (_) {}
     const supabaseOpts = { auth: { persistSession: false } };
     if (wsTransport) supabaseOpts.realtime = { transport: wsTransport };
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, supabaseOpts);
@@ -34,7 +36,11 @@ async function wipe() {
       { key: 'totalPausedMs', value: '0' },
       { key: 'startTogetherMode', value: 'true' },
       { key: 'gameStarted', value: 'false' },
-      { key: 'winnersNotepad', value: '🏆 INVICTORS FINAL OVERRIDE — OFFICIAL WINNERS SCRATCHPAD\n=======================================================\n1st Place:\n2nd Place:\n3rd Place:\n\nSpecial Mentions:\nJudge Notes:\n' }
+      {
+        key: 'winnersNotepad',
+        value:
+          '🏆 INVICTORS FINAL OVERRIDE — OFFICIAL WINNERS SCRATCHPAD\n=======================================================\n1st Place:\n2nd Place:\n3rd Place:\n\nSpecial Mentions:\nJudge Notes:\n'
+      }
     ];
 
     for (const s of defaultSettings) {
@@ -68,7 +74,7 @@ async function wipe() {
   console.log('🎉 Full dataset purge completed! Ready for a fresh start.');
 }
 
-wipe().catch(err => {
+wipe().catch((err) => {
   console.error('Purge error:', err);
   process.exit(1);
 });

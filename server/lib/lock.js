@@ -22,7 +22,7 @@ class KeyedMutex {
     }
 
     let releaseFn;
-    const lockPromise = new Promise(resolve => {
+    const lockPromise = new Promise((resolve) => {
       releaseFn = resolve;
     });
 

@@ -18,20 +18,35 @@ const STAGE_CONFIG = {
     // V: ...- (dot 1, gap 1, dot 1, gap 1, dot 1, gap 1, dash 3) -> gap 4
     // A: .- (dot 1, gap 1, dash 3)
     morsePattern: [
-      { tone: true, u: 3 }, { tone: false, u: 1 }, { tone: true, u: 1 }, // N
+      { tone: true, u: 3 },
+      { tone: false, u: 1 },
+      { tone: true, u: 1 }, // N
       { tone: false, u: 4 },
-      { tone: true, u: 3 }, { tone: false, u: 1 }, { tone: true, u: 3 }, { tone: false, u: 1 }, { tone: true, u: 3 }, // O
+      { tone: true, u: 3 },
+      { tone: false, u: 1 },
+      { tone: true, u: 3 },
+      { tone: false, u: 1 },
+      { tone: true, u: 3 }, // O
       { tone: false, u: 4 },
-      { tone: true, u: 1 }, { tone: false, u: 1 }, { tone: true, u: 1 }, { tone: false, u: 1 }, { tone: true, u: 1 }, { tone: false, u: 1 }, { tone: true, u: 3 }, // V
+      { tone: true, u: 1 },
+      { tone: false, u: 1 },
+      { tone: true, u: 1 },
+      { tone: false, u: 1 },
+      { tone: true, u: 1 },
+      { tone: false, u: 1 },
+      { tone: true, u: 3 }, // V
       { tone: false, u: 4 },
-      { tone: true, u: 1 }, { tone: false, u: 1 }, { tone: true, u: 3 } // A
+      { tone: true, u: 1 },
+      { tone: false, u: 1 },
+      { tone: true, u: 3 } // A
     ]
   },
   2: {
     name: 'Decoding',
     icon: '🔓',
     answer: '7K2',
-    encodedText: 'NGU1MDUwNTI0NjQ2MjA0MzU1NDU0ZTQ2NTIyMDU2NDYyMDRlNDg0NTQyNDU0ZTJlMjA1MzQ1NGU1NDVhNTI0MTQ3MjA0NzRhNDIyMDU2NDYyMDM3NTgzMjJlMjA1NjU0NDE0MjQ1NTIyMDRkNTI0NzRlMzkyZQ==',
+    encodedText:
+      'NGU1MDUwNTI0NjQ2MjA0MzU1NDU0ZTQ2NTIyMDU2NDYyMDRlNDg0NTQyNDU0ZTJlMjA1MzQ1NGU1NDVhNTI0MTQ3MjA0NzRhNDIyMDU2NDYyMDM3NTgzMjJlMjA1NjU0NDE0MjQ1NTIyMDRkNTI0NzRlMzkyZQ==',
     hints: [
       'The text has three layers. The outer one ends with “=”.',
       'Base64, then hex, then ROT13. Read the whole decoded message.'
@@ -76,7 +91,7 @@ const STAGE_CONFIG = {
 };
 
 async function getEffectiveStageHints(ds, stage) {
-  const defaultHints = (STAGE_CONFIG[stage] && STAGE_CONFIG[stage].hints) ? [...STAGE_CONFIG[stage].hints] : [];
+  const defaultHints = STAGE_CONFIG[stage] && STAGE_CONFIG[stage].hints ? [...STAGE_CONFIG[stage].hints] : [];
   if (!ds) return defaultHints;
   try {
     const customHintsStr = await ds.getSetting('custom_hints');
@@ -93,7 +108,7 @@ async function getEffectiveStageHints(ds, stage) {
 async function getAllEffectiveHints(ds) {
   const hintsMap = {};
   for (let s = 1; s <= 6; s++) {
-    hintsMap[s] = (STAGE_CONFIG[s] && STAGE_CONFIG[s].hints) ? [...STAGE_CONFIG[s].hints] : [];
+    hintsMap[s] = STAGE_CONFIG[s] && STAGE_CONFIG[s].hints ? [...STAGE_CONFIG[s].hints] : [];
   }
   if (!ds) return hintsMap;
   try {

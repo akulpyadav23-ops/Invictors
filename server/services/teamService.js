@@ -26,16 +26,14 @@ class TeamService {
     }
 
     // Filter non-empty members
-    const rawMembers = [member1, member2, member3, member4]
-      .map(m => (m || '').trim())
-      .filter(Boolean);
+    const rawMembers = [member1, member2, member3, member4].map((m) => (m || '').trim()).filter(Boolean);
 
     if (rawMembers.length < 3 || rawMembers.length > 4) {
       throw { status: 400, message: 'A team needs 3 or 4 players. Member 4 is optional.' };
     }
 
     // Validate unique member names
-    const normNames = rawMembers.map(m => norm(m));
+    const normNames = rawMembers.map((m) => norm(m));
     const uniqueNorms = new Set(normNames);
     if (uniqueNorms.size !== rawMembers.length) {
       throw { status: 400, message: 'Each team member must have a distinct name.' };
@@ -57,7 +55,7 @@ class TeamService {
     const gameStartedVal = this.repos.settings.get('gameStarted', 'false');
     const isStartTogether = startTogetherVal === 'true';
     const isGameStarted = gameStartedVal === 'true';
-    const initialStatus = (isStartTogether && !isGameStarted) ? 'waiting' : 'active';
+    const initialStatus = isStartTogether && !isGameStarted ? 'waiting' : 'active';
 
     // Seeded assignment for Stage 5 code formats (A10)
     // 4-player: 2 mixed + 2 alpha; 3-player: 2 mixed + 1 alpha
@@ -111,7 +109,7 @@ class TeamService {
       });
 
       this.repos.members.createBatch(membersData);
-      this.repos.progress.initForTeam(teamId, 5);
+      this.repos.progress.initForTeam(teamId, 6);
     });
 
     tx();
@@ -136,7 +134,10 @@ class TeamService {
     if (existingLeaderToken) {
       const leaderTeam = this.repos.teams.getByToken(existingLeaderToken);
       if (leaderTeam) {
-        throw { status: 403, message: 'This device is running the team leader console. Please join from a separate player device.' };
+        throw {
+          status: 403,
+          message: 'This device is running the team leader console. Please join from a separate player device.'
+        };
       }
     }
 
@@ -146,7 +147,7 @@ class TeamService {
     }
 
     const members = this.repos.members.getByTeamId(team.id);
-    const matchedMember = members.find(m => norm(m.fullName) === norm(rawFullName));
+    const matchedMember = members.find((m) => norm(m.fullName) === norm(rawFullName));
 
     if (!matchedMember) {
       throw { status: 404, message: 'Operative name not found in registered squad roster.' };

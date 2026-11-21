@@ -2,7 +2,8 @@
 // Repeated submissions with the same key return the prior result without charging again
 
 class IdempotencyStore {
-  constructor(ttlMs = 600000) { // 10 minutes
+  constructor(ttlMs = 600000) {
+    // 10 minutes
     this.ttlMs = ttlMs;
     this.store = new Map();
   }

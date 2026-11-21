@@ -16,7 +16,10 @@ class SqliteProgressRepository {
   getForTeams(teamIds) {
     if (!teamIds || teamIds.length === 0) return [];
     const placeholders = teamIds.map(() => '?').join(',');
-    return this.db.prepare(`SELECT * FROM progress WHERE teamId IN (${placeholders}) ORDER BY stage ASC`).all(...teamIds) || [];
+    return (
+      this.db.prepare(`SELECT * FROM progress WHERE teamId IN (${placeholders}) ORDER BY stage ASC`).all(...teamIds) ||
+      []
+    );
   }
 
   initForTeam(teamId, totalStages = 5) {
@@ -32,8 +35,8 @@ class SqliteProgressRepository {
   update(teamId, stage, fields) {
     const keys = Object.keys(fields);
     if (keys.length === 0) return true;
-    const setClause = keys.map(k => `${k} = ?`).join(', ');
-    const values = keys.map(k => fields[k]);
+    const setClause = keys.map((k) => `${k} = ?`).join(', ');
+    const values = keys.map((k) => fields[k]);
     values.push(teamId, stage);
     this.db.prepare(`UPDATE progress SET ${setClause} WHERE teamId = ? AND stage = ?`).run(...values);
     return true;

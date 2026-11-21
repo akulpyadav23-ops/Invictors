@@ -9,15 +9,12 @@ console.log('=== RUNNING FINAL OVERRIDE TEST SUITE ===');
 // Ensure test database is migrated with all tables and default hints
 runMigrations();
 
-const testDirs = [
-  path.join(__dirname, 'unit'),
-  path.join(__dirname, 'integration')
-];
+const testDirs = [path.join(__dirname, 'unit'), path.join(__dirname, 'integration')];
 
 const testFiles = [];
 for (const dir of testDirs) {
   if (fs.existsSync(dir)) {
-    const files = fs.readdirSync(dir).filter(f => f.endsWith('.test.js'));
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.test.js'));
     for (const f of files) {
       testFiles.push(path.join(dir, f));
     }

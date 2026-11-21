@@ -22,7 +22,10 @@ function generateToken() {
 // 8 uppercase characters from HMAC-SHA256 (A13 / 4.1)
 function generateVerificationCode(teamName, startedAtMs, finishedAtMs, secret = config.VERIFY_SECRET) {
   const payload = `${norm(teamName)}|${startedAtMs}|${finishedAtMs}`;
-  const hmac = crypto.createHmac('sha256', secret || 'fallback_verify_secret_2026').update(payload).digest('hex');
+  const hmac = crypto
+    .createHmac('sha256', secret || 'fallback_verify_secret_2026')
+    .update(payload)
+    .digest('hex');
   return hmac.slice(0, 8).toUpperCase();
 }
 
@@ -30,7 +33,11 @@ function generateVerificationCode(teamName, startedAtMs, finishedAtMs, secret = 
 // format: 'mixed' (alphanumeric, e.g. 7K2, 9F3) or 'alpha' (alphabetic only, e.g. EFD, BXA)
 function deriveMemberShard(teamName, memberName, format = 'mixed', secret = config.SHARD_SECRET) {
   const payload = `FO_SHARD|${norm(teamName)}|${norm(memberName)}`;
-  const hash = crypto.createHmac('sha256', secret || 'fallback_shard_secret_2026').update(payload).digest('hex').toUpperCase();
+  const hash = crypto
+    .createHmac('sha256', secret || 'fallback_shard_secret_2026')
+    .update(payload)
+    .digest('hex')
+    .toUpperCase();
 
   if (format === 'alpha') {
     // Filter only letters A-Z

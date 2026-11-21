@@ -13,15 +13,17 @@ app.use(express.urlencoded({ extended: true, limit: '500kb' }));
 app.use(cookieParser());
 
 // Static file caching headers
-app.use(express.static(path.join(__dirname, '..', 'public'), {
-  etag: true,
-  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+app.use(
+  express.static(path.join(__dirname, '..', 'public'), {
+    etag: true,
+    maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      }
     }
-  }
-}));
+  })
+);
 
 // API Routes
 app.use('/api', require('./routes'));

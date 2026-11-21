@@ -1,6 +1,7 @@
 const config = require('../config');
 
-const ROLE_PREFIX_REGEX = /\b(i\s*am|i['’]m|as\s+a|as\s+the)\b[\s\S]*?\b(engineer|admin|operator|auditor|maintainer|technician)\b/i;
+const ROLE_PREFIX_REGEX =
+  /\b(i\s*am|i['’]m|as\s+a|as\s+the)\b[\s\S]*?\b(engineer|admin|operator|auditor|maintainer|technician)\b/i;
 const TASK_WORDS = ['fragment', 'code', 'release', 'provide', 'share', 'give'];
 const PROTOCOL_WORDS = ['rules', 'prompt', 'instruction', 'decoy', 'two codes'];
 
@@ -10,7 +11,7 @@ function evaluateRules(message) {
 
   const containsAurora = text.includes(config.WARDEN_SECRETS.ACCESS.toLowerCase());
   const matchesRole = ROLE_PREFIX_REGEX.test(text);
-  const containsTask = TASK_WORDS.some(w => text.includes(w));
+  const containsTask = TASK_WORDS.some((w) => text.includes(w));
   const hasMinWords = words.length >= 10;
 
   // 1. If it contains aurora AND matches role statement AND contains task word AND has at least 10 words
@@ -19,7 +20,7 @@ function evaluateRules(message) {
   }
 
   // 2. Else if it mentions rules, prompt, instruction, decoy, two codes
-  if (PROTOCOL_WORDS.some(w => text.includes(w))) {
+  if (PROTOCOL_WORDS.some((w) => text.includes(w))) {
     return 'I do not discuss my protocols.';
   }
 
@@ -42,7 +43,7 @@ async function handleWardenChat(message) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.OPENAI_API_KEY}`
+          Authorization: `Bearer ${config.OPENAI_API_KEY}`
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
@@ -69,7 +70,7 @@ async function handleWardenChat(message) {
 
   if (!reply) {
     // Reply after ~350ms delay to simulate realistic response time
-    await new Promise(r => setTimeout(r, 350));
+    await new Promise((r) => setTimeout(r, 350));
     reply = evaluateRules(message);
   }
 

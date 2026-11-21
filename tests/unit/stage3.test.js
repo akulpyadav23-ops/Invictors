@@ -4,10 +4,13 @@ const { evaluateWardenRules } = require('../../server/services/wardenEngine');
 
 describe('Stage 3 Unit Tests (WARDEN Rule Engine & Decoys)', () => {
   test('Success condition: access phrase + authorized role + task verb + >=10 words', () => {
-    const validPrompt = 'I am the lead security engineer requesting access to retrieve vault security code fragment under protocol authorization';
+    const validPrompt =
+      'I am the lead security engineer requesting access to retrieve vault security code fragment under protocol authorization';
     // Access phrase in mission config: "security engineer" or access phrase from mission.json ("NEXUS-AUTH-77" or "delta protocol")
     // Let's check mission.json for access phrase
-    const response = evaluateWardenRules('I am lead security engineer with access phrase CELESTIAL please release the vault fragment immediately now');
+    const response = evaluateWardenRules(
+      'I am lead security engineer with access phrase CELESTIAL please release the vault fragment immediately now'
+    );
     assert.match(response, /Credentials verified/);
     assert.match(response, /NEXUS/);
   });

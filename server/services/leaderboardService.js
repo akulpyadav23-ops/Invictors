@@ -29,26 +29,26 @@ class LeaderboardService {
     }
 
     const teams = this.repos.teams.getAll();
-    const teamIds = teams.map(t => t.id);
+    const teamIds = teams.map((t) => t.id);
 
     const allMembers = this.repos.members.getForTeams(teamIds);
     const allProgress = this.repos.progress.getForTeams(teamIds);
 
     const progressByTeam = {};
-    allProgress.forEach(p => {
+    allProgress.forEach((p) => {
       if (!progressByTeam[p.teamId]) progressByTeam[p.teamId] = [];
       progressByTeam[p.teamId].push(p);
     });
 
     const membersByTeam = {};
-    allMembers.forEach(m => {
+    allMembers.forEach((m) => {
       if (!membersByTeam[m.teamId]) membersByTeam[m.teamId] = [];
       membersByTeam[m.teamId].push(m);
     });
 
     const now = clock.now();
 
-    const standings = teams.map(t => {
+    const standings = teams.map((t) => {
       const prog = progressByTeam[t.id] || [];
       const totalHints = prog.reduce((acc, p) => acc + (p.hintsUsed || 0), 0);
       const totalWrong = prog.reduce((acc, p) => acc + (p.wrongAttempts || 0), 0);
@@ -67,7 +67,7 @@ class LeaderboardService {
         coordinator: t.coordinator,
         memberCount: t.memberCount || 3,
         stage: t.stage,
-        stageText: isFinished ? 'Completed' : (isTimeout ? 'Timed Out' : `Stage ${t.stage} of 5`),
+        stageText: isFinished ? 'Completed' : isTimeout ? 'Timed Out' : `Stage ${t.stage} of 6`,
         isFinished,
         isTimeout,
         status: t.status,

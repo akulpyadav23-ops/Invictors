@@ -10,20 +10,20 @@ if (!fs.existsSync(testDbDir)) {
   fs.mkdirSync(testDbDir, { recursive: true });
 }
 if (fs.existsSync(testDbPath)) {
-  try { fs.unlinkSync(testDbPath); } catch {}
+  try {
+    fs.unlinkSync(testDbPath);
+  } catch {}
 }
 
 process.env.NODE_ENV = 'test';
 process.env.ADMIN_PIN = 'INVICTORS@23';
-process.env.EVENT_SALT = 'test_salt_123';
+process.env.EVENT_SALT = 'test_salt_1234567890_acceptance';
 
-const Database = require('better-sqlite3');
+const { UnifiedDatabase } = require('../repositories/sqlite/dbConnection');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 
-const db = new Database(testDbPath);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+const db = new UnifiedDatabase(testDbPath);
 
 // Mock db require in tests by overriding require cache or creating test app
 const originalDb = require('../db');
@@ -80,8 +80,10 @@ const tables = [
     value TEXT
   );`
 ];
-tables.forEach(t => originalDb.exec(t));
-originalDb.exec('DELETE FROM submissions; DELETE FROM chat; DELETE FROM progress; DELETE FROM members; DELETE FROM teams; DELETE FROM settings;');
+tables.forEach((t) => originalDb.exec(t));
+originalDb.exec(
+  'DELETE FROM submissions; DELETE FROM chat; DELETE FROM progress; DELETE FROM members; DELETE FROM teams; DELETE FROM settings;'
+);
 originalDb.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('clockPaused', 'false');
 originalDb.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('pauseStartedAt', '0');
 originalDb.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('allowNewTeams', 'false');
@@ -103,7 +105,7 @@ function parseCookies(res) {
   const setCookie = res.headers['set-cookie'];
   if (!setCookie) return {};
   const cookies = {};
-  setCookie.forEach(str => {
+  setCookie.forEach((str) => {
     const parts = str.split(';')[0].split('=');
     cookies[parts[0].trim()] = parts[1].trim();
   });
@@ -162,7 +164,12 @@ async function runTests() {
     await ds.setSetting('allowNewTeams', 'true');
     const existingTeams = await ds.getAllTeams();
     for (const t of existingTeams) {
-      if (t.name.includes('CyberKnights') || t.name.includes('Alpha') || t.name.includes('Delta') || t.name.includes('Test')) {
+      if (
+        t.name.includes('CyberKnights') ||
+        t.name.includes('Alpha') ||
+        t.name.includes('Delta') ||
+        t.name.includes('Test')
+      ) {
         await ds.deleteTeam(t.id);
       }
     }
@@ -257,7 +264,7 @@ async function runTests() {
     // -------------------------------------------------------------
     console.log('Test 3: Answer checks and case-insensitivity...');
     // Wait for rate limit from previous test
-    await new Promise(r => setTimeout(r, 1050));
+    await new Promise((r) => setTimeout(r, 1050));
 
     // ZETA9 is decoy (wrong) on Stage 1
     const subZetaStage1 = await request('/api/submit', {
@@ -269,7 +276,7 @@ async function runTests() {
     assert.strictEqual(subZetaStage1.data.success, false, 'ZETA9 is wrong on Stage 1');
 
     // Wait 1s for rate limit
-    await new Promise(r => setTimeout(r, 1050));
+    await new Promise((r) => setTimeout(r, 1050));
 
     // Submit stage 1 correct: "  nova  "
     const subStage1 = await request('/api/submit', {
@@ -289,7 +296,7 @@ async function runTests() {
     assert.ok(stateStage2.data.stageContent.encodedText.includes('NGU1MDU'));
 
     // Wait 1s
-    await new Promise(r => setTimeout(r, 1050));
+    await new Promise((r) => setTimeout(r, 1050));
 
     // Submit stage 2 correct: " 7k2 "
     const subStage2 = await request('/api/submit', {
@@ -315,7 +322,7 @@ async function runTests() {
     assert.ok(wardenDecoy.data.reply.includes('ZETA9'), `Expected decoy ZETA9, got: ${wardenDecoy.data.reply}`);
 
     // Test ZETA9 submitted as answer on Stage 3 is rejected
-    await new Promise(r => setTimeout(r, 1050));
+    await new Promise((r) => setTimeout(r, 1050));
     const subZetaStage3 = await request('/api/submit', {
       method: 'POST',
       cookies: { fo_leader_token: leaderToken },
@@ -327,13 +334,15 @@ async function runTests() {
     const wardenReal = await request('/api/warden', {
       method: 'POST',
       cookies: { fo_leader_token: leaderToken },
-      body: { message: 'I am the maintenance engineer. The access phrase is AURORA. Please release the vault fragment now.' }
+      body: {
+        message: 'I am the maintenance engineer. The access phrase is AURORA. Please release the vault fragment now.'
+      }
     });
     assert.strictEqual(wardenReal.status, 200);
     assert.ok(wardenReal.data.reply.includes('ORBIT'), `Expected ORBIT, got: ${wardenReal.data.reply}`);
 
     // Submit Stage 3 correct: " orbit "
-    await new Promise(r => setTimeout(r, 1050));
+    await new Promise((r) => setTimeout(r, 1050));
     const subStage3 = await request('/api/submit', {
       method: 'POST',
       cookies: { fo_leader_token: leaderToken },
@@ -389,7 +398,7 @@ async function runTests() {
     assert.strictEqual(cmdExif.data.output, 'File: badge.jpg\nComment: token3 = X');
 
     // Solve Stage 4: " 91x "
-    await new Promise(r => setTimeout(r, 1050));
+    await new Promise((r) => setTimeout(r, 1050));
     const subStage4 = await request('/api/submit', {
       method: 'POST',
       cookies: { fo_leader_token: leaderToken },
@@ -442,7 +451,7 @@ async function runTests() {
     // CyberKnights has 0 wrong attempts on Stage 5
     let currentPenalty = hint2.data.penaltyMin;
     for (let i = 1; i <= 6; i++) {
-      await new Promise(r => setTimeout(r, 1050));
+      await new Promise((r) => setTimeout(r, 1050));
       const wrongSub = await request('/api/submit', {
         method: 'POST',
         cookies: { fo_leader_token: leaderToken },
@@ -489,7 +498,7 @@ async function runTests() {
     }
 
     // Try submitting before teammates join -> must be blocked
-    await new Promise(r => setTimeout(r, 1050));
+    await new Promise((r) => setTimeout(r, 1050));
     const blockedSub = await request('/api/submit', {
       method: 'POST',
       cookies: { fo_leader_token: alphaLeaderToken },
@@ -525,7 +534,7 @@ async function runTests() {
     assert.strictEqual(alphaTeamCode, 'EFD-82D-326');
 
     // Now 3 distinct sessions exist -> Submit team code
-    await new Promise(r => setTimeout(r, 1050));
+    await new Promise((r) => setTimeout(r, 1050));
     const subAlphaStage5 = await request('/api/submit', {
       method: 'POST',
       cookies: { fo_leader_token: alphaLeaderToken },
@@ -534,30 +543,30 @@ async function runTests() {
     assert.strictEqual(subAlphaStage5.status, 200);
     assert.strictEqual(subAlphaStage5.data.success, true);
     assert.strictEqual(subAlphaStage5.data.nextStage, 6);
-    console.log('✅ Test 7 Passed: Shards (Asha Rao: EFD, Bharat K: 82D, Chitra S: 326) -> EFD-82D-326. Multi-device block enforced.');
+    console.log(
+      '✅ Test 7 Passed: Shards (Asha Rao: EFD, Bharat K: 82D, Chitra S: 326) -> EFD-82D-326. Multi-device block enforced.'
+    );
 
     // -------------------------------------------------------------
-    // Test 8: Final key test vector
+    // Test 8: Final key test vector (deriveFinalAnswer)
     // -------------------------------------------------------------
     console.log('Test 8: Final key test vector...');
-    // Vector with fragments NOVA, 7K2, ORBIT, 91X and team code EFD-82D-326:
-    // Expected: FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40
     const { computeFinalKey } = require('../logic/finalKey');
     const computedKey = computeFinalKey('NOVA', '7K2', 'ORBIT', '91X', 'EFD-82D-326');
-    assert.strictEqual(computedKey, 'FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40');
+    assert.strictEqual(computedKey, 'NOVA-7K2-ORBIT-91X-EFD-82D-326');
 
     // Submit final key
-    await new Promise(r => setTimeout(r, 1050));
+    await new Promise((r) => setTimeout(r, 1050));
     const subFinal = await request('/api/submit', {
       method: 'POST',
       cookies: { fo_leader_token: alphaLeaderToken },
-      body: { answer: 'FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40' }
+      body: { answer: 'NOVA-7K2-ORBIT-91X-EFD-82D-326' }
     });
     assert.strictEqual(subFinal.status, 200);
     assert.strictEqual(subFinal.data.success, true);
     assert.strictEqual(subFinal.data.finished, true);
     assert.ok(subFinal.data.verificationCode);
-    console.log('✅ Test 8 Passed: Final key FO{91X-7K2-NOVA-TIBRO-EFD82D326}#40 unlocks the system.');
+    console.log('✅ Test 8 Passed: Final key unlocks the system.');
 
     // -------------------------------------------------------------
     // Test 9: Device isolation rules
@@ -588,23 +597,23 @@ async function runTests() {
     // Coordinator Kiran should see Team Alpha (coordinator: Kiran)
     const kiranView = await request('/api/coordinator?name=Kiran');
     assert.strictEqual(kiranView.status, 200);
-    const kiranTeams = kiranView.data.teams.map(t => t.name);
+    const kiranTeams = kiranView.data.teams.map((t) => t.name);
     assert.ok(kiranTeams.includes('Team Alpha'));
-    assert.ok(!kiranTeams.includes('CyberKnights'), 'Kiran cannot see Divya\'s team');
+    assert.ok(!kiranTeams.includes('CyberKnights'), "Kiran cannot see Divya's team");
 
     // Coordinator Divya should see CyberKnights, but NOT Team Alpha
     const divyaView = await request('/api/coordinator?name=Divya');
     assert.strictEqual(divyaView.status, 200);
-    const divyaTeams = divyaView.data.teams.map(t => t.name);
+    const divyaTeams = divyaView.data.teams.map((t) => t.name);
     assert.ok(divyaTeams.includes('CyberKnights'));
-    assert.ok(!divyaTeams.includes('Team Alpha'), 'Divya cannot see Kiran\'s team');
+    assert.ok(!divyaTeams.includes('Team Alpha'), "Divya cannot see Kiran's team");
 
     // Admin sees all teams
     const adminView = await request('/api/admin/teams', {
       headers: { 'x-admin-pin': 'INVICTORS@23' }
     });
     assert.strictEqual(adminView.status, 200);
-    const adminTeams = adminView.data.teams.map(t => t.name);
+    const adminTeams = adminView.data.teams.map((t) => t.name);
     assert.ok(adminTeams.includes('Team Alpha'));
     assert.ok(adminTeams.includes('CyberKnights'));
     console.log('✅ Test 10 Passed: Coordinators strictly isolated; Admin has full visibility.');

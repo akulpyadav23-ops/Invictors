@@ -210,29 +210,54 @@
     },
     "5": {
       "id": 5,
-      "name": "Team Sync & Final Override",
+      "name": "Team Sync",
       "shortName": "Sync",
       "icon": "users",
-      "machines": ["NODE-ALPHA", "NODE-BETA", "NODE-GAMMA", "NODE-DELTA"],
       "mixedCountBySize": {
         "3": 2,
         "4": 2
       },
-      "derivationRule": "placeholder_combine_fragments_and_codes",
+      "instruction": "Every teammate must join on their own device. As individual operatives authenticate, their device reveals an isolated shard. Arrange all operatives alphabetically by full name, concatenate their shards with hyphens, and enter the team code to unlock the final integration matrix.",
       "hints": [
         {
           "id": 1,
           "category": "nudge",
           "penaltyMinutes": 3,
-          "durationSeconds": 60,
-          "text": "The final override integrates verified member codes with machine cluster signatures from NODE-ALPHA and NODE-BETA."
+          "durationSeconds": 30,
+          "text": "Ensure all squad members have opened the member portal on their separate devices. Sort operative shards alphabetically by registered full name."
         },
         {
           "id": 2,
           "category": "structural",
           "penaltyMinutes": 5,
-          "durationSeconds": 60,
-          "text": "Synthesize the final answer using your assigned squad shards and the Stage 1 to 4 recovered fragments."
+          "durationSeconds": 30,
+          "text": "Concatenate each 3-character shard separated by hyphens (e.g. SHARD1-SHARD2-SHARD3) in alphabetical order of member full names."
+        }
+      ]
+    },
+    "6": {
+      "id": 6,
+      "name": "Final Integration",
+      "shortName": "Final",
+      "icon": "shield-check",
+      "machines": ["NODE-ALPHA", "NODE-BETA", "NODE-GAMMA", "NODE-DELTA"],
+      "story": "This is the final lock! Open your dossier notebook to retrieve the 5 fragments collected across each completed mission. Synthesize the master override key to breach the security grid.",
+      "instruction": "Derive the final override key using the 5 notebook fragments and the active machine network nodes revealed in your mission hint.",
+      "derivationRule": "placeholder_derive_from_5_fragments",
+      "hints": [
+        {
+          "id": 1,
+          "category": "nudge",
+          "penaltyMinutes": 3,
+          "durationSeconds": 30,
+          "text": "The override authorization requires synchronized confirmation across NODE-ALPHA and NODE-BETA machine gateways. Join all 5 notebook fragments in sequential mission order with hyphens."
+        },
+        {
+          "id": 2,
+          "category": "structural",
+          "penaltyMinutes": 5,
+          "durationSeconds": 30,
+          "text": "The master override key synthesizes the 5 recovered mission fragments: Fragment 1 (Signal), Fragment 2 (Decoding), Fragment 3 (AI), Fragment 4 (CTF), and Fragment 5 (Team Sync)."
         }
       ]
     }
