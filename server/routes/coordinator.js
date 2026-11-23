@@ -3,6 +3,7 @@ const router = express.Router();
 const ds = require('../dataService');
 const config = require('../config');
 const { norm } = require('../logic/security');
+const { getTeamSet, SETS_CONFIG } = require('../logic/stages');
 
 // POST /api/coordinator/verify - Verify coordinator name and PIN
 router.post('/verify', (req, res) => {
@@ -73,10 +74,15 @@ router.get('/', async (req, res) => {
         status = '⏸️ Paused';
       }
 
+      const setKey = getTeamSet(t.name);
+      const setObj = SETS_CONFIG[setKey] || SETS_CONFIG.A;
+
       return {
         id: t.id,
         name: t.name,
         coordinator: t.coordinator,
+        set: setKey,
+        setName: setObj.setName,
         players: members.map(m => m.fullName),
         stageText: t.finishedAt ? '✅ Done' : (t.status === 'waiting' ? 'Lobby' : `${t.stage}/6`),
         stageNumber: t.finishedAt ? 7 : (t.status === 'waiting' ? 0 : t.stage),

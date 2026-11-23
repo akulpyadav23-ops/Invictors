@@ -5,7 +5,7 @@ const config = require('../config');
 const { generateVerificationCode } = require('../logic/security');
 const { computeTeamCode, getMemberShard } = require('../logic/shard');
 const { computeFinalKey } = require('../logic/finalKey');
-const { STAGE_CONFIG, SETS_CONFIG, getTeamSet, getAllEffectiveHints } = require('../logic/stages');
+const { STAGE_CONFIG, SETS_CONFIG, TEAM_SET_MAPPING, getTeamSet, getAllEffectiveHints, getAllSetsHints, saveSetHints, resetSetHints } = require('../logic/stages');
 
 // ── Concurrent Admin Session Tracking ────────────────────────────────────────
 // Maps sessionId → { lastSeen: timestamp }
@@ -127,8 +127,13 @@ router.get('/teams', requireAdmin, async (req, res) => {
         verificationCode = generateVerificationCode(t.name, t.startedAt, t.finishedAt);
       }
 
+      const setKey = getTeamSet(t.name);
+      const setObj = SETS_CONFIG[setKey] || SETS_CONFIG.A;
+
       return {
         ...t,
+        set: setKey,
+        setName: setObj.setName,
         members,
         progress,
         totalHints,
@@ -295,6 +300,7 @@ router.get('/answers', requireAdmin, async (req, res) => {
         stage6: { title: 'Stage 6: Final Integration', answer: setA[6].formula }
       },
       sets: SETS_CONFIG,
+      teamSetMapping: TEAM_SET_MAPPING,
       teamSolutions
     });
   } catch (err) {
@@ -323,54 +329,62 @@ router.post('/notepad', requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/hints - View all stage hints for live admin management
+// GET /api/admin/hints - View all stage hints for live admin management across all sets
 router.get('/hints', requireAdmin, async (req, res) => {
   try {
-    const hintsMap = await getAllEffectiveHints(ds);
-    const stages = {};
-    for (let s = 1; s <= 6; s++) {
-      stages[s] = {
-        stage: s,
-        name: STAGE_CONFIG[s] ? STAGE_CONFIG[s].name : `Stage ${s}`,
-        icon: STAGE_CONFIG[s] ? STAGE_CONFIG[s].icon : '🎯',
-        hints: hintsMap[s] || []
-      };
-    }
-    return res.json({ stages });
+    const allSets = await getAllSetsHints(ds);
+    const requestedSet = (req.query.setKey || 'A').toUpperCase();
+    const currentSet = allSets[requestedSet] ? requestedSet : 'A';
+    const stages = allSets[currentSet].stages;
+
+    return res.json({
+      allSets,
+      currentSet,
+      stages
+    });
   } catch (err) {
     console.error('Admin get hints error:', err);
     return res.status(500).json({ error: 'Failed to fetch stage hints.' });
   }
 });
 
-// POST /api/admin/hints - Live-edit stage hints
+// POST /api/admin/hints - Live-edit stage hints per set
 router.post('/hints', requireAdmin, async (req, res) => {
   try {
-    const { hints } = req.body; // Map: { 1: ['hint1', 'hint2'], ... }
+    const { hints, setKey, allSets } = req.body;
+    
+    if (allSets && typeof allSets === 'object') {
+      for (const [sk, setHints] of Object.entries(allSets)) {
+        await saveSetHints(ds, sk.toUpperCase(), setHints);
+      }
+      return res.json({ success: true, message: 'All sets hints updated successfully.' });
+    }
+
+    const targetSet = (setKey || 'A').toUpperCase();
     if (!hints || typeof hints !== 'object') {
       return res.status(400).json({ error: 'Invalid hints data provided.' });
     }
-    // Clean and validate format
-    const cleaned = {};
-    for (let s = 1; s <= 6; s++) {
-      if (Array.isArray(hints[s])) {
-        cleaned[s] = hints[s].map(h => String(h || '').trim()).filter(Boolean);
-      }
-    }
-    await ds.setSetting('custom_hints', JSON.stringify(cleaned));
-    return res.json({ success: true, message: 'Stage hints saved successfully.' });
+
+    await saveSetHints(ds, targetSet, hints);
+    return res.json({ success: true, message: `Hints for Set ${targetSet} saved successfully.` });
   } catch (err) {
     console.error('Admin save hints error:', err);
     return res.status(500).json({ error: 'Failed to update stage hints.' });
   }
 });
 
-// POST /api/admin/hints/reset - Reset hints to defaults
+// POST /api/admin/hints/reset - Reset hints to defaults per set or all
 router.post('/hints/reset', requireAdmin, async (req, res) => {
   try {
-    await ds.setSetting('custom_hints', '');
-    const defaultHints = await getAllEffectiveHints(ds);
-    return res.json({ success: true, message: 'All stage hints reset to system defaults.', hints: defaultHints });
+    const { setKey } = req.body || {};
+    const targetSet = setKey ? setKey.toUpperCase() : null;
+    await resetSetHints(ds, targetSet);
+    const allSets = await getAllSetsHints(ds);
+    return res.json({
+      success: true,
+      message: targetSet ? `Hints for Set ${targetSet} reset to defaults.` : 'All stage hints reset to system defaults.',
+      allSets
+    });
   } catch (err) {
     console.error('Admin reset hints error:', err);
     return res.status(500).json({ error: 'Failed to reset stage hints.' });

@@ -32,6 +32,23 @@ async function requireTeam(req, res, next) {
   }
 }
 
+// GET /api/verify-team - Realtime verification of team name and assigned question set
+router.get('/verify-team', (req, res) => {
+  const name = (req.query.name || '').trim();
+  if (!name) {
+    return res.json({ verified: false, setKey: 'A', setName: SETS_CONFIG.A.setName });
+  }
+  const setKey = getTeamSet(name);
+  const setConfig = SETS_CONFIG[setKey] || SETS_CONFIG.A;
+  return res.json({
+    verified: true,
+    teamName: name,
+    setKey,
+    setName: setConfig.setName,
+    firstMission: setConfig[1].name
+  });
+});
+
 // POST /api/teams - Register team
 router.post('/teams', async (req, res) => {
   try {
@@ -183,7 +200,9 @@ router.get('/state', requireTeam, async (req, res) => {
       };
     } else if (currentStage === 2) {
       stageContent = {
-        encodedText: stageConfig.encodedText
+        encodedText: stageConfig.encodedText,
+        sequenceHint: stageConfig.sequenceHint,
+        decodeSequence: stageConfig.decodeSequence
       };
     } else if (currentStage === 3) {
       stageContent = {
@@ -238,7 +257,8 @@ router.get('/state', requireTeam, async (req, res) => {
         isIndividuallyPaused,
         isClockPaused,
         tabSwitches: team.tabSwitches || 0,
-        set: teamSet
+        set: teamSet,
+        setName: setConfig.setName
       },
       gameStarted: isGameStarted,
       waitingInLobby: team.status === 'waiting',

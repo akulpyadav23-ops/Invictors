@@ -326,6 +326,13 @@ function renderWaitingLobby(container, state) {
         <ul style="list-style: none; margin: 0; padding: 0;">
           ${memberListHtml}
         </ul>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 0.88rem;">
+          <span style="color: var(--muted); font-weight: 600;">Assigned Mission Set:</span>
+          <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: var(--accent); border: 1px solid var(--accent); font-weight: bold; padding: 3px 10px; font-size: 0.82rem;">
+            🎯 Set ${escapeHtml(team.set || 'A')} — ${escapeHtml(team.setName || 'Cosmic Vault Alpha')}
+          </span>
+        </div>
       </div>
 
       <div style="display: inline-block; background: rgba(39, 180, 255, 0.12); border: 2px solid var(--accent); border-radius: var(--radius-md); padding: 16px 28px; margin-bottom: 14px;">
@@ -363,7 +370,10 @@ function renderWaitingLobby(container, state) {
 // ==========================================================================
 function updateStickyBar(state) {
   const team = state.team;
-  document.getElementById('status-team-name').textContent = team.name;
+  const setKey = team.set || 'A';
+  const setColors = { A: '#38bdf8', B: '#f59e0b', C: '#c084fc', D: '#f472b6' };
+  const setColor = setColors[setKey] || '#38bdf8';
+  document.getElementById('status-team-name').innerHTML = `${escapeHtml(team.name)} <span class="badge" style="background: rgba(15,23,42,0.85); border: 1px solid ${setColor}; color: ${setColor}; font-size: 0.72rem; padding: 1px 6px; font-weight: bold; margin-left: 5px;">Set ${escapeHtml(setKey)}</span>`;
   document.getElementById('status-coord-name').textContent = team.coordinator;
   document.getElementById('status-penalty').textContent = `+${team.penaltyMin}m`;
 
@@ -532,7 +542,8 @@ async function renderStartScreen(container) {
       <form id="team-register-form">
         <div class="form-group">
           <label for="reg-team-name">Team name or ID (max 24 characters) *</label>
-          <input type="text" id="reg-team-name" class="input-control" maxlength="24" placeholder="e.g. CyberKnights" required />
+          <input type="text" id="reg-team-name" class="input-control" maxlength="24" placeholder="e.g. Trinetra, BugBusters, TheDynamos" required />
+          <div id="reg-team-verify-badge" style="margin-top: 6px; font-size: 0.84rem; min-height: 22px;"></div>
         </div>
         <div class="form-group">
           <label for="reg-coordinator">Event coordinator name *</label>
@@ -564,6 +575,38 @@ async function renderStartScreen(container) {
       </form>
     </div>
   `;
+
+  const regTeamInput = document.getElementById('reg-team-name');
+  const regVerifyBadge = document.getElementById('reg-team-verify-badge');
+  let regVerifyTimeout = null;
+
+  if (regTeamInput && regVerifyBadge) {
+    regTeamInput.addEventListener('input', () => {
+      const val = regTeamInput.value.trim();
+      if (!val) {
+        regVerifyBadge.innerHTML = '';
+        return;
+      }
+      clearTimeout(regVerifyTimeout);
+      regVerifyTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/verify-team?name=${encodeURIComponent(val)}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          const setColors = { A: '#38bdf8', B: '#f59e0b', C: '#c084fc', D: '#f472b6' };
+          const color = setColors[data.setKey] || '#38bdf8';
+          regVerifyBadge.innerHTML = `
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 4px; background: rgba(15, 23, 42, 0.85); border: 1px solid ${color}; color: ${color}; font-weight: 600; font-size: 0.82rem;">
+              <span>🎯 Verified Squad:</span>
+              <strong style="color: #fff;">${escapeHtml(data.teamName)}</strong>
+              <span>➔ Assigned to</span>
+              <span style="text-decoration: underline; font-weight: 700;">Set ${data.setKey} (${escapeHtml(data.setName)})</span>
+            </span>
+          `;
+        } catch (_) {}
+      }, 200);
+    });
+  }
 
   document.getElementById('team-register-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -795,7 +838,12 @@ function renderStageScreen(container, state) {
       </div>
 
       <div style="background: #030813; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; word-break: break-all; font-family: ui-monospace, monospace; font-size: 0.88rem; color: var(--gold); margin-bottom: 14px; position: relative;">
-        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px;">Intercepted Cipher Payload:</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted);">Intercepted Cipher Payload:</span>
+          <span style="font-size: 0.78rem; font-weight: bold; color: var(--accent); background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 8px;">
+            🔀 Shuffled Sequence: ${escapeHtml(content.sequenceHint || 'Multi-Layer Transposition')}
+          </span>
+        </div>
         <div id="stage2-cipher-raw" style="user-select: all;">${escapeHtml(content.encodedText || '')}</div>
       </div>
 
@@ -2364,53 +2412,101 @@ function renderMergedPortal(container) {
 
         <div id="admin-answers-panel" style="display: none;">
           <!-- 4 Question Sets (Set A, B, C, D) Reference -->
-          <div style="font-size: 0.9rem; font-weight: bold; color: var(--gold); margin-bottom: 8px;">
-            📚 4 Balanced Question Sets (A, B, C, D) Master Overview:
+          <div style="font-size: 0.95rem; font-weight: bold; color: var(--gold); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <span>📚 4 Balanced Question Sets (A, B, C, D) Master Overview:</span>
+            <span style="font-size: 0.8rem; color: var(--muted); font-weight: normal;">Each set features distinct Morse, Shuffled Cryptographic Sequences, CTF Nodes, Hex Buses & Formulas.</span>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 18px;">
-            <div class="answer-key-box" style="border-left: 4px solid var(--accent);">
-              <h4 style="color: var(--accent);">⭐ Set A — Cosmic Vault Alpha</h4>
-              <div style="font-size: 0.8rem; line-height: 1.6; margin-top: 6px;">
-                <div>S1: <span class="solution-token">NOVA</span></div>
-                <div>S2: <span class="solution-token">7K2</span> (Phrase: <strong style="color:var(--ok);">AURORA</strong>)</div>
-                <div>S3: <span class="solution-token">ORBIT</span></div>
-                <div>S4: <span class="solution-token">91X</span> (St: 9 | 1 | X)</div>
-                <div>S5: <span class="solution-token">HEX82D</span> (48 45 58 38 32 44)</div>
-                <div>S6: <span class="solution-token" style="color: #34d399; font-size: 0.72rem;">FO{91X-7K2-HEX82D-TIBRO-NOVA}#29</span></div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px;">
+            <div class="answer-key-box" style="border-left: 4px solid var(--accent); background: rgba(3, 8, 22, 0.75);">
+              <h4 style="color: var(--accent); display: flex; justify-content: space-between; align-items: center;">
+                <span>⭐ Set A — Cosmic Vault</span>
+                <span class="badge" style="font-size: 0.7rem; background: rgba(56, 189, 248, 0.2); color: var(--accent);">Teams 01–06</span>
+              </h4>
+              <div style="font-size: 0.78rem; color: var(--muted); margin: 4px 0 8px; line-height: 1.4; border-bottom: 1px dashed var(--line); padding-bottom: 4px;">
+                <strong>Squads:</strong> Trinetra, BugBusters, Trio_Byte, Bhai, Cipher, Jupiter
+              </div>
+              <div style="font-size: 0.8rem; line-height: 1.6;">
+                <div>S1 (Morse): <span class="solution-token">NOVA</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
+                <div>S2 (Sequence): <span class="badge" style="font-size: 0.7rem; color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4);">Base64 ➔ Hex ➔ ROT13</span></div>
+                <div>S2 (Decoded): <span class="solution-token">7K2</span> | Phrase: <strong style="color:var(--ok);">AURORA</strong></div>
+                <div>S3 (AI Guardian): <span class="solution-token">ORBIT</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
+                <div>S4 (CTF Nodes): <span class="solution-token">91X</span> (L9=9 | Opt=1 | Tri=X)</div>
+                <div>S5 (Hex Bus): <span class="solution-token">HEX82D</span> (48 45 58 38 32 44)</div>
+                <div>S6 (Final Key): <span class="solution-token" style="color: #34d399; font-size: 0.72rem; word-break: break-all;">FO{91X-7K2-HEX82D-TIBRO-NOVA}#29</span></div>
               </div>
             </div>
-            <div class="answer-key-box" style="border-left: 4px solid var(--gold);">
-              <h4 style="color: var(--gold);">🌟 Set B — Cyber Nexus Beta</h4>
-              <div style="font-size: 0.8rem; line-height: 1.6; margin-top: 6px;">
-                <div>S1: <span class="solution-token">LUNA</span></div>
-                <div>S2: <span class="solution-token">4M9</span> (Phrase: <strong style="color:var(--ok);">CYPHER</strong>)</div>
-                <div>S3: <span class="solution-token">SOLAR</span></div>
-                <div>S4: <span class="solution-token">84Z</span> (St: 8 | 4 | Z)</div>
-                <div>S5: <span class="solution-token">CORE7F</span> (43 4F 52 45 37 46)</div>
-                <div>S6: <span class="solution-token" style="color: #34d399; font-size: 0.72rem;">FO{84Z-4M9-CORE7F-RALOS-LUNA}#32</span></div>
+            
+            <div class="answer-key-box" style="border-left: 4px solid var(--gold); background: rgba(3, 8, 22, 0.75);">
+              <h4 style="color: var(--gold); display: flex; justify-content: space-between; align-items: center;">
+                <span>🌟 Set B — Cyber Nexus</span>
+                <span class="badge" style="font-size: 0.7rem; background: rgba(245, 158, 11, 0.2); color: var(--gold);">Teams 07–12</span>
+              </h4>
+              <div style="font-size: 0.78rem; color: var(--muted); margin: 4px 0 8px; line-height: 1.4; border-bottom: 1px dashed var(--line); padding-bottom: 4px;">
+                <strong>Squads:</strong> Aèsir’s, OneStop, Awake, Init, SyntaxAndHre?, Fab-4
+              </div>
+              <div style="font-size: 0.8rem; line-height: 1.6;">
+                <div>S1 (Morse): <span class="solution-token">LUNA</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
+                <div>S2 (Sequence): <span class="badge" style="font-size: 0.7rem; color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4);">Hex ➔ Base64 ➔ ROT13</span></div>
+                <div>S2 (Decoded): <span class="solution-token">4M9</span> | Phrase: <strong style="color:var(--ok);">CYPHER</strong></div>
+                <div>S3 (AI Guardian): <span class="solution-token">SOLAR</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
+                <div>S4 (CTF Nodes): <span class="solution-token">84Z</span> (L8=8 | Opt=4 | Hex=Z)</div>
+                <div>S5 (Hex Bus): <span class="solution-token">CORE7F</span> (43 4F 52 45 37 46)</div>
+                <div>S6 (Final Key): <span class="solution-token" style="color: #34d399; font-size: 0.72rem; word-break: break-all;">FO{84Z-4M9-CORE7F-RALOS-LUNA}#32</span></div>
               </div>
             </div>
-            <div class="answer-key-box" style="border-left: 4px solid #a855f7;">
-              <h4 style="color: #c084fc;">🌌 Set C — Quantum Matrix Gamma</h4>
-              <div style="font-size: 0.8rem; line-height: 1.6; margin-top: 6px;">
-                <div>S1: <span class="solution-token">VEGA</span></div>
-                <div>S2: <span class="solution-token">3X8</span> (Phrase: <strong style="color:var(--ok);">VORTEX</strong>)</div>
-                <div>S3: <span class="solution-token">TITAN</span></div>
-                <div>S4: <span class="solution-token">72Y</span> (St: 7 | 2 | Y)</div>
-                <div>S5: <span class="solution-token">BYTE9A</span> (42 59 54 45 39 41)</div>
-                <div>S6: <span class="solution-token" style="color: #34d399; font-size: 0.72rem;">FO{72Y-3X8-BYTE9A-NATIT-VEGA}#29</span></div>
+
+            <div class="answer-key-box" style="border-left: 4px solid #a855f7; background: rgba(3, 8, 22, 0.75);">
+              <h4 style="color: #c084fc; display: flex; justify-content: space-between; align-items: center;">
+                <span>🌌 Set C — Quantum Matrix</span>
+                <span class="badge" style="font-size: 0.7rem; background: rgba(168, 85, 247, 0.2); color: #c084fc);">Teams 13–18</span>
+              </h4>
+              <div style="font-size: 0.78rem; color: var(--muted); margin: 4px 0 8px; line-height: 1.4; border-bottom: 1px dashed var(--line); padding-bottom: 4px;">
+                <strong>Squads:</strong> TheDynamos, Codex, A³, Huntrix, Nexora, TechTitans
+              </div>
+              <div style="font-size: 0.8rem; line-height: 1.6;">
+                <div>S1 (Morse): <span class="solution-token">VEGA</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
+                <div>S2 (Sequence): <span class="badge" style="font-size: 0.7rem; color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4);">ROT13 ➔ Hex ➔ Base64</span></div>
+                <div>S2 (Decoded): <span class="solution-token">3X8</span> | Phrase: <strong style="color:var(--ok);">VORTEX</strong></div>
+                <div>S3 (AI Guardian): <span class="solution-token">TITAN</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
+                <div>S4 (CTF Nodes): <span class="solution-token">72Y</span> (L7=7 | Opt=2 | Cross=Y)</div>
+                <div>S5 (Hex Bus): <span class="solution-token">BYTE9A</span> (42 59 54 45 39 41)</div>
+                <div>S6 (Final Key): <span class="solution-token" style="color: #34d399; font-size: 0.72rem; word-break: break-all;">FO{72Y-3X8-BYTE9A-NATIT-VEGA}#29</span></div>
               </div>
             </div>
-            <div class="answer-key-box" style="border-left: 4px solid #ec4899;">
-              <h4 style="color: #f472b6;">🪐 Set D — Stellar Bastion Delta</h4>
-              <div style="font-size: 0.8rem; line-height: 1.6; margin-top: 6px;">
-                <div>S1: <span class="solution-token">MARS</span></div>
-                <div>S2: <span class="solution-token">5P3</span> (Phrase: <strong style="color:var(--ok);">NEBULA</strong>)</div>
-                <div>S3: <span class="solution-token">ZENITH</span></div>
-                <div>S4: <span class="solution-token">63K</span> (St: 6 | 3 | K)</div>
-                <div>S5: <span class="solution-token">BITS1E</span> (42 49 54 53 31 45)</div>
-                <div>S6: <span class="solution-token" style="color: #34d399; font-size: 0.72rem;">FO{63K-5P3-BITS1E-HTINEZ-MARS}#18</span></div>
+
+            <div class="answer-key-box" style="border-left: 4px solid #ec4899; background: rgba(3, 8, 22, 0.75);">
+              <h4 style="color: #f472b6; display: flex; justify-content: space-between; align-items: center;">
+                <span>🪐 Set D — Stellar Bastion</span>
+                <span class="badge" style="font-size: 0.7rem; background: rgba(236, 72, 153, 0.2); color: #f472b6);">Teams 19–23</span>
+              </h4>
+              <div style="font-size: 0.78rem; color: var(--muted); margin: 4px 0 8px; line-height: 1.4; border-bottom: 1px dashed var(--line); padding-bottom: 4px;">
+                <strong>Squads:</strong> TheCosmos, ThirdEye, LapLegends, UpsideDowners, Beginners
               </div>
+              <div style="font-size: 0.8rem; line-height: 1.6;">
+                <div>S1 (Morse): <span class="solution-token">MARS</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
+                <div>S2 (Sequence): <span class="badge" style="font-size: 0.7rem; color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4);">Base64 ➔ ROT13 ➔ Hex</span></div>
+                <div>S2 (Decoded): <span class="solution-token">5P3</span> | Phrase: <strong style="color:var(--ok);">NEBULA</strong></div>
+                <div>S3 (AI Guardian): <span class="solution-token">ZENITH</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
+                <div>S4 (CTF Nodes): <span class="solution-token">63K</span> (L6=6 | Opt=3 | Sqr=K)</div>
+                <div>S5 (Hex Bus): <span class="solution-token">BITS1E</span> (42 49 54 53 31 45)</div>
+                <div>S6 (Final Key): <span class="solution-token" style="color: #34d399; font-size: 0.72rem; word-break: break-all;">FO{63K-5P3-BITS1E-HTINEZ-MARS}#18</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Squad Questions & Solution Inspector Tool -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+              <span style="font-size: 0.95rem; font-weight: bold; color: var(--accent); display: flex; align-items: center; gap: 6px;">
+                🔍 Squad Question &amp; Solution Inspector:
+              </span>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" id="inspector-team-search" class="input-control" placeholder="Type squad name (e.g. Trinetra)..." style="font-size: 0.82rem; padding: 4px 10px; width: 220px;" />
+                <button id="btn-inspect-clear" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 4px 8px;">Clear</button>
+              </div>
+            </div>
+            <div id="inspector-result-card" style="font-size: 0.85rem; color: var(--muted); line-height: 1.5;">
+              Type any squad name above to instantly inspect their assigned question set, cryptographic sequence, and full solutions breakdown.
             </div>
           </div>
 
@@ -2424,20 +2520,31 @@ function renderMergedPortal(container) {
 
       <!-- Stage Hints Management & Live Editor Section -->
       <div style="margin-top: 32px; border-top: 1px solid var(--line); padding-top: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
           <div>
             <h3 style="font-size: 1.25rem; color: var(--gold); display: flex; align-items: center; gap: 8px;">
-              💡 Live Stage Hints Manager &amp; Editor
+              💡 Live Stage Hints Manager &amp; Editor (Per Question Set)
             </h3>
             <p style="font-size: 0.85rem; color: var(--muted); margin-top: 2px;">
-              View and edit hints across all stages. Changes take effect immediately when requested by active players. (30s viewing timer applies to players).
+              Each question set (A, B, C, D) maintains its own custom hints for Stages 1 to 6. Edit and save independently. (30s countdown applies to active players).
             </p>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button id="btn-save-all-hints" class="btn btn-gold btn-sm">💾 Save All Hints</button>
-            <button id="btn-reset-hints" class="btn btn-outline btn-sm">↺ Reset Defaults</button>
+            <button id="btn-save-current-set-hints" class="btn btn-gold btn-sm">💾 Save Hints for Active Set</button>
+            <button id="btn-reset-current-set-hints" class="btn btn-outline btn-sm">↺ Reset Active Set</button>
+            <button id="btn-save-all-hints" class="btn btn-primary btn-sm" style="display: none;">💾 Save All</button>
+            <button id="btn-reset-hints" class="btn btn-outline btn-sm" style="display: none;">↺ Reset All</button>
           </div>
         </div>
+
+        <!-- 4 Set Selection Tabs -->
+        <div style="display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;" id="admin-hints-set-tabs">
+          <button class="btn btn-outline btn-sm admin-hint-set-pill active" data-set="A" style="font-weight: 700;">⭐ Set A (Cosmic Vault)</button>
+          <button class="btn btn-outline btn-sm admin-hint-set-pill" data-set="B" style="font-weight: 700;">🌟 Set B (Cyber Nexus)</button>
+          <button class="btn btn-outline btn-sm admin-hint-set-pill" data-set="C" style="font-weight: 700;">🌌 Set C (Quantum Matrix)</button>
+          <button class="btn btn-outline btn-sm admin-hint-set-pill" data-set="D" style="font-weight: 700;">🪐 Set D (Stellar Bastion)</button>
+        </div>
+
         <div id="admin-hints-editor-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px;">
           <p style="color: var(--muted); padding: 12px;">Loading hints editor...</p>
         </div>
@@ -2516,8 +2623,106 @@ function renderMergedPortal(container) {
       if (!res.ok) return;
       const data = await res.json();
       const solutions = data.teamSolutions || [];
+      const sets = data.sets || {};
       const containerEl = document.getElementById('dynamic-answers-table');
       if (!containerEl) return;
+
+      // Setup Inspector handler
+      const inspectorInput = document.getElementById('inspector-team-search');
+      const inspectorCard = document.getElementById('inspector-result-card');
+      const inspectorClearBtn = document.getElementById('btn-inspect-clear');
+
+      function inspectTeam(query) {
+        if (!query || !query.trim()) {
+          inspectorCard.innerHTML = 'Type any squad name above to instantly inspect their assigned question set, cryptographic sequence, and full solutions breakdown.';
+          return;
+        }
+        const qClean = query.trim().toLowerCase();
+        // Try match registered solutions first
+        let matched = solutions.find(s => s.teamName.toLowerCase().includes(qClean));
+        let setKey = 'A';
+        let teamName = query.trim();
+
+        if (matched) {
+          setKey = matched.setKey || 'A';
+          teamName = matched.teamName;
+        } else if (data.teamSetMapping) {
+          for (const [k, v] of Object.entries(data.teamSetMapping)) {
+            if (k.toLowerCase().includes(qClean) || qClean.includes(k.toLowerCase())) {
+              setKey = v;
+              break;
+            }
+          }
+        }
+
+        const setObj = sets[setKey] || sets.A;
+        const setColors = { A: '#38bdf8', B: '#f59e0b', C: '#c084fc', D: '#f472b6' };
+        const color = setColors[setKey] || '#38bdf8';
+
+        inspectorCard.innerHTML = `
+          <div style="background: rgba(3, 8, 22, 0.95); border: 1px solid ${color}; border-radius: 6px; padding: 14px; margin-top: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--line); padding-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+              <div>
+                <span style="font-size: 1.15rem; font-weight: bold; color: #fff;">${escapeHtml(teamName)}</span>
+                <span class="badge" style="background: rgba(15,23,42,0.9); border: 1px solid ${color}; color: ${color}; font-weight: bold; margin-left: 8px;">
+                  Set ${escapeHtml(setKey)} — ${escapeHtml(setObj.setName)}
+                </span>
+              </div>
+              <span style="font-size: 0.78rem; color: var(--gold); font-weight: 600;">Verified Challenge Matrix</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; font-size: 0.82rem;">
+              <div style="background: rgba(15,23,42,0.6); padding: 8px; border-radius: 4px; border: 1px solid var(--line);">
+                <div style="font-weight: bold; color: var(--accent); margin-bottom: 3px;">Stage 1: Signal Intercept</div>
+                <div>Morse Target: <span class="solution-token">${escapeHtml(setObj[1].answer)}</span></div>
+                <div style="font-size: 0.72rem; color: var(--muted); margin-top: 2px;">Decoy Anomaly: ZETA9</div>
+              </div>
+
+              <div style="background: rgba(15,23,42,0.6); padding: 8px; border-radius: 4px; border: 1px solid var(--line);">
+                <div style="font-weight: bold; color: var(--accent); margin-bottom: 3px;">Stage 2: Decoding</div>
+                <div>Shuffled Sequence: <span style="color: var(--gold); font-weight: 700;">${escapeHtml(setObj[2].sequenceHint || '3-Layer Sequence')}</span></div>
+                <div>Fragment: <span class="solution-token">${escapeHtml(setObj[2].answer)}</span> | Phrase: <strong style="color:var(--ok);">${escapeHtml(setObj[2].accessPhrase)}</strong></div>
+              </div>
+
+              <div style="background: rgba(15,23,42,0.6); padding: 8px; border-radius: 4px; border: 1px solid var(--line);">
+                <div style="font-weight: bold; color: var(--accent); margin-bottom: 3px;">Stage 3: Prompt AI</div>
+                <div>Required Phrase: <strong style="color:var(--ok);">${escapeHtml(setObj[3].accessPhrase)}</strong></div>
+                <div>Secret Token: <span class="solution-token">${escapeHtml(setObj[3].answer)}</span></div>
+              </div>
+
+              <div style="background: rgba(15,23,42,0.6); padding: 8px; border-radius: 4px; border: 1px solid var(--line);">
+                <div style="font-weight: bold; color: var(--accent); margin-bottom: 3px;">Stage 4: CTF Challenges</div>
+                <div>Station 1 Log: <span class="solution-token">${escapeHtml(setObj[4].stations[1].answer)}</span></div>
+                <div>Station 2 Optical: <span class="solution-token">${escapeHtml(setObj[4].stations[2].answer)}</span></div>
+                <div>Station 3 Symbol: <span class="solution-token">${escapeHtml(setObj[4].stations[3].answer)}</span></div>
+                <div style="margin-top: 2px;">Combined Code: <span class="solution-token" style="font-weight: bold;">${escapeHtml(setObj[4].answer)}</span></div>
+              </div>
+
+              <div style="background: rgba(15,23,42,0.6); padding: 8px; border-radius: 4px; border: 1px solid var(--line);">
+                <div style="font-weight: bold; color: var(--accent); margin-bottom: 3px;">Stage 5: Hex Decryption</div>
+                <div>Memory Bus: <code style="font-size: 0.72rem; color: var(--gold);">${escapeHtml(setObj[5].hexStream)}</code></div>
+                <div>ASCII Fragment: <span class="solution-token">${escapeHtml(setObj[5].answer)}</span></div>
+              </div>
+
+              <div style="background: rgba(15,23,42,0.6); padding: 8px; border-radius: 4px; border: 1px solid var(--line);">
+                <div style="font-weight: bold; color: var(--accent); margin-bottom: 3px;">Stage 6: Final Integration</div>
+                <div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 3px;">Mission Names Alphabetical Sort</div>
+                <div style="word-break: break-all;"><span class="solution-token" style="color: #34d399; border-color: #34d399; font-size: 0.75rem;">${escapeHtml(setObj[6].formula)}</span></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (inspectorInput) {
+        inspectorInput.oninput = () => inspectTeam(inspectorInput.value);
+      }
+      if (inspectorClearBtn) {
+        inspectorClearBtn.onclick = () => {
+          if (inspectorInput) inspectorInput.value = '';
+          inspectTeam('');
+        };
+      }
 
       if (solutions.length === 0) {
         containerEl.innerHTML = '<p style="padding: 12px; color: var(--muted);">No teams registered yet.</p>';
@@ -2525,16 +2730,24 @@ function renderMergedPortal(container) {
       }
 
       let rows = solutions.map(t => {
+        const setColors = { A: '#38bdf8', B: '#f59e0b', C: '#c084fc', D: '#f472b6' };
+        const color = setColors[t.setKey] || '#38bdf8';
         return `
           <tr>
             <td><strong>${escapeHtml(t.teamName)}</strong></td>
-            <td><span class="badge" style="background: rgba(56, 189, 248, 0.2); color: var(--accent); font-weight: bold;">Set ${escapeHtml(t.setKey || 'A')}</span></td>
+            <td><span class="badge" style="background: rgba(15,23,42,0.85); border: 1px solid ${color}; color: ${color}; font-weight: bold;">Set ${escapeHtml(t.setKey || 'A')}</span></td>
             <td><span class="solution-token">${escapeHtml(t.stage1Answer || 'NOVA')}</span></td>
-            <td><span class="solution-token">${escapeHtml(t.stage2Answer || '7K2')}</span> <span style="font-size: 0.72rem; color: var(--ok);">(${escapeHtml(t.stage2AccessPhrase || 'AURORA')})</span></td>
+            <td>
+              <span class="solution-token">${escapeHtml(t.stage2Answer || '7K2')}</span> 
+              <span style="font-size: 0.72rem; color: var(--ok);">(${escapeHtml(t.stage2AccessPhrase || 'AURORA')})</span>
+            </td>
             <td><span class="solution-token">${escapeHtml(t.stage3Answer || 'ORBIT')}</span></td>
             <td><span class="solution-token">${escapeHtml(t.stage4Answer || '91X')}</span></td>
             <td><span class="solution-token">${escapeHtml(t.stage5Code || 'HEX82D')}</span></td>
             <td><span class="solution-token" style="color: #34d399; border-color: #34d399; font-size: 0.75rem;">${escapeHtml(t.stage6Key)}</span></td>
+            <td style="text-align: center;">
+              <button class="btn btn-outline btn-sm btn-quick-inspect" data-name="${escapeHtml(t.teamName)}" style="padding: 2px 8px; font-size: 0.72rem;">🔍 Inspect</button>
+            </td>
           </tr>
         `;
       }).join('');
@@ -2551,6 +2764,7 @@ function renderMergedPortal(container) {
               <th>Stage 4</th>
               <th>Stage 5</th>
               <th>Stage 6 Key</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -2558,6 +2772,15 @@ function renderMergedPortal(container) {
           </tbody>
         </table>
       `;
+
+      containerEl.querySelectorAll('.btn-quick-inspect').forEach(btn => {
+        btn.onclick = () => {
+          const name = btn.dataset.name;
+          if (inspectorInput) inspectorInput.value = name;
+          inspectTeam(name);
+          inspectorCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+      });
     } catch (err) {
       console.error('Failed to load dynamic answers:', err);
     }
@@ -2698,17 +2921,41 @@ function renderMergedPortal(container) {
 
   document.getElementById('btn-refresh-violations').onclick = loadViolations;
 
-  // Live Stage Hints Manager Logic
-  async function loadAdminHintsEditor() {
+  // Live Stage Hints Manager Logic (Per Question Set)
+  let activeHintSet = 'A';
+  let allSetsHintsCache = null;
+
+  async function loadAdminHintsEditor(targetSet) {
+    if (targetSet) activeHintSet = targetSet.toUpperCase();
     const grid = document.getElementById('admin-hints-editor-grid');
     if (!grid) return;
     try {
-      const res = await fetch('/api/admin/hints', {
-        headers: { 'x-admin-pin': adminPin }
+      if (!allSetsHintsCache) {
+        const res = await fetch('/api/admin/hints', {
+          headers: { 'x-admin-pin': adminPin }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        allSetsHintsCache = data.allSets || {};
+      }
+
+      // Update active styling on set tabs
+      document.querySelectorAll('.admin-hint-set-pill').forEach(pill => {
+        if (pill.dataset.set === activeHintSet) {
+          pill.classList.add('active');
+          pill.style.background = 'var(--gold)';
+          pill.style.color = '#000';
+          pill.style.borderColor = 'var(--gold)';
+        } else {
+          pill.classList.remove('active');
+          pill.style.background = 'transparent';
+          pill.style.color = 'var(--txt-muted)';
+          pill.style.borderColor = 'var(--line)';
+        }
       });
-      if (!res.ok) return;
-      const data = await res.json();
-      const stages = data.stages || {};
+
+      const setInfo = allSetsHintsCache[activeHintSet] || { setName: `Set ${activeHintSet}`, stages: {} };
+      const stages = setInfo.stages || {};
 
       let html = '';
       for (let s = 1; s <= 6; s++) {
@@ -2719,21 +2966,21 @@ function renderMergedPortal(container) {
           <div class="card" style="background: rgba(3, 8, 22, 0.75); border: 1px solid var(--line); padding: 14px; border-radius: var(--radius-sm);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--line); padding-bottom: 6px;">
               <span style="font-weight: bold; color: var(--accent); font-size: 0.95rem;">${stageInfo.icon} Stage ${s}: ${escapeHtml(stageInfo.name)}</span>
-              <span style="font-size: 0.75rem; color: var(--gold); font-family: var(--font-mono); font-weight: bold;">⏱️ 30s Window</span>
+              <span style="font-size: 0.75rem; color: var(--gold); font-family: var(--font-mono); font-weight: bold;">⏱️ 30s Window (Set ${activeHintSet})</span>
             </div>
             
             <div style="margin-bottom: 10px;">
               <label style="font-size: 0.78rem; font-weight: bold; color: var(--gold); display: block; margin-bottom: 4px;">
                 💡 HINT 1 (+3 min penalty):
               </label>
-              <textarea id="admin-hint-${s}-1" class="input-control" rows="2" style="font-size: 0.85rem; width: 100%; resize: vertical;" placeholder="Enter Hint 1 text...">${escapeHtml(h1)}</textarea>
+              <textarea id="admin-hint-${s}-1" class="input-control" rows="2" style="font-size: 0.85rem; width: 100%; resize: vertical;" placeholder="Enter Hint 1 text for Set ${activeHintSet}...">${escapeHtml(h1)}</textarea>
             </div>
 
             <div>
               <label style="font-size: 0.78rem; font-weight: bold; color: var(--accent); display: block; margin-bottom: 4px;">
                 💡 HINT 2 (+5 min penalty):
               </label>
-              <textarea id="admin-hint-${s}-2" class="input-control" rows="2" style="font-size: 0.85rem; width: 100%; resize: vertical;" placeholder="Enter Hint 2 text...">${escapeHtml(h2)}</textarea>
+              <textarea id="admin-hint-${s}-2" class="input-control" rows="2" style="font-size: 0.85rem; width: 100%; resize: vertical;" placeholder="Enter Hint 2 text for Set ${activeHintSet}...">${escapeHtml(h2)}</textarea>
             </div>
           </div>
         `;
@@ -2744,11 +2991,18 @@ function renderMergedPortal(container) {
     }
   }
 
-  const saveHintsBtn = document.getElementById('btn-save-all-hints');
-  if (saveHintsBtn) {
-    saveHintsBtn.onclick = async () => {
-      saveHintsBtn.disabled = true;
-      saveHintsBtn.textContent = 'Saving...';
+  // Set Pills click listener
+  document.querySelectorAll('.admin-hint-set-pill').forEach(pill => {
+    pill.onclick = () => {
+      loadAdminHintsEditor(pill.dataset.set);
+    };
+  });
+
+  const saveCurrentSetBtn = document.getElementById('btn-save-current-set-hints');
+  if (saveCurrentSetBtn) {
+    saveCurrentSetBtn.onclick = async () => {
+      saveCurrentSetBtn.disabled = true;
+      saveCurrentSetBtn.textContent = 'Saving...';
       const hintsMap = {};
       for (let s = 1; s <= 6; s++) {
         const el1 = document.getElementById(`admin-hint-${s}-1`);
@@ -2761,35 +3015,74 @@ function renderMergedPortal(container) {
         const res = await fetch('/api/admin/hints', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
-          body: JSON.stringify({ hints: hintsMap })
+          body: JSON.stringify({ setKey: activeHintSet, hints: hintsMap })
         });
         const data = await res.json();
         if (res.ok) {
-          showToast('✅ Stage hints updated successfully! Active teams will see new hints immediately.');
+          showToast(`✅ Hints for Set ${activeHintSet} saved successfully! Active teams on Set ${activeHintSet} see them immediately.`);
+          if (allSetsHintsCache && allSetsHintsCache[activeHintSet]) {
+            for (let s = 1; s <= 6; s++) {
+              if (allSetsHintsCache[activeHintSet].stages[s]) {
+                allSetsHintsCache[activeHintSet].stages[s].hints = hintsMap[s];
+              }
+            }
+          }
         } else {
           showToast(data.error || 'Failed to save hints.', 'error');
         }
       } catch {
         showToast('Connection error while saving hints.', 'error');
       } finally {
-        saveHintsBtn.disabled = false;
-        saveHintsBtn.textContent = '💾 Save All Hints';
+        saveCurrentSetBtn.disabled = false;
+        saveCurrentSetBtn.textContent = '💾 Save Hints for Active Set';
       }
+    };
+  }
+
+  const resetCurrentSetBtn = document.getElementById('btn-reset-current-set-hints');
+  if (resetCurrentSetBtn) {
+    resetCurrentSetBtn.onclick = async () => {
+      if (!confirm(`Reset hints for Set ${activeHintSet} back to system defaults?`)) return;
+      try {
+        const res = await fetch('/api/admin/hints/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin },
+          body: JSON.stringify({ setKey: activeHintSet })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`↺ Set ${activeHintSet} hints reset to system defaults.`);
+          allSetsHintsCache = data.allSets || null;
+          loadAdminHintsEditor(activeHintSet);
+        } else {
+          showToast('Failed to reset hints.', 'error');
+        }
+      } catch {
+        showToast('Connection error.', 'error');
+      }
+    };
+  }
+
+  const saveHintsBtn = document.getElementById('btn-save-all-hints');
+  if (saveHintsBtn) {
+    saveHintsBtn.onclick = async () => {
+      if (saveCurrentSetBtn) saveCurrentSetBtn.click();
     };
   }
 
   const resetHintsBtn = document.getElementById('btn-reset-hints');
   if (resetHintsBtn) {
     resetHintsBtn.onclick = async () => {
-      if (!confirm('Reset all stage hints back to system defaults?')) return;
+      if (!confirm('Reset all stage hints across ALL sets back to system defaults?')) return;
       try {
         const res = await fetch('/api/admin/hints/reset', {
           method: 'POST',
-          headers: { 'x-admin-pin': adminPin }
+          headers: { 'Content-Type': 'application/json', 'x-admin-pin': adminPin }
         });
         if (res.ok) {
-          showToast('↺ Stage hints reset to system defaults.');
-          loadAdminHintsEditor();
+          showToast('↺ All stage hints across all sets reset to system defaults.');
+          allSetsHintsCache = null;
+          loadAdminHintsEditor(activeHintSet);
         } else {
           showToast('Failed to reset hints.', 'error');
         }
@@ -2980,9 +3273,15 @@ function renderMergedPortal(container) {
               ? `<button class="btn btn-gold btn-sm btn-team-resume" data-id="${t.id}" title="Resume this team">▶ Resume</button>`
               : `<button class="btn btn-outline btn-sm btn-team-pause" data-id="${t.id}" title="Pause this team">⏸ Pause</button>`;
 
+            const setKey = t.set || 'A';
+            const setColors = { A: '#38bdf8', B: '#f59e0b', C: '#c084fc', D: '#f472b6' };
+            const setColor = setColors[setKey] || '#38bdf8';
+            const setBadge = `<span class="badge" style="background: rgba(15,23,42,0.85); border: 1px solid ${setColor}; color: ${setColor}; font-weight: bold; font-size: 0.75rem;">Set ${escapeHtml(setKey)}</span>`;
+
             return `
               <tr>
                 <td><strong>${escapeHtml(t.name)}</strong></td>
+                <td>${setBadge}</td>
                 <td><span style="color: var(--accent); font-weight: 600;">${escapeHtml(t.coordinator)}</span></td>
                 <td>${statusBadge}</td>
                 <td><span style="color: ${t.isFinished ? 'var(--ok)' : 'var(--txt)'}; font-weight: bold;">${t.isFinished ? '✅ Done' : t.stage + '/6'}</span></td>
@@ -2991,6 +3290,7 @@ function renderMergedPortal(container) {
                 <td style="text-align: center;">${cheatBadge}</td>
                 <td>
                   <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button class="btn btn-outline btn-sm btn-team-inspect-set" data-name="${escapeHtml(t.name)}" title="Inspect assigned question set and solutions">🔍 Set</button>
                     ${pauseBtnHtml}
                     <button class="btn btn-outline btn-sm btn-team-restart" data-id="${t.id}" data-name="${escapeHtml(t.name)}" title="Restart this team back to Stage 1">🔄 Restart</button>
                     <button class="btn btn-outline btn-sm btn-action-skip" data-id="${t.id}" title="Skip current stage">⏭ Skip</button>
@@ -3007,6 +3307,7 @@ function renderMergedPortal(container) {
               <thead>
                 <tr>
                   <th>Team</th>
+                  <th>Set</th>
                   <th>Coordinator</th>
                   <th>Status</th>
                   <th>Stage</th>
@@ -3021,6 +3322,27 @@ function renderMergedPortal(container) {
               </tbody>
             </table>
           `;
+
+          // Set Inspect Button Listener
+          tableEl.querySelectorAll('.btn-team-inspect-set').forEach(b => {
+            b.onclick = () => {
+              const name = b.dataset.name;
+              const toggleBtn = document.getElementById('btn-toggle-answers');
+              const panel = document.getElementById('admin-answers-panel');
+              if (panel && panel.style.display === 'none') {
+                if (toggleBtn) toggleBtn.click();
+              }
+              const inspInput = document.getElementById('inspector-team-search');
+              if (inspInput) {
+                inspInput.value = name;
+                inspInput.dispatchEvent(new Event('input'));
+              }
+              const inspCard = document.getElementById('inspector-result-card');
+              if (inspCard) {
+                inspCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            };
+          });
 
           // Team Pause / Resume Listeners
           tableEl.querySelectorAll('.btn-team-pause').forEach(b => {

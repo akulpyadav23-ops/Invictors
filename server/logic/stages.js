@@ -92,10 +92,12 @@ const SETS_CONFIG = {
       icon: '🔓',
       answer: '7K2',
       accessPhrase: 'AURORA',
+      decodeSequence: ['Base64', 'Hex', 'ROT13'],
+      sequenceHint: 'Base64 ➔ Hex ➔ ROT13',
       encodedText: 'NGU1MDUwNTI0NjQ2MjA0MzU1NDU0ZTQ2NTIyMDU2NDYyMDRlNDg0NTQyNDU0ZTJlMjA1MzQ1NGU1NDVhNTI0MTQ3MjA0NzRhNDIyMDU2NDYyMDM3NTgzMjJlMjA1NjU0NDE0MjQ1NTIyMDRkNTI0NzRlMzkyZQ==',
       hints: [
-        'The text has three layers. The outer one ends with “=”.',
-        'Base64, then hex, then ROT13. Read the whole decoded message to find Fragment 2 and the access phrase.'
+        'The outer layer is Base64 (notice the trailing “==”). Decode Base64 first.',
+        'Decoding Sequence: Base64 ➔ Hex ➔ ROT13. Read the message for Fragment 2 (7K2) and Access Phrase (AURORA).'
       ]
     },
     3: {
@@ -187,10 +189,12 @@ const SETS_CONFIG = {
       icon: '🔓',
       answer: '4M9',
       accessPhrase: 'CYPHER',
-      encodedText: 'NGU1MDUwNTI0NjQ2MjA0MzU1NDU0ZTQ2NTIyMDU2NDYyMDUwNGM0MzU1NTI0NTJlMjA1MzQ1NGU1NDVhNTI0MTQ3MjA0NzRhNDIyMDU2NDYyMDM0NWEzOTJlMjA1NjU0NDE0MjQ1NTIyMDRkNTI0NzRlMzkyZQ==',
+      decodeSequence: ['Hex', 'Base64', 'ROT13'],
+      sequenceHint: 'Hex ➔ Base64 ➔ ROT13',
+      encodedText: '546c4251556b5a4749454e5652553547556942575269425154454e56556b557549464e46546c5261556b46484945644b5169425752694130576a6b7549465a5551554a465569424e556b644f4f53343d',
       hints: [
-        'The text has three layers. The outer one ends with “=”.',
-        'Base64, then hex, then ROT13. Read the whole decoded message to find Fragment 2 and the access phrase.'
+        'The outer layer is Hexadecimal bytes. Decode Hex first.',
+        'Decoding Sequence: Hex ➔ Base64 ➔ ROT13. Read the message for Fragment 2 (4M9) and Access Phrase (CYPHER).'
       ]
     },
     3: {
@@ -282,10 +286,12 @@ const SETS_CONFIG = {
       icon: '🔓',
       answer: '3X8',
       accessPhrase: 'VORTEX',
-      encodedText: 'NGU1MDUwNTI0NjQ2MjA0MzU1NDU0ZTQ2NTIyMDU2NDYyMDQ5NDI0NTQ3NTI0YjJlMjA1MzQ1NGU1NDVhNTI0MTQ3MjA0NzRhNDIyMDU2NDYyMDMzNGIzODJlMjA1NjU0NDE0MjQ1NTIyMDRkNTI0NzRlMzkyZQ==',
+      decodeSequence: ['ROT13', 'Hex', 'Base64'],
+      sequenceHint: 'ROT13 ➔ Hex ➔ Base64',
+      encodedText: '51554r4452564r5449464249556o46545253424n5579425754314n555256677549455n535155644r52553555494652585479424n5579417n5744677549456p48546o395352534261525652424s53343q',
       hints: [
-        'The text has three layers. The outer one ends with “=”.',
-        'Base64, then hex, then ROT13. Read the whole decoded message to find Fragment 2 and the access phrase.'
+        'The text resembles Hex but contains letters beyond F (r, o, n, p, q). Reverse the ROT13 substitution first to restore standard Hex.',
+        'Decoding Sequence: ROT13 ➔ Hex ➔ Base64. Read the message for Fragment 2 (3X8) and Access Phrase (VORTEX).'
       ]
     },
     3: {
@@ -377,10 +383,12 @@ const SETS_CONFIG = {
       icon: '🔓',
       answer: '5P3',
       accessPhrase: 'NEBULA',
-      encodedText: 'NGU1MDUwNTI0NjQ2MjA0MzU1NDU0ZTQ2NTIyMDU2NDYyMDQxNTI0ZjQ4NTk0ZTJlMjA1MzQ1NGU1NDVhNTI0MTQ3MjA0NzRhNDIyMDU2NDYyMDM1NDMzMzJlMjA1NjU0NDE0MjQ1NTIyMDRkNTI0NzRlMzkyZQ==',
+      decodeSequence: ['Base64', 'ROT13', 'Hex'],
+      sequenceHint: 'Base64 ➔ ROT13 ➔ Hex',
+      encodedText: 'NDE0MzQzNDU1MzUzMjA1MDQ4NTI0MTUzNDUyMDQ5NTMyMDRyNDU0MjU1NHA0MTJyMjA0NjUyNDE0NzRxNDU0cjU0MjA1NDU3NHMyMDQ5NTMyMDM1NTAzMzJyMjA0OTQ3NHI0czUyNDUyMDVuNDU1NDQxMzkycg==',
       hints: [
-        'The text has three layers. The outer one ends with “=”.',
-        'Base64, then hex, then ROT13. Read the whole decoded message to find Fragment 2 and the access phrase.'
+        'The outer layer is Base64 (notice the trailing “==”). Decode Base64 first.',
+        'Decoding Sequence: Base64 ➔ ROT13 ➔ Hex. Read the message for Fragment 2 (5P3) and Access Phrase (NEBULA).'
       ]
     },
     3: {
@@ -469,6 +477,11 @@ async function getEffectiveStageHints(ds, stage, teamName = null) {
     const customHintsStr = await ds.getSetting('custom_hints');
     if (customHintsStr) {
       const customHints = JSON.parse(customHintsStr);
+      // 1. Check set-specific hints (e.g. customHints.A[stage])
+      if (customHints && customHints[setKey] && customHints[setKey][stage] && Array.isArray(customHints[setKey][stage])) {
+        return customHints[setKey][stage];
+      }
+      // 2. Fallback to flat format (customHints[stage])
       if (customHints && customHints[stage] && Array.isArray(customHints[stage])) {
         return customHints[stage];
       }
@@ -489,14 +502,97 @@ async function getAllEffectiveHints(ds, teamName = null) {
     const customHintsStr = await ds.getSetting('custom_hints');
     if (customHintsStr) {
       const customHints = JSON.parse(customHintsStr);
-      for (let s = 1; s <= 6; s++) {
-        if (customHints[s] && Array.isArray(customHints[s])) {
-          hintsMap[s] = customHints[s];
+      if (customHints && customHints[setKey]) {
+        for (let s = 1; s <= 6; s++) {
+          if (customHints[setKey][s] && Array.isArray(customHints[setKey][s])) {
+            hintsMap[s] = customHints[setKey][s];
+          }
+        }
+      } else {
+        for (let s = 1; s <= 6; s++) {
+          if (customHints[s] && Array.isArray(customHints[s])) {
+            hintsMap[s] = customHints[s];
+          }
         }
       }
     }
   } catch (_) {}
   return hintsMap;
+}
+
+async function getAllSetsHints(ds) {
+  const allSets = {};
+  let customHints = {};
+  if (ds) {
+    try {
+      const customHintsStr = await ds.getSetting('custom_hints');
+      if (customHintsStr) customHints = JSON.parse(customHintsStr);
+    } catch (_) {}
+  }
+
+  ['A', 'B', 'C', 'D'].forEach(setKey => {
+    const setObj = SETS_CONFIG[setKey];
+    allSets[setKey] = {
+      setKey,
+      setName: setObj.setName,
+      stages: {}
+    };
+    for (let s = 1; s <= 6; s++) {
+      let hints = (setObj[s] && setObj[s].hints) ? [...setObj[s].hints] : [];
+      if (customHints && customHints[setKey] && customHints[setKey][s] && Array.isArray(customHints[setKey][s])) {
+        hints = customHints[setKey][s];
+      } else if (setKey === 'A' && customHints && customHints[s] && Array.isArray(customHints[s])) {
+        // Fallback for legacy flat hints mapped to Set A
+        hints = customHints[s];
+      }
+      allSets[setKey].stages[s] = {
+        stage: s,
+        name: setObj[s] ? setObj[s].name : `Stage ${s}`,
+        icon: setObj[s] ? setObj[s].icon : '🎯',
+        hints
+      };
+    }
+  });
+  return allSets;
+}
+
+async function saveSetHints(ds, setKey, hintsMap) {
+  if (!ds) return false;
+  let customHints = {};
+  try {
+    const customHintsStr = await ds.getSetting('custom_hints');
+    if (customHintsStr) customHints = JSON.parse(customHintsStr);
+  } catch (_) {}
+
+  // Ensure set container exists
+  if (!customHints[setKey] || typeof customHints[setKey] !== 'object') {
+    customHints[setKey] = {};
+  }
+
+  for (let s = 1; s <= 6; s++) {
+    if (Array.isArray(hintsMap[s])) {
+      customHints[setKey][s] = hintsMap[s].map(h => String(h || '').trim()).filter(Boolean);
+    }
+  }
+
+  await ds.setSetting('custom_hints', JSON.stringify(customHints));
+  return true;
+}
+
+async function resetSetHints(ds, setKey = null) {
+  if (!ds) return false;
+  if (!setKey || setKey === 'ALL') {
+    await ds.setSetting('custom_hints', '');
+    return true;
+  }
+  let customHints = {};
+  try {
+    const customHintsStr = await ds.getSetting('custom_hints');
+    if (customHintsStr) customHints = JSON.parse(customHintsStr);
+  } catch (_) {}
+  delete customHints[setKey];
+  await ds.setSetting('custom_hints', Object.keys(customHints).length ? JSON.stringify(customHints) : '');
+  return true;
 }
 
 module.exports = {
@@ -509,5 +605,8 @@ module.exports = {
   },
   getStageDetailsForTeam,
   getEffectiveStageHints,
-  getAllEffectiveHints
+  getAllEffectiveHints,
+  getAllSetsHints,
+  saveSetHints,
+  resetSetHints
 };
