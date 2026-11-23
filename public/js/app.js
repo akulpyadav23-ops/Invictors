@@ -1148,15 +1148,16 @@ function renderStageScreen(container, state) {
         </div>
 
         <p style="font-size: 0.82rem; color: var(--muted); margin: 0 0 10px 0;">
-          Vector Clue: The high-voltage memory line is located along <strong>Column 1</strong> across Channels A through F.
+          Vector Clue: The high-voltage memory line is located along <strong>Column 1</strong> across Channels A through F in sequence:
+          <strong style="color: var(--gold);">CH A (#1) ➔ CH B (#2) ➔ CH C (#3) ➔ CH D (#4) ➔ CH E (#5) ➔ CH F (#6)</strong>.
         </p>
 
         <div style="overflow-x: auto;">
           <table id="hex-memory-grid" style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.9rem; text-align: center;">
             <thead>
               <tr style="border-bottom: 1px solid #334155; color: var(--muted); font-size: 0.75rem;">
-                <th style="padding: 6px;">CH</th>
-                <th style="padding: 6px; color: var(--accent);">COL 1 [BUS]</th>
+                <th style="padding: 6px; color: var(--gold);">CH (#)</th>
+                <th style="padding: 6px; color: var(--accent);">COL 1 [ACTIVE BUS]</th>
                 <th style="padding: 6px;">COL 2</th>
                 <th style="padding: 6px;">COL 3</th>
                 <th style="padding: 6px;">COL 4</th>
@@ -1165,8 +1166,15 @@ function renderStageScreen(container, state) {
             <tbody>
               ${hexMatrix.map((row, idx) => `
                 <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
-                  <td style="color: var(--muted); font-weight: bold; padding: 6px;">${channels[idx] || (idx + 1)}</td>
-                  <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">${escapeHtml(row[0] || '')}</td>
+                  <td style="color: var(--muted); font-weight: bold; padding: 6px; white-space: nowrap;">
+                    <span style="color: var(--accent);">CH ${channels[idx] || (idx + 1)}</span>
+                    <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.75rem; padding: 1px 6px; margin-left: 6px; font-weight: bold;">
+                      #${idx + 1}
+                    </span>
+                  </td>
+                  <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">
+                    <span style="font-size: 0.72rem; color: var(--gold); margin-right: 4px; font-family: var(--font-mono); font-weight: normal;">[Byte ${idx + 1}]</span>${escapeHtml(row[0] || '')}
+                  </td>
                   <td style="padding: 6px; color: #64748b;">${escapeHtml(row[1] || '')}</td>
                   <td style="padding: 6px; color: #64748b;">${escapeHtml(row[2] || '')}</td>
                   <td style="padding: 6px; color: #64748b;">${escapeHtml(row[3] || '')}</td>
@@ -2426,7 +2434,7 @@ function renderMergedPortal(container) {
                 <div>S2 (Decoded): <span class="solution-token">7K2</span> | Phrase: <strong style="color:var(--ok);">AURORA</strong></div>
                 <div>S3 (AI Guardian): <span class="solution-token">ORBIT</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
                 <div>S4 (CTF Nodes): <span class="solution-token">91X</span> (L9=9 | Opt=1 | Tri=X)</div>
-                <div>S5 (Hex Bus): <span class="solution-token">HEX82D</span> (48 45 58 38 32 44)</div>
+                <div>S5 (Hex Bus): <span class="solution-token">HEX82D</span> (CH A #1 - CH F #6: 48 45 58 38 32 44)</div>
                 <div>S6 (Final Key): <span class="solution-token" style="color: #34d399; font-size: 0.72rem; word-break: break-all;">FO{91X-7K2-HEX82D-TIBRO-NOVA}#29</span></div>
               </div>
             </div>
@@ -2445,7 +2453,7 @@ function renderMergedPortal(container) {
                 <div>S2 (Decoded): <span class="solution-token">4M9</span> | Phrase: <strong style="color:var(--ok);">CYPHER</strong></div>
                 <div>S3 (AI Guardian): <span class="solution-token">SOLAR</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
                 <div>S4 (CTF Nodes): <span class="solution-token">84Z</span> (L8=8 | Opt=4 | Hex=Z)</div>
-                <div>S5 (Hex Bus): <span class="solution-token">CORE7F</span> (43 4F 52 45 37 46)</div>
+                <div>S5 (Hex Bus): <span class="solution-token">CORE7F</span> (CH A #1 - CH F #6: 43 4F 52 45 37 46)</div>
                 <div>S6 (Final Key): <span class="solution-token" style="color: #34d399; font-size: 0.72rem; word-break: break-all;">FO{84Z-4M9-CORE7F-RALOS-LUNA}#32</span></div>
               </div>
             </div>
@@ -2464,7 +2472,7 @@ function renderMergedPortal(container) {
                 <div>S2 (Decoded): <span class="solution-token">3X8</span> | Phrase: <strong style="color:var(--ok);">VORTEX</strong></div>
                 <div>S3 (AI Guardian): <span class="solution-token">TITAN</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
                 <div>S4 (CTF Nodes): <span class="solution-token">72Y</span> (L7=7 | Opt=2 | Cross=Y)</div>
-                <div>S5 (Hex Bus): <span class="solution-token">BYTE9A</span> (42 59 54 45 39 41)</div>
+                <div>S5 (Hex Bus): <span class="solution-token">BYTE9A</span> (CH A #1 - CH F #6: 42 59 54 45 39 41)</div>
                 <div>S6 (Final Key): <span class="solution-token" style="color: #34d399; font-size: 0.72rem; word-break: break-all;">FO{72Y-3X8-BYTE9A-NATIT-VEGA}#29</span></div>
               </div>
             </div>
@@ -2483,7 +2491,7 @@ function renderMergedPortal(container) {
                 <div>S2 (Decoded): <span class="solution-token">5P3</span> | Phrase: <strong style="color:var(--ok);">NEBULA</strong></div>
                 <div>S3 (AI Guardian): <span class="solution-token">ZENITH</span> <span style="font-size: 0.7rem; color: var(--muted);">(Decoy: ZETA9)</span></div>
                 <div>S4 (CTF Nodes): <span class="solution-token">63K</span> (L6=6 | Opt=3 | Sqr=K)</div>
-                <div>S5 (Hex Bus): <span class="solution-token">BITS1E</span> (42 49 54 53 31 45)</div>
+                <div>S5 (Hex Bus): <span class="solution-token">BITS1E</span> (CH A #1 - CH F #6: 42 49 54 53 31 45)</div>
                 <div>S6 (Final Key): <span class="solution-token" style="color: #34d399; font-size: 0.72rem; word-break: break-all;">FO{63K-5P3-BITS1E-HTINEZ-MARS}#18</span></div>
               </div>
             </div>
@@ -2695,7 +2703,7 @@ function renderMergedPortal(container) {
 
               <div style="background: rgba(15,23,42,0.6); padding: 8px; border-radius: 4px; border: 1px solid var(--line);">
                 <div style="font-weight: bold; color: var(--accent); margin-bottom: 3px;">Stage 5: Hex Decryption</div>
-                <div>Memory Bus: <code style="font-size: 0.72rem; color: var(--gold);">${escapeHtml(setObj[5].hexStream)}</code></div>
+                <div>Memory Bus (CH A #1 - CH F #6): <code style="font-size: 0.72rem; color: var(--gold);">${escapeHtml(setObj[5].hexStream)}</code></div>
                 <div>ASCII Fragment: <span class="solution-token">${escapeHtml(setObj[5].answer)}</span></div>
               </div>
 

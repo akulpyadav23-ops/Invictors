@@ -152,7 +152,7 @@ const SETS_CONFIG = {
         ['44', '00', '8F', '23']
       ],
       hints: [
-        'Inspect the primary memory bus: Column 1 across Channels A through F gives the hex bytes: 48 45 58 38 32 44.',
+        'Inspect the primary memory bus: Column 1 across Channels A through F (labeled #1 through #6) gives the hex bytes: 48 45 58 38 32 44.',
         'Decode the hex bytes to ASCII text: 0x48=H, 0x45=E, 0x58=X, 0x38=8, 0x32=2, 0x44=D. The resulting fragment is HEX82D.'
       ]
     },
@@ -249,7 +249,7 @@ const SETS_CONFIG = {
         ['46', '62', '0D', '99']
       ],
       hints: [
-        'Inspect the primary memory bus: Column 1 across Channels A through F gives the hex bytes: 43 4F 52 45 37 46.',
+        'Inspect the primary memory bus: Column 1 across Channels A through F (labeled #1 through #6) gives the hex bytes: 43 4F 52 45 37 46.',
         'Decode the hex bytes to ASCII text: 0x43=C, 0x4F=O, 0x52=R, 0x45=E, 0x37=7, 0x46=F. The resulting fragment is CORE7F.'
       ]
     },
@@ -346,7 +346,7 @@ const SETS_CONFIG = {
         ['41', '9C', 'D0', '73']
       ],
       hints: [
-        'Inspect the primary memory bus: Column 1 across Channels A through F gives the hex bytes: 42 59 54 45 39 41.',
+        'Inspect the primary memory bus: Column 1 across Channels A through F (labeled #1 through #6) gives the hex bytes: 42 59 54 45 39 41.',
         'Decode the hex bytes to ASCII text: 0x42=B, 0x59=Y, 0x54=T, 0x45=E, 0x39=9, 0x41=A. The resulting fragment is BYTE9A.'
       ]
     },
@@ -443,7 +443,7 @@ const SETS_CONFIG = {
         ['45', '26', '94', 'F2']
       ],
       hints: [
-        'Inspect the primary memory bus: Column 1 across Channels A through F gives the hex bytes: 42 49 54 53 31 45.',
+        'Inspect the primary memory bus: Column 1 across Channels A through F (labeled #1 through #6) gives the hex bytes: 42 49 54 53 31 45.',
         'Decode the hex bytes to ASCII text: 0x42=B, 0x49=I, 0x54=T, 0x53=S, 0x31=1, 0x45=E. The resulting fragment is BITS1E.'
       ]
     },
