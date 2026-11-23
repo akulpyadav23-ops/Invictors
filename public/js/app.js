@@ -838,12 +838,7 @@ function renderStageScreen(container, state) {
       </div>
 
       <div style="background: #030813; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; word-break: break-all; font-family: ui-monospace, monospace; font-size: 0.88rem; color: var(--gold); margin-bottom: 14px; position: relative;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-          <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted);">Intercepted Cipher Payload:</span>
-          <span style="font-size: 0.78rem; font-weight: bold; color: var(--accent); background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 4px; padding: 2px 8px;">
-            🔀 Shuffled Sequence: ${escapeHtml(content.sequenceHint || 'Multi-Layer Transposition')}
-          </span>
-        </div>
+        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px;">Intercepted Cipher Payload:</div>
         <div id="stage2-cipher-raw" style="user-select: all;">${escapeHtml(content.encodedText || '')}</div>
       </div>
 

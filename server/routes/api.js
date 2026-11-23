@@ -200,9 +200,7 @@ router.get('/state', requireTeam, async (req, res) => {
       };
     } else if (currentStage === 2) {
       stageContent = {
-        encodedText: stageConfig.encodedText,
-        sequenceHint: stageConfig.sequenceHint,
-        decodeSequence: stageConfig.decodeSequence
+        encodedText: stageConfig.encodedText
       };
     } else if (currentStage === 3) {
       stageContent = {
