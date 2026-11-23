@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
     });
 
     try {
-      const reply = await handleWardenChat(message);
+      const reply = await handleWardenChat(message, team.name);
 
       // Log WARDEN reply
       await ds.addChat({

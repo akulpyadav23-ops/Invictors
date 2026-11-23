@@ -27,6 +27,10 @@ if (isSupabaseConfigured) {
   console.log('💾 Running with local SQLite database');
 }
 
+let memorySettingsCache = null;
+let memorySettingsCacheTime = 0;
+const SETTINGS_CACHE_TTL = 3000; // 3 seconds cache to eliminate remote latency
+
 const dataService = {
   isSupabase() {
     return isSupabaseConfigured && supabase !== null;
@@ -36,29 +40,37 @@ const dataService = {
   // Settings
   // --------------------------------------------------------------------------
   async getSetting(key, defaultValue = null) {
-    if (this.isSupabase()) {
-      const { data, error } = await supabase.from('settings').select('value').eq('key', key).maybeSingle();
-      if (error || !data) return defaultValue;
-      return data.value;
+    const all = await this.getAllSettings();
+    if (all && all[key] !== undefined && all[key] !== null) {
+      return all[key];
     }
-    const row = sqliteDb.prepare('SELECT value FROM settings WHERE key = ?').get(key);
-    return row ? row.value : defaultValue;
+    return defaultValue;
   },
 
   async getAllSettings() {
+    const now = Date.now();
+    if (memorySettingsCache && (now - memorySettingsCacheTime < SETTINGS_CACHE_TTL)) {
+      return memorySettingsCache;
+    }
+
     if (this.isSupabase()) {
       const { data } = await supabase.from('settings').select('*');
       const map = {};
       (data || []).forEach(r => { map[r.key] = r.value; });
+      memorySettingsCache = map;
+      memorySettingsCacheTime = Date.now();
       return map;
     }
     const rows = sqliteDb.prepare('SELECT key, value FROM settings').all();
     const map = {};
     (rows || []).forEach(r => { map[r.key] = r.value; });
+    memorySettingsCache = map;
+    memorySettingsCacheTime = Date.now();
     return map;
   },
 
   async setSetting(key, value) {
+    memorySettingsCache = null; // Invalidate cache immediately
     const valStr = String(value);
     if (this.isSupabase()) {
       const { error } = await supabase.from('settings').upsert({ key, value: valStr });

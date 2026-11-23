@@ -5,7 +5,7 @@ const config = require('../config');
 const { generateVerificationCode } = require('../logic/security');
 const { computeTeamCode, getMemberShard } = require('../logic/shard');
 const { computeFinalKey } = require('../logic/finalKey');
-const { STAGE_CONFIG, getAllEffectiveHints } = require('../logic/stages');
+const { STAGE_CONFIG, SETS_CONFIG, getTeamSet, getAllEffectiveHints } = require('../logic/stages');
 
 // ── Concurrent Admin Session Tracking ────────────────────────────────────────
 // Maps sessionId → { lastSeen: timestamp }
@@ -264,57 +264,37 @@ router.get('/answers', requireAdmin, async (req, res) => {
         shard: getMemberShard(t.name, name)
       }));
 
-      const stage5Code = 'HEX82D';
-      const stage6Key = computeFinalKey('NOVA', '7K2', 'ORBIT', '91X', stage5Code);
+      const setKey = getTeamSet(t.name);
+      const setConfig = SETS_CONFIG[setKey] || SETS_CONFIG.A;
 
       return {
         teamId: t.id,
         teamName: t.name,
         coordinator: t.coordinator,
+        setKey,
+        setName: setConfig.setName,
         memberShards,
-        stage5Code,
-        stage6Key
+        stage1Answer: setConfig[1].answer,
+        stage2Answer: setConfig[2].answer,
+        stage2AccessPhrase: setConfig[2].accessPhrase,
+        stage3Answer: setConfig[3].answer,
+        stage4Answer: setConfig[4].answer,
+        stage5Code: setConfig[5].answer,
+        stage6Key: setConfig[6].formula
       };
     });
 
+    const setA = SETS_CONFIG.A;
     return res.json({
       staticAnswers: {
-        stage1: {
-          title: 'Stage 1: Signal Intercept (Morse Matrix)',
-          answer: 'NOVA',
-          decoy: 'ZETA9',
-          explanation: '4-Sector Morse Matrix: Oscilloscope (—• [N]), Binary Telemetry (——— [O]), Optical Strobe (•••— [V]), Satellite Relay (•— [A]) -> NOVA. Hint button reveals 15-char Morse chart.'
-        },
-        stage2: {
-          title: 'Stage 2: Decoding',
-          answer: '7K2',
-          accessPhrase: 'AURORA',
-          explanation: '3-layer cipher: Base64 decode -> Hex decode -> ROT13 unwrap reveals: "ACCESS PHRASE IS AURORA. FRAGMENT TWO IS 7K2. IGNORE ZETA9."'
-        },
-        stage3: {
-          title: 'Stage 3: Prompt the AI (WARDEN)',
-          answer: 'ORBIT',
-          decoy: 'ZETA9',
-          accessPhrase: 'AURORA',
-          explanation: 'Offline AI rule engine. Requires access phrase AURORA, role declaration (e.g., "I am the maintenance technician"), task keyword (fragment/code/release), and >=10 words.'
-        },
-        stage4: {
-          title: 'Stage 4: Cyber Defense (Firewall Matrix)',
-          answer: '91X',
-          explanation: 'Firewall Ingress rule requires Port 80 and Port 443 active with Port 21 isolated. Decoupled quadrant security nodes reveal tokens: Alpha = 9, Beta = 1, Gamma = X -> 91X.'
-        },
-        stage5: {
-          title: 'Stage 5: Hex Decryption (Hexadecimal Matrix)',
-          hexCode: '48 45 58 38 32 44',
-          answer: 'HEX82D',
-          explanation: 'High-voltage Column 1 yields hex byte stream: 48 45 58 38 32 44. Converted to ASCII plaintext: 48=H, 45=E, 58=X, 38=8, 32=2, 44=D -> HEX82D.'
-        },
-        stage6: {
-          title: 'Stage 6: Final Override Key Integration',
-          answer: 'FO{91X-7K2-HEX82D-TIBRO-NOVA}#29',
-          explanation: 'Sorted alphabetically by Mission Names: Cyber Defense (91X) - Decoding (7K2) - Hex Decryption (HEX82D) - Prompt the AI (ORBIT reversed = TIBRO) - Signal Intercept (NOVA). Digit sum: 9+1+7+2+8+2 = 29.'
-        }
+        stage1: { title: 'Stage 1: Signal Intercept', answer: setA[1].answer },
+        stage2: { title: 'Stage 2: Decoding', answer: setA[2].answer, accessPhrase: setA[2].accessPhrase },
+        stage3: { title: 'Stage 3: Prompt the AI', answer: setA[3].answer, accessPhrase: setA[3].accessPhrase },
+        stage4: { title: 'Stage 4: CTF Challenges', answer: setA[4].answer },
+        stage5: { title: 'Stage 5: Hex Decryption', answer: setA[5].answer },
+        stage6: { title: 'Stage 6: Final Integration', answer: setA[6].formula }
       },
+      sets: SETS_CONFIG,
       teamSolutions
     });
   } catch (err) {

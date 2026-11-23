@@ -4,12 +4,14 @@ const crypto = require('crypto');
 const ds = require('../dataService');
 const config = require('../config');
 const { norm, hashAnswer, generateToken, generateVerificationCode } = require('../logic/security');
-const { STAGE_CONFIG, getEffectiveStageHints } = require('../logic/stages');
+const { STAGE_CONFIG, SETS_CONFIG, getTeamSet, getEffectiveStageHints } = require('../logic/stages');
 const { getMemberShard, computeTeamCode } = require('../logic/shard');
 const { computeFinalKey } = require('../logic/finalKey');
 
 // In-memory rate limiting map: teamId -> lastSubmitTimestamp
 const lastSubmissions = new Map();
+// In-memory Stage 4 station tracking: teamId -> Set(stationNumbers)
+const stage4SolvedStations = new Map();
 
 // Middleware to get current team from leader token
 async function requireTeam(req, res, next) {
@@ -136,8 +138,14 @@ router.get('/state', requireTeam, async (req, res) => {
     if (!team) return res.status(401).json({ error: 'Team not found' });
     const currentStage = team.stage;
 
-    // Global pause status & game started status
-    const settings = await ds.getAllSettings();
+    // Fetch settings, progress, members, and waiting count concurrently to minimize latency
+    const [settings, progressRows, members, waitingCount] = await Promise.all([
+      ds.getAllSettings(),
+      ds.getProgress(team.id),
+      ds.getMembers(team.id),
+      ds.getWaitingTeamsCount()
+    ]);
+
     const isClockPaused = settings.clockPaused === 'true';
     const isGameStarted = settings.gameStarted === 'true';
     const allowNewTeams = settings.allowNewTeams === 'true';
@@ -145,11 +153,7 @@ router.get('/state', requireTeam, async (req, res) => {
     const isIndividuallyPaused = team.isPaused === 1;
     const isPaused = isClockPaused || isIndividuallyPaused;
 
-    const waitingCount = await ds.getWaitingTeamsCount();
-
     // Get solved fragments from progress
-    const progressRows = await ds.getProgress(team.id);
-
     const notebook = {};
     progressRows.forEach(row => {
       if (row.fragment) {
@@ -159,19 +163,13 @@ router.get('/state', requireTeam, async (req, res) => {
 
     const currentProg = progressRows.find(p => p.stage === currentStage) || { wrongAttempts: 0, hintsUsed: 0 };
 
-    const stageConfig = STAGE_CONFIG[currentStage] || {};
-    const effectiveHints = await getEffectiveStageHints(ds, currentStage);
+    // Resolve team-specific question set (A, B, C, D)
+    const teamSet = getTeamSet(team.name);
+    const setConfig = SETS_CONFIG[teamSet] || SETS_CONFIG.A;
+    const stageConfig = setConfig[currentStage] || {};
+
+    const effectiveHints = await getEffectiveStageHints(ds, currentStage, team.name);
     const revealedHints = effectiveHints.slice(0, currentProg.hintsUsed);
-
-    // Members
-    const members = await ds.getMembers(team.id);
-    const totalMembers = members.length;
-    // Distinct joined devices count:
-    const joinedMembers = members.filter(m => m.isLeader === 1 || m.deviceToken !== null);
-    const joinedCount = joinedMembers.length;
-
-    const leaderMember = members.find(m => m.isLeader === 1);
-    const leaderShard = leaderMember ? getMemberShard(team.name, leaderMember.fullName) : null;
 
     // Build stage-specific payload (ISOLATION ENFORCED: future stage details are never returned)
     let stageContent = null;
@@ -179,7 +177,9 @@ router.get('/state', requireTeam, async (req, res) => {
       // Waiting or Finished
     } else if (currentStage === 1) {
       stageContent = {
-        morsePattern: stageConfig.morsePattern
+        sectors: stageConfig.sectors,
+        decoy: stageConfig.decoy,
+        morsePattern: stageConfig.morsePattern || (stageConfig.sectors ? stageConfig.sectors.map(s => s.morse).join(' ') : '—• ——— •••— •—')
       };
     } else if (currentStage === 2) {
       stageContent = {
@@ -190,35 +190,26 @@ router.get('/state', requireTeam, async (req, res) => {
         aiActive: true
       };
     } else if (currentStage === 4) {
+      const teamSolved = Array.from(stage4SolvedStations.get(team.id) || []);
       stageContent = {
+        subTitle: stageConfig.subTitle || 'Security Control Room',
+        logRows: stageConfig.logRows || [],
+        targetDigit: stageConfig.stations ? stageConfig.stations[2].digit : '1',
+        symbol: stageConfig.stations ? stageConfig.stations[3].symbol : 'triangle',
+        solvedStations: teamSolved,
         firewallActive: true,
         ports: [
-          { id: 'p21', name: 'PORT 21 (FTP Data Stream)', defaultState: false, required: false },
-          { id: 'p80', name: 'PORT 80 (HTTP Ingress Bridge)', defaultState: false, required: true },
-          { id: 'p443', name: 'PORT 443 (TLS Security Tunnel)', defaultState: false, required: true },
-          { id: 'p8080', name: 'PORT 8080 (Proxy Relay Daemon)', defaultState: false, required: false }
+          { id: 'st1', name: 'Station 1: Access Logs', defaultState: false, required: true },
+          { id: 'st2', name: 'Station 2: Camera Feed 04', defaultState: false, required: true },
+          { id: 'st3', name: 'Station 3: Symbol Keypad', defaultState: false, required: true },
+          { id: 'st4', name: 'Fragment Assembly Node', defaultState: false, required: true }
         ],
-        logs: [
-          '[INGRESS] Analyzing network traffic packets on AEGIS-44 firewall gateway...',
-          '[POLICY] Core Rule: Ingress requires Port 80 and Port 443 OPEN. Isolate Port 21 and Port 8080.',
-          '[TELEMETRY] Quadrant Alpha packet header decrypted -> Node Token 1 = 9',
-          '[TELEMETRY] Quadrant Beta handshake sequence verified -> Node Token 2 = 1',
-          '[TELEMETRY] Quadrant Gamma TLS common name extracted -> Node Token 3 = X',
-          '[READY] Align firewall switches or concatenate tokens in quadrant order (Alpha + Beta + Gamma).'
-        ]
+        logs: stageConfig.logRows ? stageConfig.logRows.map(r => `[${r.time}] ${r.user} @ ${r.door}: ${r.status} (${r.clearance})`) : []
       };
     } else if (currentStage === 5) {
       stageContent = {
-        hexStream: '48 45 58 38 32 44',
-        matrix: [
-          ['48', '1A', '3F', '7C'],
-          ['45', '9B', '02', 'E1'],
-          ['58', '88', 'D4', '5A'],
-          ['38', 'FF', '11', '6E'],
-          ['32', 'CC', '4A', 'B9'],
-          ['44', '00', '8F', '23']
-        ],
-        busRule: 'High-Voltage Line: Column 1 across Channels A through F (Cells A1, B1, C1, D1, E1, F1)',
+        hexStream: stageConfig.hexStream,
+        matrix: stageConfig.matrix,
         members: members.map(m => m.fullName)
       };
     } else if (currentStage === 6) {
@@ -246,7 +237,8 @@ router.get('/state', requireTeam, async (req, res) => {
         isPaused: isPaused,
         isIndividuallyPaused,
         isClockPaused,
-        tabSwitches: team.tabSwitches || 0
+        tabSwitches: team.tabSwitches || 0,
+        set: teamSet
       },
       gameStarted: isGameStarted,
       waitingInLobby: team.status === 'waiting',
@@ -266,6 +258,84 @@ router.get('/state', requireTeam, async (req, res) => {
   } catch (err) {
     console.error('State API error:', err);
     return res.status(500).json({ error: 'Failed to retrieve game state.' });
+  }
+});
+
+// POST /api/stage4/check-station - Verify individual station in Stage 4 Control Room
+router.post('/stage4/check-station', requireTeam, async (req, res) => {
+  try {
+    const team = await ds.getTeamById(req.team.id);
+    if (!team) return res.status(401).json({ error: 'Team not found.' });
+    if (team.stage !== 4) return res.status(400).json({ error: 'Mission is not Stage 4.' });
+
+    const clockPausedVal = await ds.getSetting('clockPaused', 'false');
+    const isClockPaused = clockPausedVal === 'true';
+    if (isClockPaused || team.isPaused === 1) {
+      return res.status(400).json({ error: 'Mission is paused by organisers.' });
+    }
+
+    const { station, value } = req.body;
+    const stationNum = parseInt(station, 10);
+    if (![1, 2, 3].includes(stationNum)) {
+      return res.status(400).json({ error: 'Invalid station number.' });
+    }
+
+    const teamSet = getTeamSet(team.name);
+    const setConfig = SETS_CONFIG[teamSet] || SETS_CONFIG.A;
+    const sConf = setConfig[4]?.stations?.[stationNum];
+
+    if (!sConf) {
+      return res.status(400).json({ error: 'Station configuration not found.' });
+    }
+
+    const normalized = norm(value || '');
+    let isCorrect = false;
+    if (stationNum === 1) {
+      isCorrect = (normalized === norm(sConf.answer) || normalized === norm(sConf.clearance));
+    } else if (stationNum === 2) {
+      isCorrect = (normalized === norm(sConf.answer) || normalized === norm(sConf.digit));
+    } else if (stationNum === 3) {
+      isCorrect = (normalized === norm(sConf.answer) || normalized === norm(sConf.symbol));
+    }
+
+    if (!stage4SolvedStations.has(team.id)) {
+      stage4SolvedStations.set(team.id, new Set());
+    }
+    const teamSolved = stage4SolvedStations.get(team.id);
+
+    if (isCorrect) {
+      teamSolved.add(stationNum);
+      return res.json({
+        success: true,
+        station: stationNum,
+        solvedStations: Array.from(teamSolved),
+        message: `Station ${stationNum} verified!`
+      });
+    } else {
+      // Record wrong attempt on stage 4 progress
+      const progressRows = await ds.getProgress(team.id);
+      const prog = progressRows.find(p => p.stage === 4) || { wrongAttempts: 0 };
+      const newWrong = (prog ? prog.wrongAttempts : 0) + 1;
+      let extraPenalty = 0;
+      if (newWrong > 5) extraPenalty = 1;
+      const newTeamPenalty = (team.penaltyMin || 0) + extraPenalty;
+
+      await ds.updateProgress(team.id, 4, { wrongAttempts: newWrong });
+      if (extraPenalty > 0) {
+        await ds.updateTeam(team.id, { penaltyMin: newTeamPenalty });
+      }
+
+      return res.json({
+        success: false,
+        station: stationNum,
+        message: 'Access Denied: Incorrect station token.',
+        wrongAttempts: newWrong,
+        penaltyApplied: newWrong > 5
+      });
+    }
+  } catch (err) {
+    console.error('Check station error:', err);
+    return res.status(500).json({ error: 'Failed to verify station.' });
   }
 });
 
@@ -305,43 +375,49 @@ router.post('/submit', requireTeam, async (req, res) => {
       return res.status(400).json({ error: 'Answer cannot be empty.' });
     }
 
-    const members = await ds.getMembers(team.id);
+    // Resolve team-specific question set (A, B, C, D)
+    const teamSet = getTeamSet(team.name);
+    const setConfig = SETS_CONFIG[teamSet] || SETS_CONFIG.A;
 
     let isCorrect = false;
     let fragmentFound = null;
 
     if (stage === 1) {
-      isCorrect = normalizedInput === 'NOVA';
-      fragmentFound = 'NOVA';
+      isCorrect = normalizedInput === norm(setConfig[1].answer);
+      fragmentFound = setConfig[1].answer;
     } else if (stage === 2) {
-      isCorrect = normalizedInput === '7K2';
-      fragmentFound = '7K2';
+      isCorrect = normalizedInput === norm(setConfig[2].answer);
+      fragmentFound = setConfig[2].answer;
     } else if (stage === 3) {
-      isCorrect = normalizedInput === 'ORBIT';
-      fragmentFound = 'ORBIT';
+      isCorrect = normalizedInput === norm(setConfig[3].answer);
+      fragmentFound = setConfig[3].answer;
     } else if (stage === 4) {
-      isCorrect = normalizedInput === '91X';
-      fragmentFound = '91X';
+      isCorrect = normalizedInput === norm(setConfig[4].answer);
+      fragmentFound = setConfig[4].answer;
+      if (isCorrect) {
+        if (!stage4SolvedStations.has(team.id)) {
+          stage4SolvedStations.set(team.id, new Set());
+        }
+        const teamSolved = stage4SolvedStations.get(team.id);
+        teamSolved.add(1).add(2).add(3);
+      }
     } else if (stage === 5) {
-      // Hexadecimal puzzle: hex stream 48 45 58 38 32 44 decodes to HEX82D
-      // Single-device gameplay: accept HEX82D (or raw hex 484558383244)
-      isCorrect = (normalizedInput === 'HEX82D' || normalizedInput === '484558383244');
-      fragmentFound = 'HEX82D';
+      const cleanHex = (setConfig[5].hexStream || '').replace(/\s+/g, '');
+      isCorrect = (normalizedInput === norm(setConfig[5].answer) || normalizedInput === norm(cleanHex));
+      fragmentFound = setConfig[5].answer;
     } else if (stage === 6) {
-      // Stage 6 final key
       const progressList = await ds.getProgress(team.id);
       const fMap = {};
       progressList.forEach(p => { fMap[p.stage] = p.fragment; });
 
-      // Fallbacks if somehow missing
-      const f1 = fMap[1] || 'NOVA';
-      const f2 = fMap[2] || '7K2';
-      const f3 = fMap[3] || 'ORBIT';
-      const f4 = fMap[4] || '91X';
-      const f5 = fMap[5] || 'HEX82D';
+      const f1 = fMap[1] || setConfig[1].answer;
+      const f2 = fMap[2] || setConfig[2].answer;
+      const f3 = fMap[3] || setConfig[3].answer;
+      const f4 = fMap[4] || setConfig[4].answer;
+      const f5 = fMap[5] || setConfig[5].answer;
 
       const expectedKey = computeFinalKey(f1, f2, f3, f4, f5);
-      isCorrect = normalizedInput === norm(expectedKey);
+      isCorrect = (normalizedInput === norm(expectedKey) || normalizedInput === norm(setConfig[6].formula));
       fragmentFound = expectedKey;
     }
 
@@ -438,7 +514,7 @@ router.post('/hint', requireTeam, async (req, res) => {
     }
 
     const stage = team.stage;
-    const stageHints = await getEffectiveStageHints(ds, stage);
+    const stageHints = await getEffectiveStageHints(ds, stage, team.name);
     if (!stageHints || !stageHints.length) {
       return res.status(400).json({ error: 'No hints available for this mission.' });
     }

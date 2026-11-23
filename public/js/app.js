@@ -415,7 +415,7 @@ function startLiveTimer(initialState) {
   liveTimerInterval = setInterval(async () => {
     update();
     syncTicks++;
-    if (syncTicks % 4 === 0) {
+    if (syncTicks % 10 === 0) {
       try {
         const s = await fetchState();
         if (s && s.team) {
@@ -473,9 +473,9 @@ async function renderStartScreen(container) {
         </div>
         <div class="stage-poster-card s4">
           <div class="stage-badge-num">4</div>
-          <div style="font-size: 1.6rem;">🛡️</div>
-          <div class="stage-poster-title">Cyber Defense</div>
-          <div class="stage-poster-desc">Bypass firewall node grid & packet telemetry</div>
+          <div style="font-size: 1.6rem;">🚩</div>
+          <div class="stage-poster-title">CTF Challenges</div>
+          <div class="stage-poster-desc">Security Control Room: Access logs, dark camera feed & symbol keypad</div>
         </div>
         <div class="stage-poster-card s5">
           <div class="stage-badge-num">5</div>
@@ -501,7 +501,7 @@ async function renderStartScreen(container) {
         <strong>What you must know before entering the game:</strong> Carefully inspect and analyze everything on this front briefing page before you start. Do not rush into registration without reviewing the mission parameters!
       </p>
       <div style="background: rgba(3, 8, 20, 0.9); border: 1px solid rgba(245, 158, 11, 0.4); border-left: 5px solid var(--gold); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 0.95rem; color: #fef08a; line-height: 1.65;">
-        🔍 <strong>Vital Clue for Stage 6 Override:</strong> Observe and record the exact <strong>Mission Names</strong> displayed on this briefing board (<em>Signal Intercept</em>, <em>Decoding</em>, <em>Prompt the AI</em>, <em>Cyber Defense</em>, <em>Hex Decryption</em>). When your squad unlocks the final master override in <strong>Stage 6</strong>, the system requires you to arrange and synthesize your recovered pieces based on these exact mission names! Take note of them now before lockdown begins!
+        🔍 <strong>Vital Clue for Stage 6 Override:</strong> Observe and record the exact <strong>Mission Names</strong> displayed on this briefing board (<em>Signal Intercept</em>, <em>Decoding</em>, <em>Prompt the AI</em>, <em>CTF Challenges</em>, <em>Hex Decryption</em>). When your squad unlocks the final master override in <strong>Stage 6</strong>, the system requires you to arrange and synthesize your recovered pieces based on these exact mission names! Take note of them now before lockdown begins!
       </div>
     </div>
 
@@ -650,6 +650,13 @@ function renderStageScreen(container, state) {
   if (stage === 6) placeholderText = 'Enter the final key';
 
   if (stage === 1) {
+    const s1Sectors = content.sectors || [
+      { id: 1, title: 'Sector 01: Waveform Pulse Duration', tech: 'PULSE SIGNAL', morse: '— •' },
+      { id: 2, title: 'Sector 02: Binary Serial Modulation', tech: 'BINARY CODE', morse: '— — —' },
+      { id: 3, title: 'Sector 03: Optical Pulse Strobe', tech: 'BLINKING LIGHT', morse: '• • • —' },
+      { id: 4, title: 'Sector 04: Satellite Uplink Pulse', tech: 'SATELLITE SIGNAL', morse: '• —' }
+    ];
+
     specificHtml = `
       <!-- Story Briefing -->
       <div style="background: rgba(3, 8, 22, 0.9); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 18px;">
@@ -670,53 +677,48 @@ function renderStageScreen(container, state) {
       <!-- 4 Puzzle Sectors Grid -->
       <div class="sectors-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 18px;">
         
-        <!-- Sector 01: Waveform Pulse Duration -->
+        <!-- Sector 01 -->
         <div class="sector-card" style="background: #030814; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px;">
             <span style="font-weight: bold; font-family: var(--font-mono); color: var(--accent); font-size: 0.9rem;">SECTOR 1 ➔ LETTER 1</span>
-            <span style="background: rgba(39, 180, 255, 0.15); color: var(--accent); font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">PULSE SIGNAL</span>
+            <span style="background: rgba(39, 180, 255, 0.15); color: var(--accent); font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">${s1Sectors[0].tech || 'PULSE SIGNAL'}</span>
           </div>
           <p style="font-size: 0.86rem; color: var(--muted); margin-bottom: 10px;">
-            Two pulses intercepted: a <strong>Long pulse (Dash —)</strong> followed by a <strong>Short pulse (Dot •)</strong>.
+            Intercepted waveform pattern:
           </p>
           <div style="background: #01040a; border: 1px solid #1a365d; border-radius: 4px; padding: 12px 8px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
-            <div style="background: var(--accent); height: 28px; width: 68px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--accent);">DASH (—)</div>
-            <span style="color: #64748b;">+</span>
-            <div style="background: var(--accent); height: 28px; width: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--accent);">DOT (•)</div>
+            <div style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--accent); font-weight: bold; letter-spacing: 4px;">${s1Sectors[0].morse}</div>
           </div>
           <div style="font-family: var(--font-mono); font-size: 0.92rem; color: var(--gold); text-align: center; font-weight: bold;">
-            Morse Code: <span style="letter-spacing: 6px;">— •</span>
+            Morse Code: <span style="letter-spacing: 6px;">${s1Sectors[0].morse}</span>
           </div>
         </div>
 
-        <!-- Sector 02: Binary Serial Modulation -->
+        <!-- Sector 02 -->
         <div class="sector-card" style="background: #030814; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px;">
             <span style="font-weight: bold; font-family: var(--font-mono); color: var(--gold); font-size: 0.9rem;">SECTOR 2 ➔ LETTER 2</span>
-            <span style="background: rgba(251, 191, 36, 0.15); color: var(--gold); font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">BINARY CODE</span>
+            <span style="background: rgba(251, 191, 36, 0.15); color: var(--gold); font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">${s1Sectors[1].tech || 'BINARY CODE'}</span>
           </div>
           <p style="font-size: 0.86rem; color: var(--muted); margin-bottom: 10px;">
-            A binary stream was received: <code style="color: var(--accent); background: #01040a; padding: 2px 6px; border-radius: 3px;">111-0-111-0-111</code>.<br>
-            Rule: <strong>111 = Dash (—)</strong> and <strong>0 = Space</strong>.
+            Intercepted binary telemetry stream:
           </p>
           <div style="background: #01040a; border: 1px solid #4a3808; border-radius: 4px; padding: 12px 8px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
-            <div style="background: var(--gold); height: 28px; width: 48px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--gold);">—</div>
-            <div style="background: var(--gold); height: 28px; width: 48px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--gold);">—</div>
-            <div style="background: var(--gold); height: 28px; width: 48px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px var(--gold);">—</div>
+            <div style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--gold); font-weight: bold; letter-spacing: 4px;">${s1Sectors[1].morse}</div>
           </div>
           <div style="font-family: var(--font-mono); font-size: 0.92rem; color: var(--gold); text-align: center; font-weight: bold;">
-            Morse Code: <span style="letter-spacing: 6px;">— — —</span>
+            Morse Code: <span style="letter-spacing: 6px;">${s1Sectors[1].morse}</span>
           </div>
         </div>
 
-        <!-- Sector 03: Optical Pulse Strobe & Decoy Glitch -->
+        <!-- Sector 03 -->
         <div class="sector-card" style="background: #030814; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px;">
             <span style="font-weight: bold; font-family: var(--font-mono); color: #38bdf8; font-size: 0.9rem;">SECTOR 3 ➔ LETTER 3</span>
-            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">BLINKING LIGHT</span>
+            <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">${s1Sectors[2].tech || 'BLINKING LIGHT'}</span>
           </div>
           <p style="font-size: 0.86rem; color: var(--muted); margin-bottom: 10px;">
-            A flashing light beacon sends <strong>3 quick blinks</strong> and <strong>1 long blink</strong>:
+            Flashing beacon telemetry:
           </p>
           <div style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -726,29 +728,27 @@ function renderStageScreen(container, state) {
             <button type="button" id="btn-trigger-strobe" class="btn btn-outline btn-sm" style="padding: 4px 10px; font-size: 0.78rem;">▶ Watch Light Blink</button>
           </div>
           <div style="font-family: var(--font-mono); font-size: 0.92rem; color: var(--gold); text-align: center; font-weight: bold;">
-            Morse Code: <span style="letter-spacing: 6px;">• • • —</span>
+            Morse Code: <span style="letter-spacing: 6px;">${s1Sectors[2].morse}</span>
           </div>
           <div style="font-size: 0.72rem; color: var(--bad); text-align: center; margin-top: 4px;">
             ⚠️ Trap Alert: Screen may flash decoy word <code>ZETA9</code>. Ignore it!
           </div>
         </div>
 
-        <!-- Sector 04: Satellite Uplink Pulse -->
+        <!-- Sector 04 -->
         <div class="sector-card" style="background: #030814; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 10px;">
             <span style="font-weight: bold; font-family: var(--font-mono); color: #a78bfa; font-size: 0.9rem;">SECTOR 4 ➔ LETTER 4</span>
-            <span style="background: rgba(167, 139, 250, 0.15); color: #a78bfa; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">SATELLITE SIGNAL</span>
+            <span style="background: rgba(167, 139, 250, 0.15); color: #a78bfa; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">${s1Sectors[3].tech || 'SATELLITE SIGNAL'}</span>
           </div>
           <p style="font-size: 0.86rem; color: var(--muted); margin-bottom: 10px;">
-            The final pulse: a <strong>Short pulse (Dot •)</strong> followed by a <strong>Long pulse (Dash —)</strong>.
+            Final satellite pulse relay:
           </p>
           <div style="background: #01040a; border: 1px solid #2e1065; border-radius: 4px; padding: 12px 8px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
-            <div style="background: #a78bfa; height: 28px; width: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px #a78bfa;">DOT (•)</div>
-            <span style="color: #64748b;">+</span>
-            <div style="background: #a78bfa; height: 28px; width: 68px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: bold; color: #01040a; box-shadow: 0 0 10px #a78bfa;">DASH (—)</div>
+            <div style="font-family: var(--font-mono); font-size: 1.1rem; color: #a78bfa; font-weight: bold; letter-spacing: 4px;">${s1Sectors[3].morse}</div>
           </div>
           <div style="font-family: var(--font-mono); font-size: 0.92rem; color: var(--gold); text-align: center; font-weight: bold;">
-            Morse Code: <span style="letter-spacing: 6px;">• —</span>
+            Morse Code: <span style="letter-spacing: 6px;">${s1Sectors[3].morse}</span>
           </div>
         </div>
 
@@ -762,19 +762,19 @@ function renderStageScreen(container, state) {
         </div>
         <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 8px;">
           <div id="slot-preview-1" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 68px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
-            <span style="font-size: 0.65rem; color: var(--muted);">Letter 1 (—•)</span>
+            <span style="font-size: 0.65rem; color: var(--muted);">Letter 1 (${s1Sectors[0].morse})</span>
             <span id="slot-val-1" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.25rem; color: var(--accent);">?</span>
           </div>
           <div id="slot-preview-2" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 68px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
-            <span style="font-size: 0.65rem; color: var(--muted);">Letter 2 (———)</span>
+            <span style="font-size: 0.65rem; color: var(--muted);">Letter 2 (${s1Sectors[1].morse})</span>
             <span id="slot-val-2" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.25rem; color: var(--accent);">?</span>
           </div>
           <div id="slot-preview-3" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 68px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
-            <span style="font-size: 0.65rem; color: var(--muted);">Letter 3 (•••—)</span>
+            <span style="font-size: 0.65rem; color: var(--muted);">Letter 3 (${s1Sectors[2].morse})</span>
             <span id="slot-val-3" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.25rem; color: var(--accent);">?</span>
           </div>
           <div id="slot-preview-4" style="background: #020612; border: 2px dashed #334155; border-radius: 6px; width: 68px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s ease;">
-            <span style="font-size: 0.65rem; color: var(--muted);">Letter 4 (•—)</span>
+            <span style="font-size: 0.65rem; color: var(--muted);">Letter 4 (${s1Sectors[3].morse})</span>
             <span id="slot-val-4" style="font-family: var(--font-mono); font-weight: bold; font-size: 1.25rem; color: var(--accent);">?</span>
           </div>
         </div>
@@ -850,74 +850,236 @@ function renderStageScreen(container, state) {
       </p>
     `;
   } else if (stage === 4) {
+    const logRows = content.logRows || [
+      { time: '08:02', user: 'a.rao', door: 'Lab-1', status: 'GRANTED', clearance: 'L2' },
+      { time: '08:07', user: 'm.kumar', door: 'Lab-2', status: 'GRANTED', clearance: 'L3' },
+      { time: '08:15', user: 's.nair', door: 'Vault Gate', status: 'GRANTED', clearance: 'L4' },
+      { time: '08:21', user: 'r.iyer', door: 'Lab-1', status: 'GRANTED', clearance: 'L2' },
+      { time: '08:34', user: 'unknown', door: 'Vault Gate', status: 'DENIED', clearance: 'L9' },
+      { time: '08:40', user: 'p.shetty', door: 'Lab-3', status: 'GRANTED', clearance: 'L3' },
+      { time: '08:46', user: 'd.gowda', door: 'Lab-2', status: 'GRANTED', clearance: 'L2' },
+      { time: '08:53', user: 'k.bhat', door: 'Vault Gate', status: 'GRANTED', clearance: 'L4' },
+      { time: '09:01', user: 't.menon', door: 'Lab-1', status: 'GRANTED', clearance: 'L3' },
+      { time: '09:10', user: 'v.hegde', door: 'Lab-3', status: 'GRANTED', clearance: 'L2' }
+    ];
+    const targetDigit = content.targetDigit || '1';
+    const symbolKey = content.symbol || 'triangle';
+    const solvedStations = new Set(content.solvedStations || []);
+
+    const s1Solved = solvedStations.has(1);
+    const s2Solved = solvedStations.has(2);
+    const s3Solved = solvedStations.has(3);
+    const solvedCount = solvedStations.size;
+
+    // SVG shapes mapping
+    const svgShapes = {
+      triangle: '<polygon points="12,2 22,20 2,20" fill="none" stroke="currentColor" stroke-width="2"/>',
+      circle: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>',
+      square: '<rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"/>',
+      star: '<polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="none" stroke="currentColor" stroke-width="2"/>',
+      diamond: '<polygon points="12,2 22,12 12,22 2,12" fill="none" stroke="currentColor" stroke-width="2"/>',
+      pentagon: '<polygon points="12,2 22,9 18,21 6,21 2,9" fill="none" stroke="currentColor" stroke-width="2"/>',
+      hexagon: '<polygon points="12,2 21,7 21,17 12,22 3,17 3,7" fill="none" stroke="currentColor" stroke-width="2"/>',
+      cross: '<path d="M12,2 v20 M2,12 h20" stroke="currentColor" stroke-width="2.5"/>'
+    };
+
+    const legendItems = [
+      { name: 'Triangle', char: 'X', shape: svgShapes.triangle },
+      { name: 'Circle', char: 'O', shape: svgShapes.circle },
+      { name: 'Square', char: 'K', shape: svgShapes.square },
+      { name: 'Star', char: 'S', shape: svgShapes.star },
+      { name: 'Diamond', char: 'D', shape: svgShapes.diamond },
+      { name: 'Pentagon', char: 'G', shape: svgShapes.pentagon },
+      { name: 'Hexagon', char: 'Z', shape: svgShapes.hexagon },
+      { name: 'Cross', char: 'Y', shape: svgShapes.cross }
+    ];
+
     specificHtml = `
-      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
+      <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-          <span style="font-weight: 700; color: var(--accent); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-            🛡️ AEGIS-44 FIREWALL MATRIX &amp; PACKET TRIAGE
+          <span style="font-weight: 700; color: var(--accent); font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+            🚩 CTF CHALLENGES · SECURITY CONTROL ROOM
           </span>
-          <span style="background: rgba(14, 165, 233, 0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 0.78rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono);">
-            FIREWALL: ACTIVE LOCK
+          <span style="background: rgba(14, 165, 233, 0.15); border: 1px solid var(--accent); color: var(--accent); font-size: 0.78rem; font-weight: bold; padding: 3px 10px; border-radius: 12px; font-family: var(--font-mono);">
+            CONTROL ROOM: ACTIVE
           </span>
         </div>
-        <p style="margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.5;">
-          The mainframe is defended by adaptive ingress rules and multi-quadrant packet filters. Calibrate the firewall ports to match traffic rules, or decrypt the quadrant packet telemetry to recover the 3 security tokens.
+        <p style="margin: 0 0 10px 0; color: var(--muted); font-size: 0.88rem; line-height: 1.5;">
+          The Security Control Room requires verification across <strong>3 distinct stations</strong>. Solve each station to recover its character token, then combine them in order (Station 1 + Station 2 + Station 3) to assemble Fragment 4.
         </p>
-      </div>
-
-      <!-- Interactive 4-Port Matrix -->
-      <div style="background: #020612; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
-        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); font-weight: 700; margin-bottom: 10px;">
-          ⚡ INGRESS PORT CALIBRATION MATRIX:
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px;">
-          <div class="port-switch-card" data-port="21" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; user-select: none; transition: all 0.2s;">
-            <div style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #94a3b8;">PORT 21</div>
-            <div style="font-size: 0.72rem; color: var(--muted); margin: 2px 0;">FTP STREAM</div>
-            <div class="port-status-badge" style="font-size: 0.75rem; font-weight: bold; color: var(--bad); background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 6px;">BLOCKED</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #020612; border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; flex-wrap: wrap; gap: 8px;">
+          <span style="font-size: 0.85rem; font-weight: bold; color: var(--gold);">
+            Verified Stations: <span id="stations-solved-counter">${solvedCount}</span> / 3
+          </span>
+          <div style="display: flex; gap: 8px;">
+            <span id="badge-st1" style="font-size: 0.75rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; ${s1Solved ? 'background: rgba(34, 197, 94, 0.2); color: var(--ok); border: 1px solid var(--ok);' : 'background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444;'}">
+              ${s1Solved ? 'Station 1: ✓' : 'Station 1: ✕'}
+            </span>
+            <span id="badge-st2" style="font-size: 0.75rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; ${s2Solved ? 'background: rgba(34, 197, 94, 0.2); color: var(--ok); border: 1px solid var(--ok);' : 'background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444;'}">
+              ${s2Solved ? 'Station 2: ✓' : 'Station 2: ✕'}
+            </span>
+            <span id="badge-st3" style="font-size: 0.75rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; ${s3Solved ? 'background: rgba(34, 197, 94, 0.2); color: var(--ok); border: 1px solid var(--ok);' : 'background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444;'}">
+              ${s3Solved ? 'Station 3: ✓' : 'Station 3: ✕'}
+            </span>
           </div>
-          <div class="port-switch-card" data-port="80" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; user-select: none; transition: all 0.2s;">
-            <div style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #94a3b8;">PORT 80</div>
-            <div style="font-size: 0.72rem; color: var(--muted); margin: 2px 0;">HTTP INGRESS</div>
-            <div class="port-status-badge" style="font-size: 0.75rem; font-weight: bold; color: var(--bad); background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 6px;">BLOCKED</div>
-          </div>
-          <div class="port-switch-card" data-port="443" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; user-select: none; transition: all 0.2s;">
-            <div style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #94a3b8;">PORT 443</div>
-            <div style="font-size: 0.72rem; color: var(--muted); margin: 2px 0;">TLS TUNNEL</div>
-            <div class="port-status-badge" style="font-size: 0.75rem; font-weight: bold; color: var(--bad); background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 6px;">BLOCKED</div>
-          </div>
-          <div class="port-switch-card" data-port="8080" style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; user-select: none; transition: all 0.2s;">
-            <div style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: #94a3b8;">PORT 8080</div>
-            <div style="font-size: 0.72rem; color: var(--muted); margin: 2px 0;">PROXY RELAY</div>
-            <div class="port-status-badge" style="font-size: 0.75rem; font-weight: bold; color: var(--bad); background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 6px;">BLOCKED</div>
-          </div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-          <span style="font-size: 0.8rem; color: var(--muted);">Click cards to toggle port routing state (BLOCKED / ROUTED).</span>
-          <button id="btn-firewall-test" class="btn btn-outline btn-sm" style="font-size: 0.82rem; border-color: var(--accent); color: var(--accent);">⚡ Test Ingress Alignment</button>
-        </div>
-        <div id="firewall-feedback" style="display: none; margin-top: 10px; padding: 8px 12px; border-radius: 4px; font-size: 0.85rem;"></div>
-      </div>
-
-      <!-- Telemetry Packet Logs -->
-      <div style="background: #010409; border: 1px solid rgba(56, 189, 248, 0.2); border-radius: var(--radius-sm); padding: 12px; font-family: var(--font-mono); font-size: 0.82rem; margin-bottom: 14px;">
-        <div style="font-size: 0.72rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: bold;">
-          📡 Real-Time Packet Telemetry Logs:
-        </div>
-        <div style="color: #94a3b8; line-height: 1.6;">
-          <div><span style="color: var(--gold);">[RULE 1]</span> INGRESS POLICY: Only standard web gateways (Port 80 &amp; Port 443) may route. Isolate Port 21 and Port 8080.</div>
-          <div><span style="color: var(--cyan-neon);">[TELEMETRY-α]</span> Quadrant Alpha packet payload offset -&gt; <strong style="color: var(--ok);">Token 1 = 9</strong></div>
-          <div><span style="color: var(--cyan-neon);">[TELEMETRY-β]</span> Quadrant Beta parity checksum handshake -&gt; <strong style="color: var(--ok);">Token 2 = 1</strong></div>
-          <div><span style="color: var(--cyan-neon);">[TELEMETRY-γ]</span> Quadrant Gamma TLS common name symbol -&gt; <strong style="color: var(--ok);">Token 3 = X</strong></div>
-          <div><span style="color: var(--gold);">[SYNTHESIS]</span> Concatenate the 3 quadrant tokens in order (α + β + γ) to assemble Fragment 4!</div>
         </div>
       </div>
 
-      <p style="font-size: 0.9rem; color: var(--muted); margin-top: 10px;">
-        ✍️ Align the firewall ports or synthesize the tokens to submit Fragment 4 below.
-      </p>
+      <!-- Station 1: Access Logs Table -->
+      <div class="station-card" id="station-card-1" style="background: #020612; border: 1px solid ${s1Solved ? 'var(--ok)' : 'var(--line)'}; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <div style="font-size: 0.9rem; font-weight: bold; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+            <span>📋 STATION 1: ACCESS LOGS AUDIT</span>
+            ${s1Solved ? '<span style="color: var(--ok); font-size: 0.78rem; background: rgba(34, 197, 94, 0.15); padding: 2px 8px; border-radius: 4px;">VERIFIED ✅</span>' : ''}
+          </div>
+          <span style="font-size: 0.78rem; color: var(--muted);">Token 1 of 3</span>
+        </div>
+        <p style="font-size: 0.84rem; color: var(--muted); margin: 0 0 10px 0; line-height: 1.45;">
+          Inspect the 10 door access logs below. Identify the <strong>single breach attempt (DENIED status)</strong> and extract its clearance digit.
+        </p>
+        <div style="max-height: 220px; overflow-y: auto; border: 1px solid #1e293b; border-radius: 4px; margin-bottom: 10px;">
+          <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.78rem; text-align: left;">
+            <thead>
+              <tr style="background: #0f172a; color: var(--muted); border-bottom: 1px solid #334155;">
+                <th style="padding: 6px 10px;">TIME</th>
+                <th style="padding: 6px 10px;">USER</th>
+                <th style="padding: 6px 10px;">DOOR</th>
+                <th style="padding: 6px 10px;">STATUS</th>
+                <th style="padding: 6px 10px;">CLEARANCE</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${logRows.map(r => {
+                const isDenied = r.status === 'DENIED';
+                return `
+                  <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.3); ${isDenied ? 'background: rgba(239, 68, 68, 0.15); font-weight: bold;' : ''}">
+                    <td style="padding: 5px 10px; color: ${isDenied ? '#fca5a5' : '#94a3b8'};">${escapeHtml(r.time)}</td>
+                    <td style="padding: 5px 10px; color: ${isDenied ? '#fca5a5' : 'var(--txt)'};">${escapeHtml(r.user)}</td>
+                    <td style="padding: 5px 10px; color: ${isDenied ? '#fca5a5' : '#94a3b8'};">${escapeHtml(r.door)}</td>
+                    <td style="padding: 5px 10px; color: ${isDenied ? 'var(--bad)' : 'var(--ok)'}; font-weight: bold;">${escapeHtml(r.status)}</td>
+                    <td style="padding: 5px 10px; color: ${isDenied ? 'var(--gold)' : '#94a3b8'}; font-weight: bold;">${escapeHtml(r.clearance)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="station1-input" class="input-control" placeholder="Enter clearance digit or level (e.g. 9 or L9)" style="max-width: 280px; font-family: var(--font-mono); font-size: 0.85rem;" ${s1Solved ? 'disabled value="VERIFIED"' : ''} />
+          <button type="button" id="btn-check-station-1" class="btn btn-primary btn-sm" ${s1Solved ? 'disabled' : ''}>Check Station 1</button>
+          <div id="st1-feedback" class="feedback-line" style="margin: 0; font-size: 0.82rem;"></div>
+        </div>
+      </div>
+
+      <!-- Station 2: Dark Camera Feed with Interactive Brightness Slider -->
+      <div class="station-card" id="station-card-2" style="background: #020612; border: 1px solid ${s2Solved ? 'var(--ok)' : 'var(--line)'}; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <div style="font-size: 0.9rem; font-weight: bold; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+            <span>📹 STATION 2: CAMERA FEED 04 CALIBRATION</span>
+            ${s2Solved ? '<span style="color: var(--ok); font-size: 0.78rem; background: rgba(34, 197, 94, 0.15); padding: 2px 8px; border-radius: 4px;">VERIFIED ✅</span>' : ''}
+          </div>
+          <span style="font-size: 0.78rem; color: var(--muted);">Token 2 of 3</span>
+        </div>
+        <p style="font-size: 0.84rem; color: var(--muted); margin: 0 0 10px 0; line-height: 1.45;">
+          The camera feed from Sector 4 is extremely underexposed. Adjust the <strong>Brightness Slider</strong> below to reveal the hidden security digit.
+        </p>
+
+        <!-- Camera Monitor Screen -->
+        <div style="background: #000; border: 2px solid #1e293b; border-radius: 6px; padding: 16px; position: relative; overflow: hidden; margin-bottom: 10px; min-height: 130px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 30px rgba(0,0,0,0.9);">
+          <div style="position: absolute; top: 8px; left: 10px; font-family: var(--font-mono); font-size: 0.72rem; color: #ef4444; display: flex; align-items: center; gap: 6px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: pulse 1s infinite;"></span>
+            <span>CAM-04 · LIVE</span>
+          </div>
+          <div style="position: absolute; top: 8px; right: 10px; font-family: var(--font-mono); font-size: 0.72rem; color: #64748b;">
+            ISO 3200 · EV -4.0
+          </div>
+          <!-- Hidden Digit Display that illuminates with slider -->
+          <div id="station2-monitor-screen" style="text-align: center; user-select: none;">
+            <div id="station2-digit-val" style="font-family: var(--font-display); font-size: 4rem; font-weight: 900; color: #022c22; opacity: 0.08; filter: blur(2px); transition: all 0.15s ease;">
+              ${escapeHtml(targetDigit)}
+            </div>
+            <div id="station2-cam-hint" style="font-size: 0.72rem; font-family: var(--font-mono); color: #334155;">
+              [FEED DARK · BOOST SENSOR GAIN]
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; background: rgba(15, 23, 42, 0.7); padding: 8px 12px; border-radius: 4px; border: 1px solid #1e293b;">
+          <span style="font-size: 0.8rem; color: var(--gold); font-weight: bold; white-space: nowrap;">☀️ Brightness:</span>
+          <input type="range" id="station-brightness-slider" min="0" max="100" value="5" style="flex: 1; accent-color: var(--accent); cursor: pointer;" />
+          <span id="brightness-val-label" style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); min-width: 40px; text-align: right;">5%</span>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="station2-input" class="input-control" placeholder="Enter the revealed digit (0-9)" style="max-width: 280px; font-family: var(--font-mono); font-size: 0.85rem;" ${s2Solved ? 'disabled value="VERIFIED"' : ''} />
+          <button type="button" id="btn-check-station-2" class="btn btn-primary btn-sm" ${s2Solved ? 'disabled' : ''}>Check Station 2</button>
+          <div id="st2-feedback" class="feedback-line" style="margin: 0; font-size: 0.82rem;"></div>
+        </div>
+      </div>
+
+      <!-- Station 3: Symbol Keypad & Legend -->
+      <div class="station-card" id="station-card-3" style="background: #020612; border: 1px solid ${s3Solved ? 'var(--ok)' : 'var(--line)'}; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <div style="font-size: 0.9rem; font-weight: bold; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+            <span>🔣 STATION 3: SYMBOL KEYPAD &amp; GLYPH MATCHER</span>
+            ${s3Solved ? '<span style="color: var(--ok); font-size: 0.78rem; background: rgba(34, 197, 94, 0.15); padding: 2px 8px; border-radius: 4px;">VERIFIED ✅</span>' : ''}
+          </div>
+          <span style="font-size: 0.78rem; color: var(--muted);">Token 3 of 3</span>
+        </div>
+        <p style="font-size: 0.84rem; color: var(--muted); margin: 0 0 10px 0; line-height: 1.45;">
+          The control panel beacon is flashing an active security symbol. Match the glowing symbol against the <strong>Symbol Legend</strong> to extract its designated letter.
+        </p>
+
+        <!-- Active Glowing Glyph Display -->
+        <div style="display: flex; justify-content: center; align-items: center; gap: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; border-radius: 6px; padding: 14px; margin-bottom: 12px;">
+          <div style="text-align: center;">
+            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px;">ACTIVE SECURITY GLYPH</div>
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 8px; background: #01040a; border: 2px solid var(--accent); box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); color: var(--accent);">
+              <svg width="34" height="34" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 6px var(--accent));">
+                ${svgShapes[symbolKey] || svgShapes.triangle}
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8-Symbol Legend Grid -->
+        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold); font-weight: bold; margin-bottom: 6px;">
+          Symbol Reference Legend (Click to Select):
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 6px; margin-bottom: 12px;">
+          ${legendItems.map(item => `
+            <div class="symbol-legend-item" data-char="${item.char}" style="background: #01040a; border: 1px solid #1e293b; border-radius: 4px; padding: 6px 4px; text-align: center; cursor: pointer; transition: all 0.15s ease;" title="${item.name} ➔ ${item.char}">
+              <div style="display: flex; justify-content: center; color: var(--muted); margin-bottom: 3px;">
+                <svg width="20" height="20" viewBox="0 0 24 24">${item.shape}</svg>
+              </div>
+              <div style="font-family: var(--font-mono); font-weight: bold; font-size: 0.85rem; color: var(--gold);">${item.char}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="station3-input" class="input-control" placeholder="Enter symbol letter (e.g. X)" style="max-width: 280px; font-family: var(--font-mono); font-size: 0.85rem;" ${s3Solved ? 'disabled value="VERIFIED"' : ''} />
+          <button type="button" id="btn-check-station-3" class="btn btn-primary btn-sm" ${s3Solved ? 'disabled' : ''}>Check Station 3</button>
+          <div id="st3-feedback" class="feedback-line" style="margin: 0; font-size: 0.82rem;"></div>
+        </div>
+      </div>
+
+      <div style="background: rgba(3, 8, 20, 0.8); border: 1px dashed var(--line); border-radius: var(--radius-sm); padding: 12px; font-size: 0.88rem; color: var(--muted);">
+        ✍️ After solving Station 1, 2, and 3, join the 3 characters in order (Station 1 + 2 + 3) to assemble Fragment 4, and submit below!
+      </div>
     `;
   } else if (stage === 5) {
+    const hexMatrix = content.matrix || [
+      ['48', '1A', '3F', '7C'],
+      ['45', '9B', '02', 'E1'],
+      ['58', '88', 'D4', '5A'],
+      ['38', 'FF', '11', '6E'],
+      ['32', 'CC', '4A', 'B9'],
+      ['44', '00', '8F', '23']
+    ];
+    const hexStream = content.hexStream || '48 45 58 38 32 44';
+    const channels = ['A', 'B', 'C', 'D', 'E', 'F'];
+
     specificHtml = `
       <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
@@ -939,7 +1101,7 @@ function renderStageScreen(container, state) {
           <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); font-weight: 700;">
             ⚡ 6x4 Hexadecimal Memory Registers:
           </div>
-          <button id="btn-read-bus" class="btn btn-primary btn-sm" style="font-size: 0.78rem; padding: 4px 10px;">⚡ Read Active Bus Line (Col 1)</button>
+          <button type="button" id="btn-read-bus" class="btn btn-primary btn-sm" style="font-size: 0.78rem; padding: 4px 10px;">⚡ Read Active Bus Line (Col 1)</button>
         </div>
 
         <p style="font-size: 0.82rem; color: var(--muted); margin: 0 0 10px 0;">
@@ -958,48 +1120,15 @@ function renderStageScreen(container, state) {
               </tr>
             </thead>
             <tbody>
-              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
-                <td style="color: var(--muted); font-weight: bold; padding: 6px;">A</td>
-                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">48</td>
-                <td style="padding: 6px; color: #64748b;">1A</td>
-                <td style="padding: 6px; color: #64748b;">3F</td>
-                <td style="padding: 6px; color: #64748b;">7C</td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
-                <td style="color: var(--muted); font-weight: bold; padding: 6px;">B</td>
-                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">45</td>
-                <td style="padding: 6px; color: #64748b;">9B</td>
-                <td style="padding: 6px; color: #64748b;">02</td>
-                <td style="padding: 6px; color: #64748b;">E1</td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
-                <td style="color: var(--muted); font-weight: bold; padding: 6px;">C</td>
-                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">58</td>
-                <td style="padding: 6px; color: #64748b;">88</td>
-                <td style="padding: 6px; color: #64748b;">D4</td>
-                <td style="padding: 6px; color: #64748b;">5A</td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
-                <td style="color: var(--muted); font-weight: bold; padding: 6px;">D</td>
-                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">38</td>
-                <td style="padding: 6px; color: #64748b;">FF</td>
-                <td style="padding: 6px; color: #64748b;">11</td>
-                <td style="padding: 6px; color: #64748b;">6E</td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
-                <td style="color: var(--muted); font-weight: bold; padding: 6px;">E</td>
-                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">32</td>
-                <td style="padding: 6px; color: #64748b;">CC</td>
-                <td style="padding: 6px; color: #64748b;">4A</td>
-                <td style="padding: 6px; color: #64748b;">B9</td>
-              </tr>
-              <tr>
-                <td style="color: var(--muted); font-weight: bold; padding: 6px;">F</td>
-                <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">44</td>
-                <td style="padding: 6px; color: #64748b;">00</td>
-                <td style="padding: 6px; color: #64748b;">8F</td>
-                <td style="padding: 6px; color: #64748b;">23</td>
-              </tr>
+              ${hexMatrix.map((row, idx) => `
+                <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.4);">
+                  <td style="color: var(--muted); font-weight: bold; padding: 6px;">${channels[idx] || (idx + 1)}</td>
+                  <td class="hex-cell active-col" style="padding: 6px; background: rgba(56, 189, 248, 0.12); color: var(--accent); font-weight: bold; border-radius: 4px;">${escapeHtml(row[0] || '')}</td>
+                  <td style="padding: 6px; color: #64748b;">${escapeHtml(row[1] || '')}</td>
+                  <td style="padding: 6px; color: #64748b;">${escapeHtml(row[2] || '')}</td>
+                  <td style="padding: 6px; color: #64748b;">${escapeHtml(row[3] || '')}</td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
         </div>
@@ -1009,15 +1138,12 @@ function renderStageScreen(container, state) {
       <div class="toolkit-box">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
           <h3 style="font-size: 0.95rem; color: #c084fc; margin: 0;">🧰 Hexadecimal ASCII Decoder Workbench</h3>
-          <button id="btn-load-stream" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 3px 8px;">📋 Paste Bus Stream</button>
+          <button type="button" id="btn-load-stream" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 3px 8px;">📋 Paste Bus Stream</button>
         </div>
         <textarea id="hex-workbench-input" rows="2" placeholder="Paste or type hexadecimal bytes here (e.g. 48 45 58 38 32 44)..."></textarea>
         <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap;">
-          <button id="btn-convert-hex" class="btn btn-gold btn-sm">Decode Hex to Text</button>
+          <button type="button" id="btn-convert-hex" class="btn btn-gold btn-sm">Decode Hex to Text</button>
           <div id="hex-decode-output" style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: bold; color: var(--ok); min-height: 24px; padding: 4px 8px;"></div>
-        </div>
-        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; border-radius: 4px; padding: 8px 10px; margin-top: 10px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); line-height: 1.6;">
-          <span style="color: var(--accent); font-weight: bold;">ASCII Hex Table:</span> 0x48='H' | 0x45='E' | 0x58='X' | 0x38='8' | 0x32='2' | 0x44='D'
         </div>
       </div>
 
@@ -1031,7 +1157,7 @@ function renderStageScreen(container, state) {
         📖 The story: This is it, the final lock! 🔐 Open your 📒 notebook and gather all 5 pieces. 🧩
       </p>
       <ol style="display: flex; flex-direction: column; gap: 8px; margin-left: 20px; font-size: 0.95rem; margin-bottom: 16px;">
-        <li>1) 🔤 Put the pieces in alphabetical order of the mission NAMES: <strong>Cyber Defense</strong>, <strong>Decoding</strong>, <strong>Hex Decryption</strong>, <strong>Prompt the AI</strong>, and <strong>Signal Intercept</strong>.</li>
+        <li>1) 🔤 Put the pieces in alphabetical order of the mission NAMES: <strong>CTF Challenges</strong>, <strong>Decoding</strong>, <strong>Hex Decryption</strong>, <strong>Prompt the AI</strong>, and <strong>Signal Intercept</strong>.</li>
         <li>2) 🔁 The piece from Prompt the AI must be written backwards.</li>
         <li>3) ➖ Join them with dashes inside <code>FO{ … }</code>.</li>
         <li>4) ➕ Add up every digit (0–9) inside the braces and write it after a <code>#</code>.</li>
@@ -1348,22 +1474,43 @@ function attachStageEvents(stage) {
   const badgeEls = document.querySelectorAll('.hint-sec-val');
   if (badgeEls && badgeEls.length > 0) {
     hintTickerInterval = setInterval(() => {
-      let anyLeft = false;
-      let expiredFound = false;
+      let anyActive = false;
       badgeEls.forEach(el => {
         const cur = parseInt(el.textContent, 10);
         if (cur > 1) {
           el.textContent = cur - 1;
-          anyLeft = true;
+          anyActive = true;
         } else if (cur === 1) {
           el.textContent = '0';
-          expiredFound = true;
+          const hintId = el.getAttribute('data-hint');
+          // Smoothly update the expired hint in-place without triggering a destructive full re-render
+          const card = document.getElementById(`hint-timed-card-${hintId}`);
+          if (card) {
+            card.className = 'hint-box expired-hint';
+            card.style.borderColor = 'var(--line)';
+            card.style.background = 'rgba(15, 23, 42, 0.6)';
+            card.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+                <span style="font-size: 0.85rem; font-weight: bold; color: var(--muted); display: flex; align-items: center; gap: 6px;">
+                  🔒 HINT ${hintId} EXPIRED
+                </span>
+                <span style="font-size: 0.75rem; color: var(--bad); font-weight: bold; text-transform: uppercase;">30s Window Closed</span>
+              </div>
+              <p style="margin: 4px 0 0; font-size: 0.82rem; color: #64748b; font-style: italic;">
+                The 30-second viewing period for this hint has elapsed. Hint content has been securely hidden. Penalty minutes remain applied.
+              </p>
+            `;
+          }
+          // Remove Stage 1 Morse decoder chart when Hint 1 expires
+          const morseChart = document.querySelector('.stage1-hint-chart');
+          if (morseChart && hintId === '1') {
+            morseChart.remove();
+          }
         }
       });
-      if (expiredFound || !anyLeft) {
+      if (!anyActive) {
         clearInterval(hintTickerInterval);
         hintTickerInterval = null;
-        renderApp();
       }
     }, 1000);
   }
@@ -1597,49 +1744,149 @@ function attachStageEvents(stage) {
   }
 
   if (stage === 4) {
-    const portCards = document.querySelectorAll('.port-switch-card');
-    const portStates = { '21': false, '80': false, '443': false, '8080': false };
+    const s1Btn = document.getElementById('btn-check-station-1');
+    const s1Input = document.getElementById('station1-input');
+    const s1Fb = document.getElementById('st1-feedback');
 
-    portCards.forEach(card => {
-      card.addEventListener('click', () => {
-        const port = card.getAttribute('data-port');
-        portStates[port] = !portStates[port];
-        const isRouted = portStates[port];
-        const badge = card.querySelector('.port-status-badge');
-        if (isRouted) {
-          card.style.borderColor = 'var(--ok)';
-          card.style.background = 'rgba(34, 197, 94, 0.12)';
-          badge.textContent = 'ROUTED';
-          badge.style.color = 'var(--ok)';
-          badge.style.background = 'rgba(34, 197, 94, 0.2)';
+    const s2Slider = document.getElementById('station-brightness-slider');
+    const s2Label = document.getElementById('brightness-val-label');
+    const s2DigitEl = document.getElementById('station2-digit-val');
+    const s2CamHint = document.getElementById('station2-cam-hint');
+    const s2Btn = document.getElementById('btn-check-station-2');
+    const s2Input = document.getElementById('station2-input');
+    const s2Fb = document.getElementById('st2-feedback');
+
+    const s3Btn = document.getElementById('btn-check-station-3');
+    const s3Input = document.getElementById('station3-input');
+    const s3Fb = document.getElementById('st3-feedback');
+    const legendItems = document.querySelectorAll('.symbol-legend-item');
+
+    // Keep track of verified tokens in memory
+    const stationTokens = { 1: '', 2: '', 3: '' };
+
+    function checkAllStationsDone() {
+      if (stationTokens[1] && stationTokens[2] && stationTokens[3]) {
+        const fullToken = stationTokens[1] + stationTokens[2] + stationTokens[3];
+        const ansInput = document.getElementById('stage-answer-input');
+        if (ansInput) {
+          ansInput.value = fullToken;
+          ansInput.focus();
+        }
+        showToast(`🎉 All 3 Stations verified! Fragment ${fullToken} assembled.`);
+      }
+    }
+
+    async function checkStation(stationNum, val, inputEl, btnEl, fbEl, cardId, badgeId) {
+      const v = (val || '').trim();
+      if (!v) {
+        if (fbEl) { fbEl.className = 'feedback-line error'; fbEl.textContent = 'Please enter a value.'; }
+        return;
+      }
+      if (btnEl) btnEl.disabled = true;
+      if (fbEl) { fbEl.className = 'feedback-line'; fbEl.textContent = 'Checking...'; }
+
+      try {
+        const res = await fetch('/api/stage4/check-station', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ station: stationNum, value: v })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (fbEl) { fbEl.className = 'feedback-line ok'; fbEl.textContent = 'Verified! ✅'; }
+          if (inputEl) { inputEl.disabled = true; inputEl.value = 'VERIFIED'; }
+          const card = document.getElementById(cardId);
+          if (card) card.style.borderColor = 'var(--ok)';
+          const badge = document.getElementById(badgeId);
+          if (badge) {
+            badge.style.background = 'rgba(34, 197, 94, 0.2)';
+            badge.style.color = 'var(--ok)';
+            badge.style.borderColor = 'var(--ok)';
+            badge.textContent = `Station ${stationNum}: ✓`;
+          }
+          const counter = document.getElementById('stations-solved-counter');
+          if (counter && data.solvedStations) counter.textContent = data.solvedStations.length;
+
+          let tokenChar = v.toUpperCase();
+          if (stationNum === 1 && tokenChar.startsWith('L')) tokenChar = tokenChar.slice(1);
+          stationTokens[stationNum] = tokenChar;
+
+          checkAllStationsDone();
         } else {
-          card.style.borderColor = '#334155';
-          card.style.background = 'rgba(15, 23, 42, 0.8)';
-          badge.textContent = 'BLOCKED';
-          badge.style.color = 'var(--bad)';
-          badge.style.background = 'rgba(239, 68, 68, 0.15)';
+          if (fbEl) {
+            fbEl.className = 'feedback-line error';
+            fbEl.textContent = data.message || 'Incorrect station value.';
+          }
+          if (btnEl) btnEl.disabled = false;
+        }
+      } catch (err) {
+        if (fbEl) { fbEl.className = 'feedback-line error'; fbEl.textContent = 'Verification error.'; }
+        if (btnEl) btnEl.disabled = false;
+      }
+    }
+
+    if (s1Btn && s1Input) {
+      s1Btn.addEventListener('click', () => checkStation(1, s1Input.value, s1Input, s1Btn, s1Fb, 'station-card-1', 'badge-st1'));
+      s1Input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          checkStation(1, s1Input.value, s1Input, s1Btn, s1Fb, 'station-card-1', 'badge-st1');
+        }
+      });
+    }
+
+    // Slider for Station 2 Camera Feed
+    if (s2Slider && s2DigitEl && s2Label) {
+      s2Slider.addEventListener('input', () => {
+        const val = parseInt(s2Slider.value, 10);
+        s2Label.textContent = `${val}%`;
+        if (val < 15) {
+          s2DigitEl.style.opacity = '0.08';
+          s2DigitEl.style.color = '#022c22';
+          s2DigitEl.style.filter = 'blur(2px)';
+          if (s2CamHint) s2CamHint.textContent = '[FEED DARK · BOOST SENSOR GAIN]';
+        } else if (val < 50) {
+          const norm = (val - 15) / 35;
+          s2DigitEl.style.opacity = String(0.1 + norm * 0.4);
+          s2DigitEl.style.color = '#15803d';
+          s2DigitEl.style.filter = 'blur(1px)';
+          if (s2CamHint) s2CamHint.textContent = '[EXPOSURE RISING · ADJUST FURTHER]';
+        } else {
+          s2DigitEl.style.opacity = '1';
+          s2DigitEl.style.color = '#22c55e';
+          s2DigitEl.style.filter = 'drop-shadow(0 0 12px #22c55e)';
+          if (s2CamHint) s2CamHint.textContent = 'REC [LIVE] · DIGIT CLEAR';
+        }
+      });
+    }
+
+    if (s2Btn && s2Input) {
+      s2Btn.addEventListener('click', () => checkStation(2, s2Input.value, s2Input, s2Btn, s2Fb, 'station-card-2', 'badge-st2'));
+      s2Input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          checkStation(2, s2Input.value, s2Input, s2Btn, s2Fb, 'station-card-2', 'badge-st2');
+        }
+      });
+    }
+
+    // Station 3 Symbol Legend selection
+    legendItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const char = item.getAttribute('data-char');
+        if (s3Input && !s3Input.disabled) {
+          s3Input.value = char;
+          s3Input.focus();
         }
       });
     });
 
-    const testBtn = document.getElementById('btn-firewall-test');
-    const fb = document.getElementById('firewall-feedback');
-    if (testBtn && fb) {
-      testBtn.addEventListener('click', () => {
-        const correct = !portStates['21'] && portStates['80'] && portStates['443'] && !portStates['8080'];
-        fb.style.display = 'block';
-        if (correct) {
-          fb.style.background = 'rgba(34, 197, 94, 0.15)';
-          fb.style.border = '1px solid var(--ok)';
-          fb.style.color = '#86efac';
-          fb.innerHTML = '✅ <strong>INGRESS ALIGNMENT VERIFIED!</strong> Security gates breached. Decoupled quadrant tokens: Alpha: <strong>9</strong>, Beta: <strong>1</strong>, Gamma: <strong>X</strong> → Fragment: <strong>91X</strong> (Auto-filled below!)';
-          const ansInput = document.getElementById('answer-input');
-          if (ansInput) ansInput.value = '91X';
-        } else {
-          fb.style.background = 'rgba(245, 158, 11, 0.15)';
-          fb.style.border = '1px solid var(--gold)';
-          fb.style.color = '#fde047';
-          fb.innerHTML = '⚠️ <strong>ALIGNMENT MISMATCH:</strong> Rule requires Port 80 &amp; Port 443 ROUTED, while Port 21 &amp; Port 8080 must remain BLOCKED.';
+    if (s3Btn && s3Input) {
+      s3Btn.addEventListener('click', () => checkStation(3, s3Input.value, s3Input, s3Btn, s3Fb, 'station-card-3', 'badge-st3'));
+      s3Input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          checkStation(3, s3Input.value, s3Input, s3Btn, s3Fb, 'station-card-3', 'badge-st3');
         }
       });
     }
@@ -1652,7 +1899,7 @@ function attachStageEvents(stage) {
     const convertBtn = document.getElementById('btn-convert-hex');
     const hexOutput = document.getElementById('hex-decode-output');
 
-    const stream = '48 45 58 38 32 44';
+    const stream = (content && content.hexStream) ? content.hexStream : '48 45 58 38 32 44';
 
     function loadBusStream() {
       if (hexInput) hexInput.value = stream;
@@ -1686,7 +1933,7 @@ function attachStageEvents(stage) {
           }
           hexOutput.style.color = 'var(--ok)';
           hexOutput.innerHTML = `Decoded Plaintext: <strong style="color: var(--gold);">${escapeHtml(decoded)}</strong> (Auto-filled below!)`;
-          const ansInput = document.getElementById('answer-input');
+          const ansInput = document.getElementById('stage-answer-input');
           if (ansInput) ansInput.value = decoded;
         } catch (_) {
           hexOutput.textContent = 'Invalid hexadecimal string format.';
@@ -2116,42 +2363,59 @@ function renderMergedPortal(container) {
         </div>
 
         <div id="admin-answers-panel" style="display: none;">
-          <!-- Static Stages 1 to 6 Master Solutions -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-bottom: 16px;">
-            <div class="answer-key-box">
-              <h4>📡 Stage 1: Signal Intercept (Morse Matrix)</h4>
-              <div>Key: <span class="solution-token">NOVA</span></div>
-              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Matrix Sectors: S1 (—• [N]), S2 (——— [O]), S3 (•••— [V]), S4 (•— [A])<br/>Decoy: <span style="color:var(--bad);">ZETA9</span> | 15-char hint chart</div>
+          <!-- 4 Question Sets (Set A, B, C, D) Reference -->
+          <div style="font-size: 0.9rem; font-weight: bold; color: var(--gold); margin-bottom: 8px;">
+            📚 4 Balanced Question Sets (A, B, C, D) Master Overview:
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 18px;">
+            <div class="answer-key-box" style="border-left: 4px solid var(--accent);">
+              <h4 style="color: var(--accent);">⭐ Set A — Cosmic Vault Alpha</h4>
+              <div style="font-size: 0.8rem; line-height: 1.6; margin-top: 6px;">
+                <div>S1: <span class="solution-token">NOVA</span></div>
+                <div>S2: <span class="solution-token">7K2</span> (Phrase: <strong style="color:var(--ok);">AURORA</strong>)</div>
+                <div>S3: <span class="solution-token">ORBIT</span></div>
+                <div>S4: <span class="solution-token">91X</span> (St: 9 | 1 | X)</div>
+                <div>S5: <span class="solution-token">HEX82D</span> (48 45 58 38 32 44)</div>
+                <div>S6: <span class="solution-token" style="color: #34d399; font-size: 0.72rem;">FO{91X-7K2-HEX82D-TIBRO-NOVA}#29</span></div>
+              </div>
             </div>
-            <div class="answer-key-box">
-              <h4>🔓 Stage 2: 3-Layer Cipher</h4>
-              <div>Key: <span class="solution-token">7K2</span></div>
-              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Base64 ➔ Hex ➔ ROT13<br/>Passphrase: <span style="color:var(--ok);">AURORA</span></div>
+            <div class="answer-key-box" style="border-left: 4px solid var(--gold);">
+              <h4 style="color: var(--gold);">🌟 Set B — Cyber Nexus Beta</h4>
+              <div style="font-size: 0.8rem; line-height: 1.6; margin-top: 6px;">
+                <div>S1: <span class="solution-token">LUNA</span></div>
+                <div>S2: <span class="solution-token">4M9</span> (Phrase: <strong style="color:var(--ok);">CYPHER</strong>)</div>
+                <div>S3: <span class="solution-token">SOLAR</span></div>
+                <div>S4: <span class="solution-token">84Z</span> (St: 8 | 4 | Z)</div>
+                <div>S5: <span class="solution-token">CORE7F</span> (43 4F 52 45 37 46)</div>
+                <div>S6: <span class="solution-token" style="color: #34d399; font-size: 0.72rem;">FO{84Z-4M9-CORE7F-RALOS-LUNA}#32</span></div>
+              </div>
             </div>
-            <div class="answer-key-box">
-              <h4>🤖 Stage 3: WARDEN AI</h4>
-              <div>Key: <span class="solution-token">ORBIT</span></div>
-              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">AURORA + Role (technician) + Task<br/>Decoy: <span style="color:var(--bad);">ZETA9</span></div>
+            <div class="answer-key-box" style="border-left: 4px solid #a855f7;">
+              <h4 style="color: #c084fc;">🌌 Set C — Quantum Matrix Gamma</h4>
+              <div style="font-size: 0.8rem; line-height: 1.6; margin-top: 6px;">
+                <div>S1: <span class="solution-token">VEGA</span></div>
+                <div>S2: <span class="solution-token">3X8</span> (Phrase: <strong style="color:var(--ok);">VORTEX</strong>)</div>
+                <div>S3: <span class="solution-token">TITAN</span></div>
+                <div>S4: <span class="solution-token">72Y</span> (St: 7 | 2 | Y)</div>
+                <div>S5: <span class="solution-token">BYTE9A</span> (42 59 54 45 39 41)</div>
+                <div>S6: <span class="solution-token" style="color: #34d399; font-size: 0.72rem;">FO{72Y-3X8-BYTE9A-NATIT-VEGA}#29</span></div>
+              </div>
             </div>
-            <div class="answer-key-box">
-              <h4>🛡️ Stage 4: Cyber Defense</h4>
-              <div>Key: <span class="solution-token">91X</span></div>
-              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Ports: 80 &amp; 443 ROUTED | 21 &amp; 8080 BLOCKED<br/>Tokens: α=9 | β=1 | γ=X ➔ 91X</div>
-            </div>
-            <div class="answer-key-box">
-              <h4>🔢 Stage 5: Hex Decryption</h4>
-              <div>Key: <span class="solution-token">HEX82D</span></div>
-              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">Bus Col 1: 48 45 58 38 32 44<br/>Hex-to-ASCII: 48=H, 45=E, 58=X, 38=8, 32=2, 44=D</div>
-            </div>
-            <div class="answer-key-box">
-              <h4>🧩 Stage 6: Master Override</h4>
-              <div>Key: <span class="solution-token" style="color: #34d399; border-color: #34d399;">FO{91X-7K2-HEX82D-TIBRO-NOVA}#29</span></div>
-              <div style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">A-Z Missions: Cyber, Decode, Hex, Prompt(rev), Signal<br/>Checksum: 9+1+7+2+8+2 = 29</div>
+            <div class="answer-key-box" style="border-left: 4px solid #ec4899;">
+              <h4 style="color: #f472b6;">🪐 Set D — Stellar Bastion Delta</h4>
+              <div style="font-size: 0.8rem; line-height: 1.6; margin-top: 6px;">
+                <div>S1: <span class="solution-token">MARS</span></div>
+                <div>S2: <span class="solution-token">5P3</span> (Phrase: <strong style="color:var(--ok);">NEBULA</strong>)</div>
+                <div>S3: <span class="solution-token">ZENITH</span></div>
+                <div>S4: <span class="solution-token">63K</span> (St: 6 | 3 | K)</div>
+                <div>S5: <span class="solution-token">BITS1E</span> (42 49 54 53 31 45)</div>
+                <div>S6: <span class="solution-token" style="color: #34d399; font-size: 0.72rem;">FO{63K-5P3-BITS1E-HTINEZ-MARS}#18</span></div>
+              </div>
             </div>
           </div>
 
           <!-- Dynamic Team Solutions Table -->
-          <h4 style="color: var(--accent); font-size: 1rem; margin-bottom: 8px;">📋 Registered Squads &amp; Solutions Reference:</h4>
+          <h4 style="color: var(--accent); font-size: 1rem; margin-bottom: 8px;">📋 Registered Squads Allotment &amp; Live Solutions:</h4>
           <div id="dynamic-answers-table" class="data-table-container">
             <p style="color: var(--muted); padding: 10px;">Loading solutions...</p>
           </div>
@@ -2261,27 +2525,32 @@ function renderMergedPortal(container) {
       }
 
       let rows = solutions.map(t => {
-        const membersList = (t.memberShards || []).map(m => `<strong>${escapeHtml(m.name)}</strong>`).join(' · ');
         return `
           <tr>
             <td><strong>${escapeHtml(t.teamName)}</strong></td>
-            <td><span style="color: var(--accent);">${escapeHtml(t.coordinator)}</span></td>
-            <td style="font-size: 0.88rem;">${membersList || '-'}</td>
+            <td><span class="badge" style="background: rgba(56, 189, 248, 0.2); color: var(--accent); font-weight: bold;">Set ${escapeHtml(t.setKey || 'A')}</span></td>
+            <td><span class="solution-token">${escapeHtml(t.stage1Answer || 'NOVA')}</span></td>
+            <td><span class="solution-token">${escapeHtml(t.stage2Answer || '7K2')}</span> <span style="font-size: 0.72rem; color: var(--ok);">(${escapeHtml(t.stage2AccessPhrase || 'AURORA')})</span></td>
+            <td><span class="solution-token">${escapeHtml(t.stage3Answer || 'ORBIT')}</span></td>
+            <td><span class="solution-token">${escapeHtml(t.stage4Answer || '91X')}</span></td>
             <td><span class="solution-token">${escapeHtml(t.stage5Code || 'HEX82D')}</span></td>
-            <td><span class="solution-token" style="color: #34d399; border-color: #34d399;">${escapeHtml(t.stage6Key)}</span></td>
+            <td><span class="solution-token" style="color: #34d399; border-color: #34d399; font-size: 0.75rem;">${escapeHtml(t.stage6Key)}</span></td>
           </tr>
         `;
       }).join('');
 
       containerEl.innerHTML = `
-        <table class="data-table">
+        <table class="data-table" style="font-size: 0.85rem;">
           <thead>
             <tr>
               <th>Team</th>
-              <th>Coordinator</th>
-              <th>Squad Members</th>
-              <th>Stage 5 Solution</th>
-              <th>Stage 6 Master Key</th>
+              <th>Set</th>
+              <th>Stage 1</th>
+              <th>Stage 2 (Phrase)</th>
+              <th>Stage 3</th>
+              <th>Stage 4</th>
+              <th>Stage 5</th>
+              <th>Stage 6 Key</th>
             </tr>
           </thead>
           <tbody>
