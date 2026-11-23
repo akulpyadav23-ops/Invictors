@@ -437,7 +437,7 @@ function startLiveTimer(initialState) {
 // Start Screen (Registration & Member Join)
 // ==========================================================================
 async function renderStartScreen(container) {
-  let coordinators = ['Arun', 'Divya', 'Kiran', 'Pooja', 'Rakshith'];
+  let coordinators = ['Tanu', 'Surabhi', 'Abhivishnu', 'Chandrashekar', 'Thrisha', 'Arun', 'Divya', 'Kiran', 'Pooja', 'Rakshith'];
   try {
     const cfgRes = await fetch('/api/config');
     if (cfgRes.ok) {

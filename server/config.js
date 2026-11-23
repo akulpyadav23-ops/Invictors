@@ -2,6 +2,11 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const DEFAULT_COORDINATOR_PINS = {
+  'tanu': '2042',
+  'surabhi': '2043',
+  'abhivishnu': '2044',
+  'chandrashekar': '2045',
+  'thrisha': '2046',
   'akul p yadav': '7090',
   'gagan s urs': '9108',
   'anish s kumar': '7975',
@@ -13,7 +18,12 @@ const DEFAULT_COORDINATOR_PINS = {
   'vishnuvardhan': '2038',
   'vandhana v': '2039',
   'abhiram bs': '2040',
-  'harshil': '2041'
+  'harshil': '2041',
+  'arun': '1111',
+  'divya': '2222',
+  'kiran': '3333',
+  'pooja': '4444',
+  'rakshith': '5555'
 };
 
 // Parse any custom env overrides (format: "Name1:Pin1,Name2:Pin2")
@@ -35,7 +45,7 @@ const coordinatorPinsMap = parseCoordinatorPins();
 module.exports = {
   PORT: parseInt(process.env.PORT, 10) || 3000,
   ADMIN_PIN: process.env.ADMIN_PIN || 'INVICTORS@23',
-  COORDINATORS: (process.env.COORDINATORS || 'Akul P Yadav,Gagan S Urs,M Punya Sagar,MN Shashank,Dhanush KP,Anish S Kumar,Ayush P,Skanda,Vishnuvardhan,Vandhana V,Abhiram BS,Harshil')
+  COORDINATORS: (process.env.COORDINATORS || 'Tanu,Surabhi,Abhivishnu,Chandrashekar,Thrisha,Arun,Divya,Kiran,Pooja,Rakshith,Akul P Yadav,Gagan S Urs,M Punya Sagar,MN Shashank,Dhanush KP,Anish S Kumar,Ayush P,Skanda,Vishnuvardhan,Vandhana V,Abhiram BS,Harshil')
     .split(',')
     .map(c => c.trim())
     .filter(Boolean),

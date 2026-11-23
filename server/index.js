@@ -67,7 +67,7 @@ function getLanIp() {
 let server = null;
 const PORT = config.PORT;
 
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && !process.env.NOW_REGION && require.main === module) {
   server = app.listen(PORT, '0.0.0.0', () => {
     const lanIp = getLanIp();
     console.log('====================================================');
@@ -82,4 +82,4 @@ if (!process.env.VERCEL) {
   });
 }
 
-module.exports = process.env.VERCEL ? app : { app, server };
+module.exports = app;
